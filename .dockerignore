@@ -1,5 +1,4 @@
 Dockerfile
-nginx.conf
 .git
 .gitignore
 CODEBASE_GUIDE.md
