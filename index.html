@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edibles Print - Inicio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="auth.js"></script>
+  <style> [x-cloak]{display:none!important} </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white overflow-y-auto font-sans selection:bg-rose-500/30">
+  <div x-data="landing" class="min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🌸</span>
+        <span class="font-black text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-200 to-rose-400" x-text="$store.app.name"></span>
+      </div>
+      <button @click="goToLogin()" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold backdrop-blur-sm transition border border-white/10">
+        Iniciar sesión
+      </button>
+    </nav>
+
+    <!-- Hero -->
+    <div class="max-w-4xl mx-auto px-6 pt-16 pb-20 text-center">
+      <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs sm:text-sm font-bold uppercase tracking-widest mb-8 shadow-inner">
+        🎂 Impresión Comestible de Alta Gama
+      </div>
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black mb-6 leading-[1.1] tracking-tight text-slate-100">
+        Eleva la repostería<br>a <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-300">nivel obra de arte.</span>
+      </h1>
+      <p class="text-lg sm:text-xl text-slate-300/90 mb-10 max-w-3xl mx-auto leading-relaxed font-medium">
+        Herramientas de expertos, para los repósteros más exigentes.<br class="hidden sm:block"> 
+        Configura tus tamaños, elige tu lienzo y haz magia.
+      </p>
+      <button @click="goToCanvas()" class="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 font-black text-lg text-white transition-all shadow-xl shadow-rose-900/40 hover:scale-105">
+        <span>Abrir Editor de Impresión</span>
+        <span>→</span>
+      </button>
+    </div>
+
+    <!-- Features / Catalog (3 cols) -->
+    <div class="max-w-7xl mx-auto px-6 pb-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 1 -->
+      <div class="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:-translate-y-1 transition duration-300 flex flex-col shadow-2xl backdrop-blur-sm">
+        <div class="text-4xl mb-6">🌸</div>
+        <h3 class="font-black text-xl mb-1 text-rose-100">Oblea de Arroz 0.3 mm</h3>
+        <span class="text-rose-400/80 text-xs font-bold uppercase tracking-wider mb-4 block">La delicada</span>
+        <h4 class="font-bold text-sm text-white/80 mb-3">El secreto detrás de las flores comestibles perfectas.</h4>
+        <p class="text-slate-300 text-sm leading-relaxed mb-4 flex-1">
+          Logra texturas realistas y movimientos naturales. Su flexibilidad única es ideal para encajes, mariposas y arte floral que no se quiebra.
+        </p>
+        <div class="pt-4 border-t border-white/10 text-xs font-semibold text-rose-300">
+          Uso pro: Floristería comestible y decoraciones flexibles.
+        </div>
+      </div>
+      
+      <!-- 2 -->
+      <div class="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:-translate-y-1 transition duration-300 flex flex-col shadow-2xl backdrop-blur-sm">
+        <div class="text-4xl mb-6">🖨️</div>
+        <h3 class="font-black text-xl mb-1 text-rose-100">Oblea de Arroz 0.4 mm</h3>
+        <span class="text-rose-400/80 text-xs font-bold uppercase tracking-wider mb-4 block">La todoterreno</span>
+        <h4 class="font-bold text-sm text-white/80 mb-3">Versatilidad y nitidez en cada impresión.</h4>
+        <p class="text-slate-300 text-sm leading-relaxed mb-4 flex-1">
+          Nuestra Oblea de Espesor Estándar. El equilibrio exacto entre resistencia y flexibilidad para fotos, logotipos y aplicaciones sobre crema o fondant.
+        </p>
+        <div class="pt-4 border-t border-white/10 text-xs font-semibold text-rose-300">
+          Uso pro: Impresiones generales y decoraciones de pasteles.
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:-translate-y-1 transition duration-300 flex flex-col shadow-2xl backdrop-blur-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl origin-top-right">Best Seller</div>
+        <div class="text-4xl mb-6">🛡️</div>
+        <h3 class="font-black text-xl mb-1 text-rose-100">Oblea de Arroz 0.6 mm</h3>
+        <span class="text-rose-400/80 text-xs font-bold uppercase tracking-wider mb-4 block">La de alto soporte</span>
+        <h4 class="font-bold text-sm text-white/80 mb-3">Rigidez extrema para tus Cake Toppers.</h4>
+        <p class="text-slate-300 text-sm leading-relaxed mb-4 flex-1">
+          ¿Cansado de que tus decoraciones se doblen? Disfruta de una firmeza superior. Perfecta para figuras en pie sin necesitar soportes extra.
+        </p>
+        <div class="pt-4 border-t border-white/10 text-xs font-semibold text-rose-300">
+          Uso pro: Toppers rígidos y figuras 3D.
+        </div>
+      </div>
+      
+      <!-- 4 -->
+      <div class="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:-translate-y-1 transition duration-300 flex flex-col shadow-2xl backdrop-blur-sm lg:col-start-2">
+        <div class="text-4xl mb-6">🍰</div>
+        <h3 class="font-black text-xl mb-1 text-rose-100">Hoja de Azúcar</h3>
+        <span class="text-rose-400/80 text-xs font-bold uppercase tracking-wider mb-4 block">La de lujo</span>
+        <h4 class="font-bold text-sm text-white/80 mb-3">Calidad fotográfica sobre tu pastel.</h4>
+        <p class="text-slate-300 text-sm leading-relaxed mb-4 flex-1">
+          Lámina de alta resolución con acabado blanco ultra liso para colores vibrantes. Flexible, fácil de cortar y se funde con tu cobertura.
+        </p>
+        <div class="pt-4 border-t border-white/10 text-xs font-semibold text-rose-300">
+          Uso pro: Retratos, logos corporativos y acabados premium.
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:-translate-y-1 transition duration-300 flex flex-col shadow-2xl backdrop-blur-sm lg:col-start-3">
+        <div class="text-4xl mb-6">🎨</div>
+        <h3 class="font-black text-xl mb-1 text-rose-100">Transfer para Gelatina</h3>
+        <span class="text-rose-400/80 text-xs font-bold uppercase tracking-wider mb-4 block">La técnica</span>
+        <h4 class="font-bold text-sm text-white/80 mb-3">Magia y precisión en tus creaciones.</h4>
+        <p class="text-slate-300 text-sm leading-relaxed mb-4 flex-1">
+          Diseñada para migrar la tinta de forma limpia y rápida, logrando gelatinas artísticas con acabados profesionales que sorprenden a todos.
+        </p>
+        <div class="pt-4 border-t border-white/10 text-xs font-semibold text-rose-300">
+          Uso pro: Gelatina, fondant y chocolate blanco.
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-auto text-center pb-8 border-t border-white/5 pt-8">
+      <p class="text-slate-500 text-sm font-medium">¡Pide el calibre ideal para tu proyecto deslizando a nuestro editor!</p>
+      <div class="flex items-center justify-center gap-2 mt-2 text-[10px] text-slate-600 uppercase font-bold tracking-widest">
+        <span>#ImpresionComestible</span>
+        <span>·</span>
+        <span x-text="$store.app.name"></span>
+        <span>·</span>
+        <span>#ReposteriaCreativa</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('landing', () => ({
+        goToLogin() { window.location.href = 'login'; },
+        goToCanvas() { window.location.href = isAuthenticated() ? 'canvas' : 'login'; }
+      }));
+    });
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>

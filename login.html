@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    if (isAuthenticated()) {
+      const qs = new URLSearchParams(window.location.search);
+      window.location.replace(qs.get('redirectTo') || 'canvas');
+    }
+  </script>
+  <style>
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body>
+  <div x-data="authView" class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <span class="text-5xl">🏠</span>
+        <h1 class="text-2xl font-black text-white mt-3 tracking-tight" x-text="$store.app.name"></h1>
+        <p class="text-slate-400 text-sm mt-1">Accede para crear tus stickers</p>
+      </div>
+      
+      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4 backdrop-blur-sm shadow-xl">
+        <div x-show="error" x-cloak class="bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center" x-text="error"></div>
+        <div x-show="successMsg" x-cloak class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center" x-text="successMsg"></div>
+
+        <!-- TABS -->
+        <div class="flex bg-white/10 rounded-xl p-1 mb-6">
+          <button @click="tab = 'pwd'; error = ''" :class="tab === 'pwd' ? 'bg-white/20 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition">Contraseña</button>
+          <button @click="tab = 'otp'; error = ''" :class="tab === 'otp' ? 'bg-white/20 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition">Celular (SMS)</button>
+        </div>
+
+        <!-- 1) LOGIN CON PASSWORD -->
+        <template x-if="tab === 'pwd'">
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Teléfono Celular</label>
+              <input x-model="phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
+              <input x-model="password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="loginPassword()" />
+            </div>
+            <button @click="loginPassword()" :disabled="loading || !phone || !password" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-2 shadow-lg" x-text="loading ? 'Iniciando sesión…' : 'Acceder'"></button>
+          </div>
+        </template>
+
+        <!-- 2) LOGIN CON OTP (SMS) -->
+        <template x-if="tab === 'otp'">
+          <div class="space-y-4">
+            <template x-if="otpStep === 1">
+              <div>
+                <div>
+                  <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tu Teléfono Celular</label>
+                  <input x-model="phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="requestOTP()"/>
+                </div>
+                <button @click="requestOTP()" :disabled="loading || !phone" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-4 shadow-lg" x-text="loading ? 'Buscando...' : 'Enviar código SMS'"></button>
+              </div>
+            </template>
+
+            <template x-if="otpStep === 2">
+              <div>
+                <div>
+                  <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 text-center">Escribe el Código de 6 dígitos</label>
+                  <input x-model="otpCode" type="text" maxlength="6" placeholder="000000" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="verifyOTP()"/>
+                </div>
+                <button @click="verifyOTP()" :disabled="loading || otpCode.length < 4" class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-4 shadow-lg" x-text="loading ? 'Verificando...' : 'Verificar y Entrar'"></button>
+                <button @click="otpStep = 1; otpCode = ''; error = ''" class="w-full bg-transparent hover:bg-white/10 rounded-xl py-2 mt-2 text-xs font-semibold text-slate-400 transition">Regresar</button>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <p class="text-center text-slate-500 text-xs pt-3 mt-4 border-t border-white/10">
+          ¿No tienes cuenta? <a href="register" class="text-violet-400 hover:text-violet-300 font-bold transition">Regístrate gratis</a><br><br>
+          <a href="/" class="text-slate-600 hover:text-slate-400 transition">← Volver al inicio</a>
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('authView', () => ({
+        tab: 'pwd', otpStep: 1,
+        phone: '', password: '', 
+        otpCode: '',
+        loading: false, error: '', successMsg: '',
+        
+        async loginPassword() {
+          this.error = ''; this.loading = true;
+          try {
+            await this.$store.auth.loginWithPassword(this.phone, this.password);
+
+            const qs = new URLSearchParams(window.location.search);
+            window.location.href = qs.get('redirectTo') || 'canvas';
+          } catch(e) {
+            this.error = (e?.status === 400 || e?.status === 403)
+              ? 'Celular o contraseña incorrectos.'
+              : 'Hubo un error de conexión al iniciar sesión.';
+          } finally { this.loading = false; }
+        },
+
+        async requestOTP() {
+          this.error = ''; this.successMsg = ''; this.loading = true;
+          try {
+            await this.$store.auth.pb.send("/api/auth/login-otp", {
+               method: "POST",
+               body: { phone: this.phone }
+            });
+            this.otpStep = 2;
+            this.successMsg = 'Te hemos enviado un código por SMS.';
+          } catch(e) {
+            this.error = e?.data?.message || 'Error al buscar celular o enviar código.';
+          } finally { this.loading = false; }
+        },
+
+        async verifyOTP() {
+          this.error = ''; this.loading = true;
+          try {
+            const authRecord = await this.$store.auth.pb.send("/api/auth/login-otp-validate", {
+               method: "POST", body: { phone: this.phone, otp: this.otpCode }
+            });
+            this.$store.auth.token = authRecord.token; 
+            this.$store.auth.user = authRecord.record;
+            localStorage.setItem('sm_token', authRecord.token);
+            localStorage.setItem('sm_user', JSON.stringify(authRecord.record));
+            this.$store.auth.pb.authStore.save(authRecord.token, authRecord.record);
+            window.location.href = 'canvas';
+          } catch(e) {
+            this.error = e?.data?.message || 'Código incorrecto o expirado.';
+          } finally { this.loading = false; }
+        }
+      }));
+    });
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>

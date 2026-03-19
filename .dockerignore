@@ -1,0 +1,13 @@
+Dockerfile
+nginx.conf
+.git
+.gitignore
+CODEBASE_GUIDE.md
+LICENSE
+README.md
+node_modules
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+.env

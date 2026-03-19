@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sticker Maker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    if (!isAuthenticated()) { window.location.replace('login?redirectTo=canvas'); }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Righteous&family=Russo+One&family=Sacramento&family=Satisfy&family=Inter:wght@400;700;900&family=Anton&family=Pacifico&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Bebas+Neue&family=Lobster&family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Chewy&family=Permanent+Marker&family=Nunito:wght@400;700;900&family=Raleway:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Archivo+Black&family=Passion+One:wght@400;700;900&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    html,body{margin:0;padding:0;background:#e5e7eb;font-family:Inter,sans-serif}
+    .sheet{position:relative;overflow:hidden;background:white;box-shadow:0 10px 30px rgba(0,0,0,.18);user-select:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .item{position:absolute;cursor:move;touch-action:none}
+    .item.selected{outline:2px dashed #2563eb;outline-offset:1px}
+    .item.locked-item{cursor:default}
+    .resize-handle{position:absolute;right:-8px;bottom:-8px;width:22px;height:22px;border-radius:9999px;background:#2563eb;border:2px solid white;cursor:nwse-resize;box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none}
+    .rotate-handle{position:absolute;top:-32px;left:calc(50% - 9px);width:22px;height:22px;border-radius:9999px;background:white;border:2px solid #10b981;cursor:crosshair;box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none}
+    .rotate-handle::after{content:'';position:absolute;width:2px;height:12px;background:#10b981;left:7px;top:18px}
+    .text-box{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;word-break:break-word;line-height:1.05;padding:6px}
+    .checker{background-image:linear-gradient(45deg,#f3f4f6 25%,transparent 25%),linear-gradient(-45deg,#f3f4f6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f3f4f6 75%),linear-gradient(-45deg,transparent 75%,#f3f4f6 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+    .crop-overlay{position:absolute;inset:0;z-index:30;pointer-events:auto;touch-action:none}
+    .crop-box{position:absolute;border:2px solid #8b5cf6;box-shadow:0 0 0 9999px rgba(0,0,0,.35);background:transparent;cursor:move;touch-action:none}
+    .crop-handle{position:absolute;width:12px;height:12px;background:white;border:2px solid #8b5cf6;border-radius:999px;box-sizing:border-box;touch-action:none}
+    .handle-nw{left:-7px;top:-7px;cursor:nwse-resize}.handle-n{left:calc(50% - 6px);top:-7px;cursor:ns-resize}
+    .handle-ne{right:-7px;top:-7px;cursor:nesw-resize}.handle-e{right:-7px;top:calc(50% - 6px);cursor:ew-resize}
+    .handle-se{right:-7px;bottom:-7px;cursor:nwse-resize}.handle-s{left:calc(50% - 6px);bottom:-7px;cursor:ns-resize}
+    .handle-sw{left:-7px;bottom:-7px;cursor:nesw-resize}.handle-w{left:-7px;top:calc(50% - 6px);cursor:ew-resize}
+    .guide-v{position:absolute;top:0;width:1px;pointer-events:none;z-index:100;background:#ec4899}
+    .guide-h{position:absolute;left:0;height:1px;pointer-events:none;z-index:100;background:#ec4899}
+    .tb-scroll::-webkit-scrollbar{height:3px}.tb-scroll::-webkit-scrollbar-track{background:transparent}.tb-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:9999px}
+    .drag-locked{overflow:hidden!important;touch-action:none!important}
+    .canvas-zoom-outer{position:relative}.canvas-zoom-inner{transform-origin:top left}
+    .ruler-grid{position:absolute;inset:0;pointer-events:none;z-index:5;background-image:repeating-linear-gradient(to right,transparent,transparent 36.809px,rgba(0,0,0,0.15) 36.809px,rgba(0,0,0,0.15) 37.809px),repeating-linear-gradient(to bottom,transparent,transparent 36.809px,rgba(0,0,0,0.15) 36.809px,rgba(0,0,0,0.15) 37.809px)}
+    @media(pointer:coarse){.resize-handle{width:28px!important;height:28px!important;right:-14px!important;bottom:-14px!important}.rotate-handle{width:28px!important;height:28px!important;top:-40px!important;left:calc(50% - 14px)!important}.rotate-handle::after{left:10px!important;top:26px!important}}
+    @media print{
+      html,body{background:white!important;margin:0!important;padding:0!important}
+      .no-print{display:none!important}
+      .sheet-wrap{margin:0!important;padding:0!important;overflow:visible!important}
+      main{overflow:visible!important}
+      .canvas-zoom-outer{width:auto!important;height:auto!important}
+      .canvas-zoom-inner{transform:none!important}
+      .sheet{box-shadow:none!important;margin:0!important}
+      .item,.item.selected{outline:none!important}
+      .resize-handle,.rotate-handle{display:none!important}
+    }
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body>
+<div x-data="stickerMaker()" x-init="init()" class="h-screen flex flex-col bg-slate-100 print:min-h-0 print:bg-white print:block">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header class="no-print w-full bg-white shadow z-50 shrink-0">
+
+    <!-- FILA 1: Menú Principal Fijo (Mobile-friendly) -->
+    <div class="flex items-center justify-between h-14 border-b border-slate-200 px-3 sm:px-4">
+      
+      <!-- Logo -->
+      <div class="flex items-center shrink-0">
+        <span class="text-xl sm:text-2xl mr-1 sm:mr-2">🏠</span>
+        <span class="hidden sm:inline text-base font-black tracking-tight text-slate-700">StickerMaker</span>
+      </div>
+
+      <!-- Derecha -->
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        
+        <div class="flex items-center gap-1.5 border-r border-slate-200 pr-2 sm:pr-3">
+          <span class="text-xs font-semibold text-slate-600 max-w-[80px] sm:max-w-[120px] truncate" x-text="$store.auth.user?.username || $store.auth.user?.phone || 'Usuario'"></span>
+          <template x-if="$store.auth.isAdmin()">
+            <button @click="window.location.href='admin'" class="px-2 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 text-[10px] font-bold transition">⚙️</button>
+          </template>
+          <button @click="$store.auth.logout()" title="Cerrar sesión" class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 font-bold transition flex items-center gap-1"><span class="text-[14px]">🚪</span> <span class="text-[10px] text-slate-600 uppercase">Salir</span></button>
+        </div>
+
+        <!-- Botón Nuevo -->
+        <button @click="resetProject()" title="Limpiar lienzo e iniciar un Nuevo Proyecto" class="py-1 px-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"><span class="text-[14px]">📄</span> <span class="hidden sm:inline text-[11px] font-black text-slate-600 uppercase tracking-widest">Nuevo</span></button>
+
+        <template x-if="savedProjects.length > 0">
+          <select x-ref="projectSelect" @change="loadProject($event.target.value)" class="text-xs py-1.5 px-2 text-ellipsis overflow-hidden border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none cursor-pointer w-24 sm:w-auto shrink-0">
+            <option value="">📁 Proy.</option>
+            <template x-for="proj in savedProjects" :key="proj.id"><option :value="proj.id" x-text="proj.name || ('Borrador ' + new Date(proj.date).toLocaleDateString())"></option></template>
+          </select>
+        </template>
+
+        <!-- Mostrar Modal Guardar -->
+        <button @click="isSaveModalOpen = true" :disabled="isSaving" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-emerald-400/30">
+          <span class="text-base sm:text-sm" x-text="isSaving ? '⏳' : '🖨️'"></span>
+          <span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide" x-text="isSaving ? 'Enviando...' : 'IMPRIMIR'"></span>
+        </button>
+        
+      </div>
+    </div>
+
+    <!-- FILA 2: Herramientas (Scroll horizontal horizontal) -->
+    <div class="flex items-center overflow-x-auto tb-scroll px-2 border-b border-slate-200 min-h-[48px] gap-0.5">
+      
+      <!-- Imagen -->
+      <button @click="$refs.fileInput.click()" class="tbtn shrink-0" title="Agregar imagen (Ctrl+V para pegar)">
+        <span class="tbtn-icon">🖼️</span><span class="tbtn-label">Imagen</span>
+      </button>
+      <input x-ref="fileInput" type="file" accept="image/*" multiple class="hidden" @change="handleFiles($event)" />
+
+      <!-- Texto -->
+      <button @click="addText()" class="tbtn shrink-0" title="Agregar texto">
+        <span class="tbtn-icon">📝</span><span class="tbtn-label">Texto</span>
+      </button>
+
+      <!-- Forma -->
+      <button @click="addShape('rect')" class="tbtn shrink-0" title="Agregar forma">
+        <span class="tbtn-icon">▭</span><span class="tbtn-label">Forma</span>
+      </button>
+
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+
+      <!-- Undo / Redo -->
+      <button @click="undo()" :disabled="!canUndo()" class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
+        <span class="tbtn-icon">↩️</span><span class="tbtn-label hidden sm:inline">Deshacer</span>
+      </button>
+      <button @click="redo()" :disabled="!canRedo()" class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Rehacer (Ctrl+Y)">
+        <span class="tbtn-icon">↪️</span><span class="tbtn-label hidden sm:inline">Rehacer</span>
+      </button>
+
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+
+      <!-- Duplicar / Eliminar -->
+      <button @click="duplicateSelected()" :disabled="!selected" class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Duplicar (Ctrl+D)">
+        <span class="tbtn-icon">📋</span><span class="tbtn-label">Duplicar</span>
+      </button>
+      <button @click="deleteSelected()" :disabled="!selected" class="tbtn shrink-0 text-red-500 hover:bg-red-50 disabled:opacity-40 disabled:text-slate-400 disabled:hover:bg-transparent disabled:cursor-not-allowed" title="Eliminar (Supr)">
+        <span class="tbtn-icon">🗑️</span><span class="tbtn-label">Eliminar</span>
+      </button>
+
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+
+      <!-- Color Fondo -->
+      <div class="flex items-center gap-1.5 shrink-0 px-2" title="Color de fondo de la pestaña actual">
+        <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Fondo</span>
+        <input type="color" :value="pageColors[activePage] || '#ffffff'" @input="pageColors[activePage] = $event.target.value" class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white" />
+      </div>
+
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+
+      <!-- Cuadricula Toggler -->
+      <button @click="showGrid = !showGrid" class="tbtn shrink-0" title="Alternar Cuadrícula">
+        <span class="tbtn-icon" :class="showGrid ? 'text-violet-600' : 'text-slate-600'">📏</span>
+        <span class="tbtn-label whitespace-nowrap" :class="showGrid ? 'text-violet-600 font-bold' : ''">Cuadrícula</span>
+      </button>
+
+      <!-- Recortar (solo imagen seleccionada) -->
+      <template x-if="selected && selected.type === 'image'">
+        <div class="flex items-center shrink-0 gap-0.5">
+          <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+          <template x-if="!(crop.active && crop.id === selected.id)">
+            <button @click="startCropMode()" class="tbtn shrink-0 text-blue-700 bg-blue-50 hover:bg-blue-100">
+              <span class="tbtn-icon">✂️</span><span class="tbtn-label">Recortar</span>
+            </button>
+          </template>
+          <template x-if="crop.active && crop.id === selected.id">
+            <div class="flex items-center gap-1 shrink-0">
+              <button @click="applyCropFromOverlay()" class="tbtn text-emerald-800 bg-emerald-100 hover:bg-emerald-200" title="Aplicar (Enter)">
+                <span class="tbtn-icon">✔️</span><span class="tbtn-label">Aplicar</span>
+              </button>
+              <button @click="cancelCropMode()" class="tbtn text-slate-700 bg-slate-100 hover:bg-slate-200" title="Cancelar (Esc)">
+                <span class="tbtn-icon">❌</span><span class="tbtn-label">Cancelar</span>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Espaciador flexible y Controles de Zoom -->
+      <div class="ml-auto flex items-center shrink-0 pr-1 pl-2 border-l border-slate-200">
+        <button @click="zoomOut()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom out">−</button>
+        <span class="text-xs font-bold text-slate-600 w-9 text-center select-none" x-text="zoomPercent()"></span>
+        <button @click="zoomIn()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom in">+</button>
+        <div class="w-px h-4 bg-slate-200 mx-1"></div>
+        <button @click="fitZoom()" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition" title="Ajustar a pantalla">FIT</button>
+      </div>
+
+    </div>
+
+    <!-- FILA 2: Propiedades (desktop md+) -->
+    <div class="hidden md:flex w-full bg-slate-50 border-b border-slate-200 px-4 py-1.5 items-center gap-3 overflow-x-auto tb-scroll min-h-[44px] text-sm shrink-0">
+      <template x-if="!selected">
+        <p class="text-slate-400 italic text-xs">Selecciona un elemento para ver sus propiedades…</p>
+      </template>
+      <template x-if="selected">
+        <div class="flex items-center gap-3 whitespace-nowrap">
+
+          <!-- Capas -->
+          <div class="flex items-center gap-1 border-r border-slate-200 pr-3">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>
+            <button @click="bringForward()" class="p-1 hover:bg-slate-200 rounded" title="Al frente">⏫</button>
+            <button @click="sendToBack()" class="p-1 hover:bg-slate-200 rounded" title="Al fondo">⏬</button>
+            <button @click="moveOneUp()" class="px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs">↑</button>
+            <button @click="moveOneDown()" class="px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs">↓</button>
+          </div>
+
+          <!-- Lock -->
+          <div class="flex items-center gap-1 border-r border-slate-200 pr-3">
+            <button @click="selected.locked = !selected.locked; pushHistory()"
+              :class="selected.locked ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'hover:bg-slate-200 text-slate-600'"
+              class="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition"
+              :title="selected.locked ? 'Desbloquear elemento' : 'Bloquear elemento'">
+              <span x-text="selected.locked ? '🔒' : '🔓'"></span>
+              <span x-text="selected.locked ? 'Bloq.' : 'Libre'"></span>
+            </button>
+          </div>
+
+          <!-- Opacidad -->
+          <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Opacidad</span>
+            <input type="range" x-model.number="selected.opacity" min="0.05" max="1" step="0.05"
+              @change="pushHistory()"
+              class="w-20 h-1.5 accent-blue-600 cursor-pointer" />
+            <span class="text-xs text-slate-500 w-7" x-text="Math.round((selected.opacity ?? 1) * 100) + '%'"></span>
+          </div>
+
+          <!-- Imagen: Fit -->
+          <template x-if="selected.type === 'image'">
+            <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ajuste</span>
+              <select x-model="selected.fit" class="px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
+                <option value="fill">Fill</option>
+                <option value="contain">Contain</option>
+                <option value="cover">Cover</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Forma: colores y tipo -->
+          <template x-if="selected.type === 'shape'">
+            <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Forma</span>
+              <button @click="selected.shapeType='rect'; pushHistory()"
+                :class="selected.shapeType==='rect' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'"
+                class="px-2 py-0.5 rounded text-xs font-medium transition">▭ Rect</button>
+              <button @click="selected.shapeType='circle'; pushHistory()"
+                :class="selected.shapeType==='circle' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'"
+                class="px-2 py-0.5 rounded text-xs font-medium transition">⬤ Círculo</button>
+              <label class="text-[10px] text-slate-500">Relleno</label>
+              <input type="color" x-model="selected.fillColor" class="w-5 h-5 rounded cursor-pointer border border-slate-200 p-0 bg-transparent" />
+              <label class="text-[10px] text-slate-500">Borde</label>
+              <input type="color" x-model="selected.strokeColor" class="w-5 h-5 rounded cursor-pointer border border-slate-200 p-0 bg-transparent" />
+              <input type="number" x-model.number="selected.strokeWidth" min="0" max="40" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none" placeholder="px" title="Grosor borde" />
+            </div>
+          </template>
+
+          <!-- Texto: propiedades -->
+          <template x-if="selected.type === 'text'">
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+                <input type="text" x-model="selected.text" placeholder="Texto…" class="w-28 px-1.5 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" />
+              </div>
+              <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+                <select x-model="selected.fontFamily" class="w-24 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
+                  <template x-for="font in fonts" :key="font.value">
+                    <option :value="font.value" x-text="font.label"></option>
+                  </template>
+                </select>
+                <input type="color" x-model="selected.color" class="w-5 h-5 rounded cursor-pointer border border-slate-200 p-0 bg-transparent" />
+                <select x-model="selected.fontWeight" class="w-16 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
+                  <option value="400">Norm</option><option value="700">Bold</option><option value="900">Black</option>
+                </select>
+                <div class="flex items-center gap-0.5"><label class="text-[10px] text-slate-500">T</label><input type="number" x-model.number="selected.fontSize" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" /></div>
+              </div>
+              <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+                <label class="flex items-center gap-1 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textOutline" class="w-3 h-3 accent-blue-600" />Borde</label>
+                <template x-if="selected.textOutline">
+                  <div class="flex items-center gap-1">
+                    <input type="color" x-model="selected.outlineColor" class="w-4 h-4 rounded cursor-pointer p-0 border border-slate-200 bg-transparent" />
+                    <input type="number" x-model.number="selected.outlineWidth" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="1" max="20" />
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <label class="flex items-center gap-1 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textShadow" class="w-3 h-3 accent-blue-600" />Sombra</label>
+                <template x-if="selected.textShadow">
+                  <div class="flex items-center gap-1">
+                    <input type="color" x-model="selected.shadowColor" class="w-4 h-4 rounded cursor-pointer p-0 border border-slate-200 bg-transparent" />
+                    <input type="number" x-model.number="selected.shadowOffsetX" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="X" />
+                    <input type="number" x-model.number="selected.shadowOffsetY" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="Y" />
+                    <input type="number" x-model.number="selected.shadowBlur" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="0" placeholder="B" />
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <!-- Grid Fill (siempre que haya selección) -->
+          <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3 ml-auto shrink-0">
+            <button @click="gridFill()"
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition border border-slate-200 hover:border-violet-300"
+              title="Llenar hoja con este elemento en cuadrícula">
+              ⊞ Llenar hoja
+            </button>
+          </div>
+
+        </div>
+      </template>
+    </div>
+
+    <!-- Mobile props bar -->
+    <div x-show="selected" x-cloak
+      class="md:hidden w-full bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center gap-2 overflow-x-auto tb-scroll text-sm min-h-[42px] shrink-0">
+      <template x-if="selected">
+        <div class="flex items-center gap-2 whitespace-nowrap">
+          <!-- Capas -->
+          <div class="flex items-center gap-0.5 border-r border-slate-200 pr-2">
+            <button @click="bringForward()" class="p-1.5 hover:bg-slate-200 rounded text-base" title="Al frente">⏫</button>
+            <button @click="sendToBack()" class="p-1.5 hover:bg-slate-200 rounded text-base" title="Al fondo">⏬</button>
+            <button @click="moveOneUp()" class="px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm">↑</button>
+            <button @click="moveOneDown()" class="px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm">↓</button>
+          </div>
+          <!-- Lock -->
+          <button @click="selected.locked = !selected.locked; pushHistory()"
+            :class="selected.locked ? 'bg-amber-100 text-amber-700' : 'bg-white border border-slate-200 text-slate-600'"
+            class="px-2 py-1 rounded text-xs font-semibold border-r border-slate-200 pr-2 mr-0 transition">
+            <span x-text="selected.locked ? '🔒' : '🔓'"></span>
+          </button>
+          <!-- Opacidad -->
+          <div class="flex items-center gap-1 border-r border-slate-200 pr-2">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Op</span>
+            <input type="range" x-model.number="selected.opacity" min="0.05" max="1" step="0.05" @change="pushHistory()" class="w-16 h-1.5 accent-blue-600 cursor-pointer" />
+          </div>
+          <!-- Imagen fit -->
+          <template x-if="selected.type === 'image'">
+            <div class="flex items-center gap-1 border-r border-slate-200 pr-2">
+              <select x-model="selected.fit" class="px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none">
+                <option value="fill">Fill</option><option value="contain">Contain</option><option value="cover">Cover</option>
+              </select>
+            </div>
+          </template>
+          <!-- Shape tipo + colores -->
+          <template x-if="selected.type === 'shape'">
+            <div class="flex items-center gap-1 border-r border-slate-200 pr-2">
+              <button @click="selected.shapeType='rect'" :class="selected.shapeType==='rect'?'bg-slate-700 text-white':'bg-white border border-slate-200'" class="px-2 py-0.5 rounded text-xs">▭</button>
+              <button @click="selected.shapeType='circle'" :class="selected.shapeType==='circle'?'bg-slate-700 text-white':'bg-white border border-slate-200'" class="px-2 py-0.5 rounded text-xs">⬤</button>
+              <input type="color" x-model="selected.fillColor" class="w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5" />
+              <input type="color" x-model="selected.strokeColor" class="w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5" />
+              <input type="number" x-model.number="selected.strokeWidth" min="0" max="40" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none" placeholder="px" />
+            </div>
+          </template>
+          <!-- Texto compacto -->
+          <template x-if="selected.type === 'text'">
+            <div class="flex items-center gap-1.5">
+              <input type="text" x-model="selected.text" placeholder="Texto…" class="w-24 px-1.5 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" />
+              <select x-model="selected.fontFamily" class="w-24 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none">
+                <template x-for="font in fonts" :key="font.value"><option :value="font.value" x-text="font.label"></option></template>
+              </select>
+              <input type="color" x-model="selected.color" class="w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5" />
+              <div class="flex items-center gap-0.5"><label class="text-[10px] text-slate-500">T</label><input type="number" x-model.number="selected.fontSize" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none" /></div>
+              <label class="flex items-center gap-0.5 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textOutline" class="w-3 h-3 accent-blue-600" />Borde</label>
+              <template x-if="selected.textOutline">
+                <div class="flex items-center gap-0.5">
+                  <input type="color" x-model="selected.outlineColor" class="w-5 h-5 rounded cursor-pointer p-0 border border-slate-200" />
+                  <input type="number" x-model.number="selected.outlineWidth" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="1" max="20" />
+                </div>
+              </template>
+              <label class="flex items-center gap-0.5 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textShadow" class="w-3 h-3 accent-blue-600" />Sombra</label>
+              <template x-if="selected.textShadow">
+                <div class="flex items-center gap-1">
+                  <input type="color" x-model="selected.shadowColor" class="w-5 h-5 rounded cursor-pointer p-0 border border-slate-200" />
+                  <input type="number" x-model.number="selected.shadowOffsetX" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="X" />
+                  <input type="number" x-model.number="selected.shadowOffsetY" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="Y" />
+                  <input type="number" x-model.number="selected.shadowBlur" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="0" placeholder="B" />
+                </div>
+              </template>
+            </div>
+          </template>
+          <!-- Grid Fill mobile -->
+          <div class="border-l border-slate-200 pl-2 shrink-0">
+            <button @click="gridFill()" class="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition">
+              ⊞ Llenar
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+  </header>
+  <!-- ══════════════ FIN HEADER ══════════════ -->
+
+  <!-- ══════════════ MODAL DE IMPRESIÓN ══════════════ -->
+  <div x-show="isSaveModalOpen" x-cloak class="no-print fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div @click.away="isSaveModalOpen = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <h2 class="text-lg font-black text-slate-800 tracking-tight">Imprimir Proyecto</h2>
+        <button @click="isSaveModalOpen = false" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-200 rounded-lg p-1 transition leading-none text-xl">&times;</button>
+      </div>
+      <div class="p-4 sm:p-6 overflow-y-auto tb-scroll space-y-4 bg-white">
+        
+        <!-- Nombre del Proyecto -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Nombre del Proyecto <span class="text-red-500">*</span></label>
+          <input type="text" x-model="projectTitle" placeholder="Ej. Bautizo de María..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition text-sm text-slate-700 bg-slate-50" />
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-5 max-w-full">
+          <div class="md:w-[60%] shrink-0">
+            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Elige tu material <span class="text-red-500">*</span></label>
+            <div class="space-y-3">
+              <template x-for="prod in products" :key="prod.code">
+                <label :class="materialType === prod.code ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500' : 'border-slate-200 hover:bg-slate-50'"
+                  class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition select-none shadow-sm">
+                  <input type="radio" :value="prod.code" x-model="materialType" class="mt-1 w-4 h-4 accent-violet-600 cursor-pointer shrink-0" />
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <div class="font-bold text-slate-800 text-sm leading-tight" x-text="prod.title"></div>
+                      <div class="text-xs font-black text-violet-700" x-text="'$'+prod.precio"></div>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-1 leading-relaxed" x-text="prod.desc"></div>
+                  </div>
+                </label>
+              </template>
+            </div>
+          </div>
+          <div class="md:w-[40%] flex flex-col gap-4 shrink-0 min-w-0">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Copias (Hojas) <span class="text-red-500">*</span></label>
+              <input type="number" x-model.number="printQuantity" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition text-lg font-black text-center text-slate-700 bg-slate-50" />
+            </div>
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex-1 flex flex-col justify-center overflow-hidden">
+              <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1 text-center">Cotización</div>
+              
+              <template x-if="quote.pct > 0">
+                <div class="text-[11px] text-emerald-600 font-bold bg-emerald-100/50 rounded-md px-2 py-1 mb-2 text-center text-ellipsis overflow-hidden">
+                  ¡<span x-text="quote.pct"></span>% DESCUENTO!
+                </div>
+              </template>
+              
+              <div class="flex justify-between items-end mb-2 border-b border-indigo-100 pb-2">
+                <span class="text-xs text-indigo-900/60 font-medium">Pre. p/h</span>
+                <span class="text-sm font-bold text-indigo-900" x-text="'$'+quote.finalUnitPrice.toFixed(2)"></span>
+              </div>
+              
+              <div class="flex justify-between items-end mt-1 gap-2">
+                <span class="text-sm text-indigo-900/70 font-bold uppercase tracking-wide">Total</span>
+                <span class="text-xl xl:text-2xl font-black text-indigo-700 leading-none truncate" x-text="'$'+quote.total.toFixed(2)" :title="'$'+quote.total.toFixed(2)"></span>
+              </div>
+              <template x-if="quote.warning">
+                 <div class="mt-3 text-[9px] text-amber-600 bg-amber-50 px-2 py-1 rounded leading-tight font-medium border border-amber-200" x-text="quote.warning"></div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 shrink-0 flex items-center justify-end gap-3 rounded-b-2xl">
+        <button @click="isSaveModalOpen = false" class="px-4 py-2 sm:py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-200 transition text-xs sm:text-sm">Cancelar</button>
+        <button @click="saveProject(); isSaveModalOpen = false" :disabled="isSaving || !projectTitle.trim()" class="px-5 py-2 sm:py-2.5 rounded-xl text-white font-bold bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:bg-slate-400 disabled:shadow-none transition text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center gap-2">
+          <span x-text="isSaving ? '⏳' : '📨'"></span>
+          <span x-text="isSaving ? 'Enviando...' : 'Confirmar Impresión'"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CANVAS ══════════════ -->
+  <main x-ref="canvasMain"
+    class="flex-1 overflow-auto bg-slate-200/60 flex flex-col items-center justify-start p-4 sm:p-8 print:p-0 print:bg-white print:overflow-visible print:block relative">
+
+    <!-- Pestañas (Tabs) de Hojas -->
+    <div class="no-print w-full flex flex-col sm:flex-row items-center justify-between gap-3 max-w-full mb-3 shrink-0" :style="{ maxWidth: (sheet.w * canvasZoom) + 'px' }">
+      <div class="flex items-center gap-1 overflow-x-auto tb-scroll py-1 w-full sm:w-auto">
+        <template x-for="p in pagesCount" :key="p">
+          <button @click="setPage(p)"
+            :class="activePage === p ? 'bg-white text-violet-700 shadow border border-violet-200 font-bold' : 'bg-slate-300/40 text-slate-500 hover:bg-slate-300 hover:text-slate-700 font-medium'"
+            class="px-4 py-1.5 rounded-t-lg transition text-[11px] uppercase tracking-wide whitespace-nowrap truncate shrink-0 max-w-[120px]">
+            Hoja <span x-text="p"></span>
+          </button>
+        </template>
+        <button @click="addPage()" class="px-3 py-1.5 ml-1 rounded-t-lg bg-slate-300/40 hover:bg-slate-300 text-slate-600 font-bold transition text-sm shrink-0" title="Agregar Hoja">+</button>
+      </div>
+      <template x-if="pagesCount > 1">
+        <button @click="deletePage()" class="px-3 py-1 text-xs font-bold text-red-500 hover:bg-red-100 rounded-lg transition shrink-0 hidden sm:block">🗑️ Eliminar Hoja Actual</button>
+      </template>
+    </div>
+
+    <!-- Zoom wrapper -->
+    <div class="canvas-zoom-outer print:w-auto print:h-auto"
+      :style="{ width: (sheet.w * canvasZoom) + 'px', height: (sheet.h * canvasZoom) + 'px' }">
+      <div class="canvas-zoom-inner print:transform-none relative"
+        :style="{ transform: 'scale(' + canvasZoom + ')', width: sheet.w + 'px', height: sheet.h + 'px' }">
+
+        <!-- Regla Externa/Márgenes (SIEMPRE VISIBLE) -->
+        <div class="no-print absolute top-[-20px] left-0 h-[20px] bg-white border-b border-r border-slate-300 z-20 overflow-hidden" :style="{ width: sheet.w + 'px', ...getRulerXStyle() }"></div>
+        <div class="no-print absolute top-0 left-[-20px] w-[20px] bg-white border-r border-b border-slate-300 z-20 overflow-hidden" :style="{ height: sheet.h + 'px', ...getRulerYStyle() }"></div>
+        <div class="no-print absolute top-[-20px] left-[-20px] w-[20px] h-[20px] border-b border-r border-slate-300 z-20 bg-slate-50"></div>
+
+        <!-- Iterar para permitir múltiples hojas (impresión) -->
+        <template x-for="p in pagesCount" :key="p">
+        <div class="sheet checker relative"
+          x-show="activePage === p || isPrinting"
+          :class="{ 'print:block page-break-after': true, 'hidden print:block': activePage !== p }"
+          :style="{ background: pageColors[p] || '#ffffff', width: sheet.w + 'px', height: sheet.h + 'px' }"
+          @mousedown.self="activePage === p && clearSelection()"
+          x-ref="sheet">
+
+          <!-- Cuadrícula Interna -->
+          <template x-if="showGrid && activePage === p">
+            <div class="no-print absolute inset-0 pointer-events-none z-10" :style="getGridStyle()"></div>
+          </template>
+
+          <!-- Guías de alineación -->
+          <template x-if="activePage === p">
+           <div class="absolute inset-0 pointer-events-none"> <!-- wrapper for x-for safely next to x-if -->
+            <template x-for="guide in guides" :key="guide.type + guide.pos">
+              <div
+                :class="guide.type === 'v' ? 'guide-v' : 'guide-h'"
+                :style="guide.type === 'v'
+                  ? { left: guide.pos + 'px', height: sheet.h + 'px' }
+                  : { top: guide.pos + 'px', width: sheet.w + 'px' }">
+              </div>
+            </template>
+           </div>
+          </template>
+
+          <!-- Items -->
+          <template x-for="item in sortedItems().filter(i => (i.page||1) === p)" :key="item.id">
+            <div class="item"
+              :class="{ 'selected': selectedId === item.id, 'locked-item': item.locked }"
+              :style="itemStyle(item)"
+              @pointerdown.stop="onItemPointerDown($event, item.id)"
+              @click.stop="select(item.id)"
+              @dblclick.stop="if (item.type === 'text' && !item.locked) editingTextId = item.id">
+
+              <!-- Imagen -->
+              <template x-if="item.type === 'image'">
+                <div class="w-full h-full relative">
+                  <img :src="item.src" draggable="false" class="w-full h-full pointer-events-none" :style="{ objectFit: item.fit || 'contain' }" alt="" />
+                  <template x-if="crop.active && crop.id === item.id">
+                    <div class="crop-overlay">
+                      <div class="crop-box" :style="cropBoxStyle()" @pointerdown.stop.prevent="startCropMove($event)">
+                        <template x-for="handle in cropHandles" :key="handle">
+                          <div class="crop-handle" :class="'handle-' + handle" @pointerdown.stop.prevent="startCropResize($event, handle)"></div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Texto -->
+              <template x-if="item.type === 'text'">
+                <div class="w-full h-full relative">
+                  <template x-if="editingTextId !== item.id">
+                    <div class="text-box pointer-events-none"
+                      :style="{ fontFamily: item.fontFamily, color: item.color, fontSize: item.fontSize + 'px', fontWeight: item.fontWeight,
+                        textShadow: item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none',
+                        '-webkit-text-stroke': item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none' }"
+                      x-text="item.text"></div>
+                  </template>
+                  <template x-if="editingTextId === item.id">
+                    <textarea x-model="item.text" @blur="editingTextId = null; pushHistory()" @pointerdown.stop
+                      class="text-box w-full h-full bg-transparent border-2 border-blue-400 outline-none resize-none overflow-hidden"
+                      :style="{ fontFamily: item.fontFamily, color: item.color, fontSize: item.fontSize + 'px', fontWeight: item.fontWeight,
+                        textShadow: item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none',
+                        '-webkit-text-stroke': item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none' }"
+                      x-init="$el.focus(); $el.setSelectionRange($el.value.length, $el.value.length)"></textarea>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Forma -->
+              <template x-if="item.type === 'shape'">
+                <div class="w-full h-full pointer-events-none"
+                  :style="{
+                    background: item.fillColor ?? '#3b82f6',
+                    borderRadius: item.shapeType === 'circle' ? '50%' : '4px',
+                    border: (item.strokeWidth ?? 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none',
+                    boxSizing: 'border-box'
+                  }"></div>
+              </template>
+
+              <!-- Lock indicator -->
+              <template x-if="item.locked && selectedId === item.id">
+                <div class="absolute top-1 right-1 text-xs bg-amber-400 text-white rounded px-1 pointer-events-none select-none z-10">🔒</div>
+              </template>
+
+              <div x-show="selectedId === item.id && !item.locked && !(crop.active && crop.id === item.id)"
+                class="resize-handle no-print" @pointerdown.stop.prevent="onResizeHandlePointerDown($event, item.id)"></div>
+              <div x-show="selectedId === item.id && !item.locked && !(crop.active && crop.id === item.id)"
+                class="rotate-handle no-print" @pointerdown.stop.prevent="onRotateHandlePointerDown($event, item.id)"
+                title="Rotar (Shift = 15°)"></div>
+            </div>
+          </template>
+
+        </div>
+        </template>
+      </div>
+    </div>
+  </main>
+
+  <!-- Estilos de botones de toolbar reutilizables (via Tailwind @apply si fuera posible, usamos clases directas) -->
+  <style>
+    .tbtn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 8px;border-radius:8px;color:#374151;transition:background .15s;cursor:pointer;border:none;background:transparent}
+    .tbtn:hover{background:#f1f5f9}
+    @media(min-width:640px){.tbtn{flex-direction:row;gap:6px;padding:6px 10px}}
+    .tbtn-icon{font-size:1.125rem;line-height:1}
+    .tbtn-label{font-size:10px;font-weight:500;line-height:1}
+    @media(min-width:640px){.tbtn-icon{font-size:.875rem}.tbtn-label{font-size:.875rem}}
+  </style>
+
+  <script>
+    function stickerMaker() {
+      return {
+        pageColors: { 1: '#ffffff' },
+        get currentPageColor() { return this.pageColors[this.activePage] || '#ffffff'; },
+        set currentPageColor(val) { this.pageColors[this.activePage] = val; },
+        isSaveModalOpen: false,
+        showGrid: false,
+        materialType: 'RICE_04',
+        projectTitle: '',
+        printQuantity: 1,
+        pagesCount: 1,
+        activePage: 1,
+        isPrinting: false,
+        products: [
+          { code: 'RICE_03', title: 'Oblea de Arroz 0.3 mm (La delicada)', desc: 'Flexible, ideal para encajes y arte floral. No se quiebra.', precio: 85 },
+          { code: 'RICE_04', title: 'Oblea de Arroz 0.4 mm (La todoterreno)', desc: 'Equilibrio exacto y colores nítidos. La favorita de los reposteros.', precio: 85 },
+          { code: 'RICE_06', title: 'Oblea de Arroz 0.6 mm (Gran soporte)', desc: 'Rigidez extrema. Perfecta para Toppers que deben mantenerse de pie.', precio: 100 },
+          { code: 'SUGAR_SHEET', title: 'Hoja de Azúcar (La de lujo)', desc: 'Calidad fotográfica con colores vibrantes y negros profundos.', precio: 175 },
+          { code: 'GELATIN_TRANSFER', title: 'Transfer para Gelatina (La técnica)', desc: 'Diseñada para transferir diseños artísticos con gran precisión.', precio: 165 }
+        ],
+        // Cálculo Reactivo local de Cotización
+        get quote() {
+          const prod = this.products.find(p => p.code === this.materialType);
+          if (!prod) return { total: 0, finalUnitPrice: 0, pct: 0, warning: null };
+          
+          let qty = (parseInt(this.printQuantity) || 1) * this.pagesCount;
+          if (qty < 1) qty = 1;
+          
+          let pct = 0;
+          if (qty >= 50) pct = 20;
+          else if (qty >= 25) pct = 15;
+          else if (qty >= 10) pct = 10;
+          
+          let finalUnitPrice = prod.precio * (1 - pct/100);
+          let total = finalUnitPrice * qty;
+          let warning = null;
+          
+          if (total < 80) {
+            total = 80;
+            finalUnitPrice = 80 / qty;
+            warning = "Un pedido pequeño activa automáticamente el cargo mínimo administrativo para producción en masa ($80).";
+          }
+          
+          return { total, pct, finalUnitPrice, warning };
+        },
+        items: [],
+        selectedId: null,
+        canvasZoom: 1.0,
+        guides: [],
+        pinch: { active: false, startDist: 0, startZoom: 1 },
+        history: [],
+        historyIndex: -1,
+        fonts: [
+          { label: 'Inter', value: 'Inter, sans-serif' },{ label: 'Montserrat', value: 'Montserrat, sans-serif' },
+          { label: 'Oswald', value: 'Oswald, sans-serif' },{ label: 'Anton', value: 'Anton, sans-serif' },
+          { label: 'Pacifico', value: 'Pacifico, cursive' },{ label: 'Bebas Neue', value: '"Bebas Neue", sans-serif' },
+          { label: 'Lobster', value: 'Lobster, cursive' },{ label: 'Luckiest Guy', value: '"Luckiest Guy", cursive' },
+          { label: 'Fredoka', value: 'Fredoka, sans-serif' },{ label: 'Baloo 2', value: '"Baloo 2", cursive' },
+          { label: 'Chewy', value: 'Chewy, cursive' },{ label: 'Permanent Marker', value: '"Permanent Marker", cursive' },
+          { label: 'Nunito', value: 'Nunito, sans-serif' },{ label: 'Raleway', value: 'Raleway, sans-serif' },
+          { label: 'Poppins', value: 'Poppins, sans-serif' },{ label: 'Archivo Black', value: '"Archivo Black", sans-serif' },
+          { label: 'Passion One', value: '"Passion One", sans-serif' },{ label: 'Comfortaa', value: 'Comfortaa, sans-serif' },
+          { label: 'Abril Fatface', value: '"Abril Fatface", cursive' },{ label: 'Amatic SC', value: '"Amatic SC", cursive' },
+          { label: 'Caveat', value: 'Caveat, cursive' },{ label: 'Cinzel', value: 'Cinzel, serif' },
+          { label: 'Courgette', value: 'Courgette, cursive' },{ label: 'Dancing Script', value: '"Dancing Script", cursive' },
+          { label: 'Righteous', value: 'Righteous, cursive' },{ label: 'Russo One', value: '"Russo One", sans-serif' },
+          { label: 'Sacramento', value: 'Sacramento, cursive' },{ label: 'Satisfy', value: 'Satisfy, cursive' }
+        ],
+        crop: { active:false,id:null,x:0,y:0,w:0,h:0,bounds:{x:0,y:0,w:0,h:0} },
+        cropHandles: ['nw','n','ne','e','se','s','sw','w'],
+        action: null,
+        isSaving: false,
+        
+        getRulerXStyle() {
+          const pxPerCm = 37.8095;
+          const w = 794; /* 21cm ancho exacto A4 */
+          let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="20">`;
+          svg += `<rect width="100%" height="100%" fill="white" />`;
+          for(let i=0; i<=21; i++) {
+            const x = i * pxPerCm;
+            svg += `<line x1="${x}" y1="0" x2="${x}" y2="20" stroke="#64748b" stroke-width="1.5" />`;
+            if(i>0) svg += `<text x="${x+3}" y="10" font-family="sans-serif" font-size="9" font-weight="bold" fill="#475569">${i}</text>`;
+            for(let j=1; j<10; j++) {
+              if (i===21) break;
+              const mx = x + j*(pxPerCm/10);
+              const mY = (j===5) ? 10 : 15;
+              svg += `<line x1="${mx}" y1="${mY}" x2="${mx}" y2="20" stroke="#94a3b8" stroke-width="1" />`;
+            }
+          }
+          svg += `</svg>`;
+          return { backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`, backgroundRepeat: 'no-repeat' };
+        },
+
+        getRulerYStyle() {
+          const pxPerCm = 37.8095;
+          const h = 1123; /* 29.7cm alto exacto A4 */
+          let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="${h}">`;
+          svg += `<rect width="100%" height="100%" fill="white" />`;
+          for(let i=0; i<=29; i++) {
+            const y = i * pxPerCm;
+            svg += `<line x1="0" y1="${y}" x2="20" y2="${y}" stroke="#64748b" stroke-width="1.5" />`;
+            if(i>0) svg += `<text x="2" y="${y+10}" font-family="sans-serif" font-size="9" font-weight="bold" fill="#475569">${i}</text>`;
+            for(let j=1; j<10; j++) {
+              if (i===29) break;
+              const my = y + j*(pxPerCm/10);
+              const mX = (j===5) ? 10 : 15;
+              svg += `<line x1="${mX}" y1="${my}" x2="20" y2="${my}" stroke="#94a3b8" stroke-width="1" />`;
+            }
+          }
+          svg += `</svg>`;
+          return { backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`, backgroundRepeat: 'no-repeat' };
+        },
+
+        getGridStyle() {
+          const pxPerCm = 37.8095;
+          let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${pxPerCm}" height="${pxPerCm}">`;
+          svg += `<rect width="${pxPerCm}" height="${pxPerCm}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1" stroke-dasharray="2,2" />`;
+          svg += `</svg>`;
+          return { backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')` };
+        },
+        editingTextId: null,
+        paperSize: 'a4',
+        sheet: { w:794, h:1123 },
+        savedProjects: [],
+
+        // ── INIT ──────────────────────────────────────────────
+        init() {
+          window.addEventListener('pointermove', (e) => this.onPointerMove(e));
+          window.addEventListener('pointerup', () => this.stopAction());
+          window.addEventListener('keydown', (e) => this.onKeyDown(e));
+          window.addEventListener('paste', (e) => this.handlePaste(e));
+          this.loadUserProjects();
+          this.updatePageStyle();
+          this.pushHistory(); // estado inicial
+          this.$nextTick(() => {
+            this.fitZoom();
+            window.addEventListener('resize', () => this.fitZoom());
+            // Pinch-to-zoom via touch events
+            const main = this.$refs.canvasMain;
+            if (main) {
+              main.addEventListener('touchstart', (e) => this.onCanvasTouchStart(e), { passive: true });
+              main.addEventListener('touchmove', (e) => this.onCanvasTouchMove(e), { passive: false });
+              main.addEventListener('touchend', (e) => this.onCanvasTouchEnd(e), { passive: true });
+            }
+          });
+          const qs = new URLSearchParams(window.location.search);
+          const projectId = qs.get('id');
+          if (projectId) { this.$nextTick(() => this.loadProject(projectId)); }
+        },
+
+        // ── HISTORY ───────────────────────────────────────────
+        pushHistory() {
+          this.history = this.history.slice(0, this.historyIndex + 1);
+          this.history.push(JSON.stringify(this.items));
+          if (this.history.length > 60) this.history.shift();
+          this.historyIndex = this.history.length - 1;
+        },
+        undo() {
+          if (!this.canUndo()) return;
+          this.historyIndex--;
+          this.items = JSON.parse(this.history[this.historyIndex]);
+          this.selectedId = null;
+        },
+        redo() {
+          if (!this.canRedo()) return;
+          this.historyIndex++;
+          this.items = JSON.parse(this.history[this.historyIndex]);
+          this.selectedId = null;
+        },
+        canUndo() { return this.historyIndex > 0; },
+        canRedo() { return this.historyIndex < this.history.length - 1; },
+
+        // ── ZOOM ──────────────────────────────────────────────
+        fitZoom() {
+          const main = this.$refs.canvasMain;
+          if (!main) return;
+          const availW = main.clientWidth - 48;
+          const availH = main.clientHeight - 80;
+          const fit = Math.min(availW / this.sheet.w, availH / this.sheet.h, 1.0);
+          this.canvasZoom = Math.round(fit * 100) / 100;
+        },
+        zoomIn()  { this.setZoom(this.canvasZoom + 0.1); },
+        zoomOut() { this.setZoom(this.canvasZoom - 0.1); },
+        setZoom(z) { this.canvasZoom = Math.round(Math.max(0.1, Math.min(3.0, z)) * 100) / 100; },
+        zoomPercent() { return Math.round(this.canvasZoom * 100) + '%'; },
+
+        // ── PINCH TO ZOOM ─────────────────────────────────────
+        onCanvasTouchStart(event) {
+          if (event.touches.length === 2) {
+            const dx = event.touches[0].clientX - event.touches[1].clientX;
+            const dy = event.touches[0].clientY - event.touches[1].clientY;
+            this.pinch = { active: true, startDist: Math.hypot(dx, dy), startZoom: this.canvasZoom };
+          }
+        },
+        onCanvasTouchMove(event) {
+          if (this.pinch.active && event.touches.length === 2) {
+            event.preventDefault();
+            const dx = event.touches[0].clientX - event.touches[1].clientX;
+            const dy = event.touches[0].clientY - event.touches[1].clientY;
+            this.setZoom(this.pinch.startZoom * (Math.hypot(dx, dy) / this.pinch.startDist));
+          }
+        },
+        onCanvasTouchEnd(event) {
+          if (event.touches.length < 2) this.pinch = { active: false, startDist: 0, startZoom: 1 };
+        },
+
+        // ── GETTERS ───────────────────────────────────────────
+        get selected() { return this.items.find(i => i.id === this.selectedId) || null; },
+        uid() { return crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2); },
+        nextZ() { if (!this.items.length) return 1; return Math.max(...this.items.map(i => i.z||1))+1; },
+        sortedItems() { return [...this.items].sort((a,b) => a.z-b.z); },
+        normalizeZ() { this.sortedItems().forEach((item,i) => item.z=i+1); },
+        select(id) { this.selectedId = id; },
+        clearSelection() { this.selectedId = null; },
+        
+        // ── PAGES / TABS ──────────────────────────────────────
+        addPage() {
+          this.pagesCount++;
+          this.activePage = this.pagesCount;
+          this.clearSelection();
+        },
+        deletePage() {
+          if (this.pagesCount <= 1) return;
+          if (!confirm(`¿Estás seguro de eliminar la Hoja ${this.activePage} y perder todos los elementos que están en ella?`)) return;
+          
+          this.items = this.items.filter(i => (i.page||1) !== this.activePage);
+          this.items.forEach(i => {
+            if ((i.page||1) > this.activePage) i.page--;
+          });
+          this.pagesCount--;
+          if (this.activePage > this.pagesCount) this.activePage = this.pagesCount;
+          this.clearSelection();
+          this.pushHistory();
+        },
+        setPage(p) { this.activePage = p; this.clearSelection(); },
+        resetProject() {
+          if(!confirm("¿Deseas borrar todo el lienzo e iniciar un proyecto en blanco? Perderás cambios no guardados.")) return;
+          this.items=[]; this.history=[]; this.historyIndex=-1; this.projectTitle='';
+          this.pagesCount=1; this.activePage=1; this.pageColors={ 1: '#ffffff' };
+          if(this.$refs.projectSelect) this.$refs.projectSelect.value='';
+          this.clearSelection(); this.pushHistory();
+        },
+
+        // ── PAPER ─────────────────────────────────────────────
+        updatePaperSize() {
+          if (this.paperSize === 'a4') { this.sheet.w=794; this.sheet.h=1123; }
+          else { this.sheet.w=816; this.sheet.h=1056; }
+          this.updatePageStyle();
+          this.$nextTick(() => this.fitZoom());
+        },
+        updatePageStyle() {
+          let el = document.getElementById('print-page-style');
+          if (!el) { el=document.createElement('style'); el.id='print-page-style'; document.head.appendChild(el); }
+          el.innerHTML = `@page{size:${this.paperSize==='a4'?'A4':'letter'};margin:0}@media print{.sheet{width:${this.paperSize==='a4'?'210mm':'8.5in'}!important;height:${this.paperSize==='a4'?'297mm':'11in'}!important; page-break-after: always; break-after: page;}}`;
+        },
+
+        // ── ADD ELEMENTS ──────────────────────────────────────
+        addText(config={}) {
+          const item = { id:this.uid(), type:'text', text:config.text??'Nuevo texto', x:config.x??80, y:config.y??80,
+            w:config.w??260, h:config.h??100, fontFamily:config.fontFamily??'Montserrat, sans-serif',
+            fontSize:config.fontSize??42, color:config.color??'#111827', fontWeight:config.fontWeight??'700',
+            rotation:config.rotation??0, opacity:1.0, locked:false, page: this.activePage,
+            textShadow:false, shadowColor:'#000000', shadowBlur:4, shadowOffsetX:2, shadowOffsetY:2,
+            textOutline:false, outlineColor:'#000000', outlineWidth:2, z:this.nextZ() };
+          this.items.push(item); this.selectedId=item.id; this.pushHistory();
+        },
+        addShape(shapeType='rect') {
+          const item = { id:this.uid(), type:'shape', shapeType, x:80, y:80, w:200, h:200,
+            fillColor:'#3b82f6', strokeColor:'#1e40af', strokeWidth:0,
+            rotation:0, opacity:1.0, locked:false, page: this.activePage, z:this.nextZ() };
+          this.items.push(item); this.selectedId=item.id; this.pushHistory();
+        },
+        handleFiles(event) {
+          const files = [...(event.target.files||[])];
+          files.forEach((file,index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const img = new Image();
+              img.onload = () => {
+                const maxSide=280; let w,h;
+                if (img.naturalWidth>=img.naturalHeight) { w=maxSide; h=Math.round(maxSide*img.naturalHeight/img.naturalWidth); }
+                else { h=maxSide; w=Math.round(maxSide*img.naturalWidth/img.naturalHeight); }
+                const item = { id:this.uid(), type:'image', src:e.target.result, originalSrc:e.target.result,
+                  x:40+((index*30)%180), y:40+((index*30)%180), w, h, fit:'fill',
+                  whiteThreshold:245, rotation:0, opacity:1.0, locked:false, page: this.activePage, z:this.nextZ() };
+                this.items.push(item); this.selectedId=item.id; this.pushHistory();
+              };
+              img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          });
+          event.target.value = '';
+        },
+        handlePaste(event) {
+          const items = [...(event.clipboardData?.items||[])];
+          const imgItem = items.find(i => i.type.startsWith('image/'));
+          if (!imgItem) return;
+          const file = imgItem.getAsFile();
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const maxSide=280; let w,h;
+              if (img.naturalWidth>=img.naturalHeight) { w=maxSide; h=Math.round(maxSide*img.naturalHeight/img.naturalWidth); }
+              else { h=maxSide; w=Math.round(maxSide*img.naturalWidth/img.naturalHeight); }
+              const item = { id:this.uid(), type:'image', src:e.target.result, originalSrc:e.target.result,
+                x:80, y:80, w, h, fit:'fill', whiteThreshold:245, rotation:0, opacity:1.0, locked:false, page: this.activePage, z:this.nextZ() };
+              this.items.push(item); this.selectedId=item.id; this.pushHistory();
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        },
+
+        // ── GRID FILL ─────────────────────────────────────────
+        gridFill() {
+          if (!this.selected) return;
+          const item = this.selected;
+          const gap = 8;
+          const cols = Math.max(1, Math.floor((this.sheet.w + gap) / (item.w + gap)));
+          const rows = Math.max(1, Math.floor((this.sheet.h + gap) / (item.h + gap)));
+          const newItems = [];
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const copy = JSON.parse(JSON.stringify(item));
+              copy.id = this.uid();
+              copy.x = c * (item.w + gap);
+              copy.y = r * (item.h + gap);
+              copy.z = r * cols + c + 1;
+              copy.locked = false;
+              copy.page = this.activePage;
+              newItems.push(copy);
+            }
+          }
+          this.items = this.items.filter(i => (i.page||1) !== this.activePage).concat(newItems);
+          this.selectedId = null;
+          this.pushHistory();
+          alert(`Cuadrícula creada: ${cols}×${rows} = ${cols*rows} stickers`);
+        },
+
+        // ── ITEM OPERATIONS ───────────────────────────────────
+        deleteSelected() {
+          if (!this.selected) return;
+          this.items = this.items.filter(i => i.id !== this.selectedId);
+          this.selectedId = null; this.normalizeZ(); this.pushHistory();
+        },
+        duplicateSelected() {
+          if (!this.selected) return;
+          const s=this.selected, c=JSON.parse(JSON.stringify(s));
+          c.id=this.uid(); c.x=Math.min(s.x+25,this.sheet.w-s.w); c.y=Math.min(s.y+25,this.sheet.h-s.h); c.z=this.nextZ(); c.page = this.activePage;
+          this.items.push(c); this.selectedId=c.id; this.pushHistory();
+        },
+        bringForward() { if(!this.selected) return; this.selected.z=this.nextZ(); this.normalizeZ(); },
+        sendToBack() { if(!this.selected) return; this.selected.z=0; this.normalizeZ(); },
+        moveOneUp() {
+          if(!this.selected) return;
+          const items=this.sortedItems(), idx=items.findIndex(i=>i.id===this.selectedId);
+          if(idx===items.length-1) return;
+          const t=items[idx].z; items[idx].z=items[idx+1].z; items[idx+1].z=t; this.normalizeZ();
+        },
+        moveOneDown() {
+          if(!this.selected) return;
+          const items=this.sortedItems(), idx=items.findIndex(i=>i.id===this.selectedId);
+          if(idx<=0) return;
+          const t=items[idx].z; items[idx].z=items[idx-1].z; items[idx-1].z=t; this.normalizeZ();
+        },
+
+        // ── ITEM STYLE ────────────────────────────────────────
+        itemStyle(item) {
+          return {
+            left: this.clamp(item.x,0,this.sheet.w-item.w)+'px', top: this.clamp(item.y,0,this.sheet.h-item.h)+'px',
+            width: this.clamp(item.w,20,this.sheet.w)+'px', height: this.clamp(item.h,20,this.sheet.h)+'px',
+            zIndex: item.z, transform: item.rotation ? `rotate(${item.rotation}deg)` : 'none',
+            opacity: item.opacity ?? 1.0, cursor: item.locked ? 'default' : 'move'
+          };
+        },
+
+        // ── POINTER DOWN HANDLERS ─────────────────────────────
+        onItemPointerDown(event,id) {
+          const item = this.items.find(i => i.id===id);
+          if (item?.locked) { this.select(id); return; }
+          if (this.crop.active) return;
+          this.startDrag(event,id);
+          event.currentTarget?.setPointerCapture?.(event.pointerId);
+        },
+        onResizeHandlePointerDown(event,id) {
+          const item = this.items.find(i => i.id===id);
+          if (item?.locked || this.crop.active) return;
+          this.startResize(event,id);
+          event.currentTarget?.setPointerCapture?.(event.pointerId);
+        },
+        onRotateHandlePointerDown(event,id) {
+          const item = this.items.find(i => i.id===id);
+          if (item?.locked || this.crop.active) return;
+          this.startRotate(event,id);
+          event.currentTarget?.setPointerCapture?.(event.pointerId);
+        },
+
+        // ── CROP ─────────────────────────────────────────────
+        loadImage(src) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); },
+        async startCropMode() {
+          if(!this.selected||this.selected.type!=='image') return;
+          const item=this.selected;
+          this.crop.active=true; this.crop.id=item.id;
+          this.crop.x=0; this.crop.y=0; this.crop.w=item.w; this.crop.h=item.h;
+          this.crop.bounds={x:0,y:0,w:item.w,h:item.h};
+        },
+        cancelCropMode() { this.crop.active=false; this.crop.id=null; this.crop.x=0; this.crop.y=0; this.crop.w=0; this.crop.h=0; this.crop.bounds={x:0,y:0,w:0,h:0}; },
+        cropBoxStyle() { return {left:this.crop.x+'px',top:this.crop.y+'px',width:this.crop.w+'px',height:this.crop.h+'px'}; },
+        startCropMove(event) {
+          if(!this.crop.active) return;
+          event.preventDefault(); event.stopPropagation();
+          event.currentTarget?.setPointerCapture?.(event.pointerId);
+          this.action={mode:'crop-move',startX:event.clientX,startY:event.clientY,cropX:this.crop.x,cropY:this.crop.y};
+          this.$refs.canvasMain?.classList.add('drag-locked');
+        },
+        startCropResize(event,handle) {
+          if(!this.crop.active) return;
+          event.preventDefault(); event.stopPropagation();
+          event.currentTarget?.setPointerCapture?.(event.pointerId);
+          this.action={mode:'crop-resize',handle,startX:event.clientX,startY:event.clientY,cropX:this.crop.x,cropY:this.crop.y,cropW:this.crop.w,cropH:this.crop.h};
+          this.$refs.canvasMain?.classList.add('drag-locked');
+        },
+        clampCropRect() {
+          const b=this.crop.bounds, min=20;
+          if(this.crop.w<min) this.crop.w=min; if(this.crop.h<min) this.crop.h=min;
+          if(this.crop.x<b.x) this.crop.x=b.x; if(this.crop.y<b.y) this.crop.y=b.y;
+          if(this.crop.x+this.crop.w>b.x+b.w) this.crop.w=(b.x+b.w)-this.crop.x;
+          if(this.crop.y+this.crop.h>b.y+b.h) this.crop.h=(b.y+b.h)-this.crop.y;
+          if(this.crop.w<min){this.crop.w=min;this.crop.x=Math.max(b.x,(b.x+b.w)-min);}
+          if(this.crop.h<min){this.crop.h=min;this.crop.y=Math.max(b.y,(b.y+b.h)-min);}
+        },
+        async applyCropFromOverlay() {
+          if(!this.selected||this.selected.type!=='image') return;
+          if(!this.crop.active||this.crop.id!==this.selected.id) return;
+          const item=this.selected, img=new Image(); 
+          if (!item.src.startsWith('data:')) img.crossOrigin = "anonymous";
+          img.src=item.src;
+          await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;});
+          const scaleX=img.naturalWidth/item.w, scaleY=img.naturalHeight/item.h;
+          const sx=Math.max(0,Math.round(this.crop.x*scaleX)), sy=Math.max(0,Math.round(this.crop.y*scaleY));
+          let sw=Math.max(1,Math.round(this.crop.w*scaleX)), sh=Math.max(1,Math.round(this.crop.h*scaleY));
+          sw=Math.min(sw,img.naturalWidth-sx); sh=Math.min(sh,img.naturalHeight-sy);
+          if(sw<=0||sh<=0) return;
+          const out=document.createElement('canvas'); out.width=sw; out.height=sh;
+          out.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+          item.src=out.toDataURL('image/png'); item.originalSrc=item.src;
+          item.h=Math.round(item.w*(sh/sw));
+          this.cancelCropMode(); this.pushHistory();
+        },
+        restoreOriginalImage() { if(!this.selected||this.selected.type!=='image') return; if(this.selected.originalSrc) this.selected.src=this.selected.originalSrc; },
+        async trimWhiteBorders() {
+          if(!this.selected||this.selected.type!=='image') return;
+          const item=this.selected, img=new Image(); 
+          if (!item.src.startsWith('data:')) img.crossOrigin = "anonymous";
+          img.src=item.src;
+          await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;});
+          const w=img.naturalWidth, h=img.naturalHeight; if(!w||!h) return;
+          const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+          const ctx=canvas.getContext('2d',{willReadFrequently:true}); ctx.drawImage(img,0,0);
+          const {data}=ctx.getImageData(0,0,w,h), thr=Number(item.whiteThreshold??245);
+          const isBlank=(x,y)=>{const i=(y*w+x)*4;const a=data[i+3];if(a===0)return true;return data[i]>=thr&&data[i+1]>=thr&&data[i+2]>=thr;};
+          const rowB=(y)=>{for(let x=0;x<w;x++)if(!isBlank(x,y))return false;return true;};
+          const colB=(x)=>{for(let y=0;y<h;y++)if(!isBlank(x,y))return false;return true;};
+          let top=0;while(top<h&&rowB(top))top++;
+          let bot=h-1;while(bot>=0&&rowB(bot))bot--;
+          let left=0;while(left<w&&colB(left))left++;
+          let right=w-1;while(right>=0&&colB(right))right--;
+          if(left>right||top>bot) return;
+          const cw=right-left+1, ch=bot-top+1;
+          const out=document.createElement('canvas'); out.width=cw; out.height=ch;
+          out.getContext('2d').drawImage(canvas,left,top,cw,ch,0,0,cw,ch);
+          item.src=out.toDataURL('image/png'); this.pushHistory();
+        },
+
+        // ── KEYBOARD ──────────────────────────────────────────
+        onKeyDown(event) {
+          if(this.crop.active){
+            if(event.key==='Enter'){event.preventDefault();this.applyCropFromOverlay();}
+            else if(event.key==='Escape'){event.preventDefault();this.cancelCropMode();}
+            return;
+          }
+          const tag=(event.target.tagName||'').toLowerCase();
+          const typing=['input','textarea','select'].includes(tag)||event.target.isContentEditable;
+          if(typing) return;
+          if((event.key==='Delete'||event.key==='Backspace')&&this.selectedId){event.preventDefault();this.deleteSelected();}
+          if(event.key.toLowerCase()==='d'&&(event.ctrlKey||event.metaKey)&&this.selectedId){event.preventDefault();this.duplicateSelected();}
+          if(event.key.toLowerCase()==='z'&&(event.ctrlKey||event.metaKey)){event.preventDefault(); event.shiftKey?this.redo():this.undo();}
+          if(event.key.toLowerCase()==='y'&&(event.ctrlKey||event.metaKey)){event.preventDefault();this.redo();}
+          if(event.key.startsWith('Arrow')&&this.selected&&!this.selected.locked){
+            event.preventDefault();
+            const step=event.shiftKey?10:1;
+            if(event.key==='ArrowUp') this.selected.y-=step;
+            if(event.key==='ArrowDown') this.selected.y+=step;
+            if(event.key==='ArrowLeft') this.selected.x-=step;
+            if(event.key==='ArrowRight') this.selected.x+=step;
+          }
+        },
+
+        // ── DRAG / RESIZE / ROTATE ────────────────────────────
+        startDrag(event,id) {
+          if(this.crop.active) return;
+          this.select(id);
+          const item=this.items.find(i=>i.id===id); if(!item) return;
+          this.action={mode:'drag',id,startX:event.clientX,startY:event.clientY,itemX:item.x,itemY:item.y};
+          this.$refs.canvasMain?.classList.add('drag-locked');
+        },
+        startResize(event,id) {
+          if(this.crop.active) return;
+          this.select(id);
+          const item=this.items.find(i=>i.id===id); if(!item) return;
+          this.action={mode:'resize',id,startX:event.clientX,startY:event.clientY,itemW:item.w,itemH:item.h};
+          this.$refs.canvasMain?.classList.add('drag-locked');
+        },
+        startRotate(event,id) {
+          this.select(id);
+          const item=this.items.find(i=>i.id===id); if(!item) return;
+          const sheetRect=this.$refs.sheet.getBoundingClientRect();
+          const itemCenterX=sheetRect.left+(item.x+item.w/2)*this.canvasZoom;
+          const itemCenterY=sheetRect.top+(item.y+item.h/2)*this.canvasZoom;
+          const startAngle=Math.atan2(event.clientY-itemCenterY,event.clientX-itemCenterX);
+          this.action={mode:'rotate',id,centerX:itemCenterX,centerY:itemCenterY,startAngle,startRot:item.rotation||0};
+          this.$refs.canvasMain?.classList.add('drag-locked');
+        },
+
+        // ── ALIGNMENT GUIDES ──────────────────────────────────
+        computeGuides(item, nx, ny) {
+          const thr = 6; // px en coordenadas del sheet
+          const guides = [];
+          const iEdgesV = [nx, nx+item.w/2, nx+item.w];
+          const iEdgesH = [ny, ny+item.h/2, ny+item.h];
+          for (const other of this.items) {
+            if (other.id===item.id) continue;
+            const oEV=[other.x, other.x+other.w/2, other.x+other.w];
+            const oEH=[other.y, other.y+other.h/2, other.y+other.h];
+            for (const ie of iEdgesV) for (const oe of oEV) if (Math.abs(ie-oe)<thr) guides.push({type:'v',pos:oe});
+            for (const ie of iEdgesH) for (const oe of oEH) if (Math.abs(ie-oe)<thr) guides.push({type:'h',pos:oe});
+          }
+          // deduplicar
+          const seen=new Set();
+          this.guides = guides.filter(g=>{const k=g.type+g.pos; if(seen.has(k))return false;seen.add(k);return true;});
+        },
+
+        // ── POINTER MOVE ──────────────────────────────────────
+        onPointerMove(event) {
+          if(!this.action) return;
+          const item=this.items.find(i=>i.id===this.action.id);
+          const z=this.canvasZoom;
+
+          if(this.action.mode==='drag'){
+            if(!item||this.crop.active) return;
+            const dx=(event.clientX-this.action.startX)/z;
+            const dy=(event.clientY-this.action.startY)/z;
+            const nx=this.clamp(this.action.itemX+dx,0,this.sheet.w-item.w);
+            const ny=this.clamp(this.action.itemY+dy,0,this.sheet.h-item.h);
+            item.x=nx; item.y=ny;
+            this.computeGuides(item, nx, ny);
+            return;
+          }
+          if(this.action.mode==='resize'){
+            if(!item||this.crop.active) return;
+            const dx=(event.clientX-this.action.startX)/z;
+            const dy=(event.clientY-this.action.startY)/z;
+            item.w=this.clamp(this.action.itemW+dx,20,this.sheet.w-item.x);
+            item.h=this.clamp(this.action.itemH+dy,20,this.sheet.h-item.y);
+            return;
+          }
+          if(this.action.mode==='rotate'){
+            if(!item||this.crop.active) return;
+            const curAngle=Math.atan2(event.clientY-this.action.centerY,event.clientX-this.action.centerX);
+            const diff=(curAngle-this.action.startAngle)*(180/Math.PI);
+            let newRot=this.action.startRot+diff;
+            if(event.shiftKey) newRot=Math.round(newRot/15)*15;
+            item.rotation=Math.round(newRot)%360;
+            if(item.rotation<0) item.rotation+=360;
+            return;
+          }
+          if(this.action.mode==='crop-move'){
+            const dx=(event.clientX-this.action.startX)/z;
+            const dy=(event.clientY-this.action.startY)/z;
+            this.crop.x=this.action.cropX+dx; this.crop.y=this.action.cropY+dy;
+            this.clampCropRect(); return;
+          }
+          if(this.action.mode==='crop-resize'){
+            let x=this.action.cropX,y=this.action.cropY,w=this.action.cropW,h=this.action.cropH;
+            const dx=(event.clientX-this.action.startX)/z;
+            const dy=(event.clientY-this.action.startY)/z;
+            const min=20, handle=this.action.handle;
+            if(handle.includes('e')) w=Math.max(min,this.action.cropW+dx);
+            if(handle.includes('s')) h=Math.max(min,this.action.cropH+dy);
+            if(handle.includes('w')){x=Math.min(this.action.cropX+dx,this.action.cropX+this.action.cropW-min);w=this.action.cropW-(x-this.action.cropX);}
+            if(handle.includes('n')){y=Math.min(this.action.cropY+dy,this.action.cropY+this.action.cropH-min);h=this.action.cropH-(y-this.action.cropY);}
+            this.crop.x=x;this.crop.y=y;this.crop.w=w;this.crop.h=h;
+            this.clampCropRect();
+          }
+        },
+
+        stopAction() {
+          if(this.action && ['drag','resize','rotate'].includes(this.action.mode)) {
+            this.pushHistory();
+          }
+          this.action=null;
+          this.guides=[];
+          this.$refs.canvasMain?.classList.remove('drag-locked');
+        },
+        clamp(v,min,max) { return Math.max(min,Math.min(max,Number(v))); },
+        async printCanvas() { 
+          this.clearSelection(); 
+          this.isPrinting = true;
+          // Esperar un ciclo para que el DOM renderize todas las pestañas antes de llamar la impresora
+          await this.$nextTick(); 
+          setTimeout(() => {
+            window.print();
+            this.isPrinting = false;
+          }, 150);
+        },
+
+        // ── LOAD / SAVE ───────────────────────────────────────
+        async loadUserProjects() {
+          try {
+            if (!this.$store.auth.user) return;
+            const pb = new PocketBase('https://scraping.pockethost.io');
+            const records = await pb.collection('sticker_orders').getList(1, 40, {
+              filter: `user = "${this.$store.auth.user.id}"`,
+              sort: '-created'
+            });
+            this.savedProjects = records.items.map(r => ({
+              id: r.id,
+              name: r.title || ('Borrador ' + new Date(r.created).toLocaleDateString()),
+              date: r.created
+            }));
+          } catch(err) { console.error('Error loading projects', err); }
+        },
+
+        async loadProject(id) {
+          if(!id) return;
+          try {
+            const pb=new PocketBase('https://scraping.pockethost.io');
+            const record=await pb.collection('sticker_orders').getOne(id);
+            this.paperSize=record.paper_size||'a4'; this.updatePaperSize();
+            this.pageColors = { 1: record.page_bg||'#ffffff' }; // fallback temporal
+            let items=[];
+            if(record.canvas_data){
+              let parsed=typeof record.canvas_data==='string'?JSON.parse(record.canvas_data):record.canvas_data;
+              if (parsed && typeof parsed === 'object' && parsed.hasOwnProperty('items')) {
+                items = parsed.items;
+                if(parsed.pageColors) this.pageColors = { ...parsed.pageColors };
+              } else {
+                items = parsed; // formato antiguo array directo
+              }
+            }
+            let maxPage = 1;
+            items.forEach(item=>{
+              if(item.type==='image'&&item.src&&item.src.startsWith('FILE:')){
+                const prefix=item.src.replace('FILE:','').split('.')[0].replace(/-/g,'_');
+                let assets=[];
+                if(Array.isArray(record.upload_assets)) assets=record.upload_assets;
+                else if(typeof record.upload_assets==='string'&&record.upload_assets.trim()!=='') assets=[record.upload_assets];
+                const fn=assets.find(f=>f.startsWith(prefix)||f.includes(prefix));
+                if(fn){const url=pb.files.getUrl(record,fn);item.src=url;if(item.originalSrc)item.originalSrc=url;}
+              }
+              if(item.opacity===undefined) item.opacity=1.0;
+              if(item.locked===undefined) item.locked=false;
+              if(item.page===undefined) item.page=1;
+              if(item.page > maxPage) maxPage = item.page;
+            });
+            this.pagesCount = maxPage;
+            this.activePage = 1;
+            this.items=items; this.clearSelection(); this.pushHistory();
+            if(this.$refs.projectSelect) this.$refs.projectSelect.value='';
+          } catch(err){console.error(err);alert('No se pudo cargar el proyecto.');}
+        },
+        async saveProject() {
+          if(this.isSaving) return; this.isSaving=true;
+          try {
+            const pb=new PocketBase('https://scraping.pockethost.io');
+            const itemsToSave=JSON.parse(JSON.stringify(this.items));
+            const fd=new FormData();
+            const safeTitle = this.projectTitle.trim() || ('Proyecto ' + new Date().toLocaleDateString());
+            fd.append('title', safeTitle);
+            fd.append('status','pendiente'); fd.append('paper_size',this.paperSize); fd.append('page_bg',this.pageBg);
+            for(let item of itemsToSave){
+              if(item.type==='image'&&item.src&&item.src.startsWith('data:image')){
+                const res=await fetch(item.src), blob=await res.blob();
+                const fn=`img_${item.id}.png`;
+                fd.append('upload_assets',blob,fn);
+                item.src=`FILE:${fn}`; if(item.originalSrc)item.originalSrc=`FILE:${fn}`;
+              }
+            }
+            
+            // INYECTAR LA RELACIÓN CON LA COLECCIÓN "USERS_CANVA"
+            if (this.$store.auth.user && this.$store.auth.user.id) {
+               fd.append('user', this.$store.auth.user.id);
+            }
+            
+            // INYECTAR EL MATERIAL SELECCIONADO PARA LA ORDEN
+            fd.append('material_type', this.materialType);
+
+            // Empaquetar metadata con items
+            const savedState = {
+              items: itemsToSave,
+              quote: {
+                quantity: this.printQuantity,
+                total: this.quote.total,
+                basePrice: this.products.find(p=>p.code===this.materialType)?.precio,
+                discountPct: this.quote.pct
+              },
+              pageColors: this.pageColors
+            };
+            fd.append('canvas_data',JSON.stringify(savedState));
+
+            await pb.collection('sticker_orders').create(fd);
+            await this.loadUserProjects();
+            alert('¡Enviado a imprimir con éxito!');
+          } catch(err){console.error(err);alert('Error al enviar a impresión.');}
+          finally{this.isSaving=false;}
+        }
+      };
+    }
+  </script>
+
+</div>
+</body>
+</html>

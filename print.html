@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Imprimir Stickers</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <!-- No auth user check needed for printing -->
+  <style>
+    html,body{margin:0;padding:0;background:#f8fafc;font-family:Inter,sans-serif}
+    .sheet{position:relative;overflow:hidden;background:white;box-shadow:0 10px 30px rgba(0,0,0,.18);user-select:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .text-box{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;word-break:break-word;line-height:1.05;padding:6px}
+    @media print{
+      html,body{background:white!important;margin:0!important;padding:0!important}
+      .no-print{display:none!important}
+      .sheet{box-shadow:none!important;margin:0!important; page-break-after: always; break-after: page;}
+    }
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body>
+  <div x-data="printView" x-init="init()">
+    <div x-show="status !== 'ready'" class="no-print min-h-screen flex items-center justify-center bg-slate-50">
+      <div class="text-center">
+        <div x-show="status === 'loading'" class="text-4xl mb-3 animate-pulse">⏳</div>
+        <div x-show="status === 'error'" class="text-4xl mb-3">❌</div>
+        <p class="text-slate-500 text-sm" x-text="status === 'loading' ? 'Cargando proyecto…' : 'Error al cargar el proyecto. Verifica el ID.'"></p>
+      </div>
+    </div>
+    <div x-show="status === 'ready'" id="print-sheet" class="flex flex-col items-center gap-8 print:gap-0">
+      <template x-for="p in pagesCount" :key="p">
+        <div class="sheet" :style="{ background: pageColors[p] || '#ffffff', width: sheet.w + 'px', height: sheet.h + 'px' }">
+          <template x-for="item in sortedItems().filter(i => (i.page||1) === p)" :key="item.id">
+            <div :style="itemStyle(item)">
+              <template x-if="item.type === 'image'">
+                <img :src="item.src" draggable="false" class="w-full h-full" :style="{ objectFit: item.fit || 'contain' }" alt="" />
+              </template>
+              <template x-if="item.type === 'text'">
+                <div class="text-box" :style="{ fontFamily: item.fontFamily, color: item.color, fontSize: item.fontSize + 'px', fontWeight: item.fontWeight, textShadow: item.textShadow ? item.shadowOffsetX+'px '+item.shadowOffsetY+'px '+item.shadowBlur+'px '+item.shadowColor : 'none', '-webkit-text-stroke': item.textOutline ? item.outlineWidth+'px '+item.outlineColor : 'none' }" x-text="item.text"></div>
+              </template>
+              <template x-if="item.type === 'shape'">
+                <div class="w-full h-full" :style="{ background: item.fillColor ?? '#3b82f6', borderRadius: item.shapeType === 'circle' ? '50%' : '4px', border: (item.strokeWidth??0)>0 ? item.strokeWidth+'px solid '+item.strokeColor : 'none', boxSizing: 'border-box' }"></div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <script>
+    const PB_URL = 'https://scraping.pockethost.io';
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('printView', () => ({
+        items: [], pageColors: { 1: '#ffffff' }, pagesCount: 1, sheet: { w: 794, h: 1123 }, paperSize: 'a4', status: 'loading',
+        async init() {
+          const qs = new URLSearchParams(window.location.search);
+          const id = qs.get('id');
+          if (!id) { this.status = 'error'; return; }
+          try {
+            const pb = new PocketBase(PB_URL);
+            const rec = await pb.collection('sticker_orders').getOne(id);
+            this.paperSize = rec.paper_size || 'a4';
+            if (this.paperSize === 'a4') { this.sheet.w=794; this.sheet.h=1123; }
+            else { this.sheet.w=816; this.sheet.h=1056; }
+            
+            let canvasData = rec.canvas_data ? (typeof rec.canvas_data==='string' ? JSON.parse(rec.canvas_data) : rec.canvas_data) : [];
+            let items = [];
+            
+            if (canvasData && typeof canvasData === 'object' && canvasData.items) {
+              items = canvasData.items;
+              this.pageColors = canvasData.pageColors || { 1: rec.page_bg || '#ffffff' };
+            } else {
+              items = canvasData; // Formato antiguo
+              this.pageColors = { 1: rec.page_bg || '#ffffff' };
+            }
+
+            let maxPage = 1;
+            items.forEach(item => {
+              if (item.page === undefined) item.page = 1;
+              if (item.page > maxPage) maxPage = item.page;
+              
+              if (item.type==='image' && item.src?.startsWith('FILE:')) {
+                const prefix = item.src.replace('FILE:','').split('.')[0].replace(/-/g,'_');
+                const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : (rec.upload_assets ? [rec.upload_assets] : []);
+                const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
+                if (fn) item.src = pb.files.getUrl(rec, fn);
+              }
+            });
+            
+            this.pagesCount = maxPage;
+            this.items = items; 
+            this.status = 'ready';
+            let el = document.getElementById('print-page-style');
+            if (!el) { el=document.createElement('style'); el.id='print-page-style'; document.head.appendChild(el); }
+            el.innerHTML = `@page{size:${this.paperSize==='a4'?'A4':'letter'};margin:0}@media print{html,body{margin:0!important;padding:0!important;background:white!important}}`;
+            this.$nextTick(() => {
+              const imgs = document.querySelectorAll('#print-sheet img');
+              if (!imgs.length) { setTimeout(()=>window.print(), 600); return; }
+              let pending = imgs.length;
+              const done = () => { if(--pending<=0) setTimeout(()=>window.print(), 400); };
+              imgs.forEach(img => { if(img.complete) done(); else { img.onload=done; img.onerror=done; } });
+            });
+          } catch(err) { console.error(err); this.status='error'; }
+        },
+        itemStyle(item) {
+          return { position:'absolute', left:item.x+'px', top:item.y+'px', width:item.w+'px', height:item.h+'px', zIndex:item.z, opacity:item.opacity??1, transform:item.rotation?`rotate(${item.rotation}deg)`:'none' };
+        },
+        sortedItems() { return [...this.items].sort((a,b)=>a.z-b.z); }
+      }));
+    });
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
