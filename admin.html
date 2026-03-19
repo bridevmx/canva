@@ -6,10 +6,10 @@
   <title>StickerMaker - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
-  <script src="/auth.js"></script>
+  <script src="auth.js"></script>
   <script>
-    if (!isAuthenticated()) { window.location.replace('login?redirectTo=admin'); }
-    else if (!isAdmin()) { window.location.replace('canvas'); }
+    if (!isAuthenticated()) { window.location.replace('login.html?redirectTo=admin.html'); }
+    else if (!isAdmin()) { window.location.replace('canvas.html'); }
   </script>
   <style>
     [x-cloak]{display:none!important}
@@ -24,7 +24,7 @@
         <span class="text-xs bg-violet-100 text-violet-700 rounded-full px-2 py-0.5 font-bold ml-1">Admin</span>
       </div>
       <div class="flex items-center gap-2">
-        <button @click="window.location.href='canvas'" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+        <button @click="window.location.href='canvas.html'" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
           ✏️ Canvas
         </button>
         <span class="text-sm text-slate-500 hidden sm:inline truncate max-w-[120px]" x-text="$store.auth.user?.name || $store.auth.user?.email"></span>
@@ -116,11 +116,8 @@
         filteredOrders() {
           return this.filter === 'todos' ? this.orders : this.orders.filter(o => o.status === this.filter);
         },
-        openInCanvas(id) { window.location.href = 'canvas?id=' + id; },
-        getPrintUrl(id) { 
-          const path = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-          return window.location.origin + path + 'print?id=' + id; 
-        },
+        openInCanvas(id) { window.location.href = 'canvas.html?id=' + id; },
+        getPrintUrl(id) { return window.location.origin + window.location.pathname.replace('admin.html', '') + 'print.html?id=' + id; },
         copyPrintUrl(id) { navigator.clipboard.writeText(this.getPrintUrl(id)); alert('URL copiada al portapapeles.'); },
         openPrint(id) { window.open(this.getPrintUrl(id), '_blank'); },
         async markPrinted(id) {

@@ -6,10 +6,10 @@
   <title>StickerMaker - Registro SMS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
-  <script src="/auth.js"></script>
+  <script src="auth.js"></script>
   <script>
     if (isAuthenticated()) {
-      window.location.replace('canvas');
+      window.location.replace('canvas.html');
     }
   </script>
   <style> [x-cloak]{display:none!important} </style>
@@ -67,7 +67,7 @@
         </template>
 
         <p class="text-center text-slate-600 text-xs pt-3 mt-4 border-t border-white/10">
-          ¿Ya tienes cuenta? <a href="login" class="text-violet-400 hover:text-violet-300 transition">Inicia sesión</a>
+          ¿Ya tienes cuenta? <a href="login.html" class="text-violet-400 hover:text-violet-300 transition">Inicia sesión</a>
         </p>
       </div>
     </div>
@@ -113,7 +113,7 @@
             this.$store.auth.pb.authStore.save(authRecord.token, authRecord.record);
             
             // Éxito, vámonos al Canvas.
-            window.location.href = 'canvas';
+            window.location.href = 'canvas.html';
           } catch(e) {
             this.error = 'Código incorrecto o expirado.';
           } finally { this.loading = false; }

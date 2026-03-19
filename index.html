@@ -6,7 +6,7 @@
   <title>Edibles Print - Inicio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
-  <script src="/auth.js"></script>
+  <script src="auth.js"></script>
   <style> [x-cloak]{display:none!important} </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white overflow-y-auto font-sans selection:bg-rose-500/30">
@@ -130,11 +130,8 @@
   <script>
     document.addEventListener('alpine:init', () => {
       Alpine.data('landing', () => ({
-        goToLogin() { window.location.href = 'login'; },
-        goToCanvas() { 
-          const isAuth = (typeof isAuthenticated === 'function') ? isAuthenticated() : !!localStorage.getItem('sm_token');
-          window.location.href = isAuth ? 'canvas' : 'login'; 
-        }
+        goToLogin() { window.location.href = 'login.html'; },
+        goToCanvas() { window.location.href = isAuthenticated() ? 'canvas.html' : 'login.html'; }
       }));
     });
   </script>
