@@ -6,7 +6,7 @@
   <title>StickerMaker - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
-  <script src="auth.js"></script>
+  <script src="/auth.js"></script>
   <script>
     if (!isAuthenticated()) { window.location.replace('login?redirectTo=admin'); }
     else if (!isAdmin()) { window.location.replace('canvas'); }

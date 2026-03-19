@@ -1,7 +1,21 @@
+function isAuthenticated() { return !!localStorage.getItem('sm_token'); }
+function isAdmin() {
+  const u = localStorage.getItem('sm_user');
+  if (!u) return false;
+  try {
+    const user = JSON.parse(u);
+    return user.role === 'admin' || user.isAdmin === true || user.admin === true;
+  } catch(e) { return false; }
+}
+
 const PB_URL = 'https://scraping.pockethost.io';
 const APP_NAME = 'StickerMaker'; // ¡CAMBIA ESTO PARA ACTUALIZAR EL NOMBRE EN TODA LA APP!
 
 document.addEventListener('alpine:init', () => {
+  if (typeof PocketBase === 'undefined') {
+    console.error("PocketBase SDK not loaded. Check your script tags.");
+    return;
+  }
   const _pb = new PocketBase(PB_URL);
   _pb.autoCancellation(false);
 
@@ -31,7 +45,6 @@ document.addEventListener('alpine:init', () => {
       }
     },
     async loginWithPassword(identity, password) {
-      // Identity puede ser el "username" (tu campo de 24 caracteres) o el correo real
       await _pb.collection('users_canva').authWithPassword(identity, password);
       this.token = _pb.authStore.token; this.user = _pb.authStore.record;
       localStorage.setItem('sm_token', this.token);
@@ -44,13 +57,3 @@ document.addEventListener('alpine:init', () => {
     }
   });
 });
-
-function isAuthenticated() { return !!localStorage.getItem('sm_token'); }
-function isAdmin() {
-  const u = localStorage.getItem('sm_user');
-  if (!u) return false;
-  try {
-    const user = JSON.parse(u);
-    return user.role === 'admin' || user.isAdmin === true || user.admin === true;
-  } catch(e) { return false; }
-}
