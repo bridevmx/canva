@@ -63,7 +63,7 @@
     <div class="flex items-center justify-between h-14 border-b border-slate-200 px-3 sm:px-4">
       
       <!-- Logo -->
-      <div class="flex items-center shrink-0">
+      <div @click="window.location.href='/dashboard'" class="flex items-center shrink-0 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard">
         <span class="text-xl sm:text-2xl mr-1 sm:mr-2">🏠</span>
         <span class="hidden sm:inline text-base font-black tracking-tight text-slate-700">StickerMaker</span>
       </div>
@@ -1265,6 +1265,7 @@
 
             this.paperSize=record.paper_size||'a4'; this.updatePaperSize();
             this.pageColors = { 1: record.page_bg||'#ffffff' }; 
+            this.projectTitle = record.title || '';
             
             let source = record.canvas_data;
             if (this._editingAsAdmin) {
