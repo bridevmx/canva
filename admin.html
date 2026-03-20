@@ -34,62 +34,93 @@
         </button>
       </div>
     </header>
+
     <main class="max-w-5xl mx-auto px-4 py-6">
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <!-- Estadísticas -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
           <p class="text-3xl font-black text-slate-800 mt-1" x-text="orders.length"></p>
         </div>
         <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
-          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Pendientes</p>
-          <p class="text-3xl font-black text-amber-700 mt-1" x-text="orders.filter(o=>o.status==='pendiente').length"></p>
+          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Recibidos</p>
+          <p class="text-3xl font-black text-amber-700 mt-1" x-text="orders.filter(o=>o.status==='recibido').length"></p>
+        </div>
+        <div class="bg-violet-50 rounded-2xl p-4 border border-violet-200 shadow-sm">
+          <p class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">En Ajuste</p>
+          <p class="text-3xl font-black text-violet-700 mt-1" x-text="orders.filter(o=>o.status==='ajuste_diseno').length"></p>
         </div>
         <div class="bg-blue-50 rounded-2xl p-4 border border-blue-200 shadow-sm">
-          <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Para imprimir</p>
-          <p class="text-3xl font-black text-blue-700 mt-1" x-text="orders.filter(o=>o.status==='para_imprimir').length"></p>
+          <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Producción</p>
+          <p class="text-3xl font-black text-blue-700 mt-1" x-text="orders.filter(o=>o.status==='produccion').length"></p>
         </div>
         <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 shadow-sm">
-          <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Impresos</p>
-          <p class="text-3xl font-black text-emerald-700 mt-1" x-text="orders.filter(o=>o.status==='impreso').length"></p>
+          <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Finalizados</p>
+          <p class="text-3xl font-black text-emerald-700 mt-1" x-text="orders.filter(o=>o.status==='finalizado').length"></p>
         </div>
       </div>
+
+      <!-- Filtros -->
       <div class="flex items-center gap-2 mb-4 flex-wrap">
         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Filtrar:</span>
-        <template x-for="f in ['todos','pendiente','para_imprimir','impreso']" :key="f">
-          <button @click="filter=f" :class="filter===f ? 'bg-slate-800 text-white shadow' : 'bg-white text-slate-700 border border-slate-200'" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition" x-text="f==='todos' ? 'Todos' : f.replace('_',' ')"></button>
+        <template x-for="f in ['todos','recibido','ajuste_diseno','produccion','finalizado','cancelado']" :key="f">
+          <button @click="filter=f" 
+            :class="filter===f ? 'bg-slate-800 text-white shadow' : 'bg-white text-slate-700 border border-slate-200'" 
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition" 
+            x-text="f==='todos' ? 'Todos' : f.replace('_',' ')"></button>
         </template>
         <button @click="loadOrders()" class="ml-auto px-3 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-semibold transition flex items-center gap-1">
           <span :class="loading ? 'animate-spin inline-block' : ''">↻</span> Actualizar
         </button>
       </div>
-      <div x-show="loading && orders.length === 0" class="text-center py-16 text-slate-400">
-        <div class="text-4xl mb-3 animate-pulse">⏳</div>
-        <p class="text-sm">Cargando pedidos…</p>
-      </div>
-      <div x-show="!loading && filteredOrders().length === 0" class="text-center py-16 text-slate-400">
-        <div class="text-4xl mb-3">📭</div>
-        <p class="text-sm">No hay pedidos en esta categoría</p>
-      </div>
+
+      <!-- Lista de Pedidos -->
       <div class="space-y-3">
         <template x-for="order in filteredOrders()" :key="order.id">
           <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition">
             <div class="flex flex-col sm:flex-row sm:items-center gap-3">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap mb-1">
-                  <h3 class="font-bold text-slate-800 truncate" x-text="order.client_name || 'Sin nombre'"></h3>
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 uppercase tracking-wide" :class="{'bg-amber-100 text-amber-700': order.status==='pendiente','bg-blue-100 text-blue-700': order.status==='para_imprimir','bg-emerald-100 text-emerald-700': order.status==='impreso'}" x-text="order.status?.replace('_',' ')"></span>
+                  <h3 class="font-bold text-slate-800 truncate" x-text="order.title || 'Sin nombre'"></h3>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 uppercase tracking-wide" 
+                    :class="{
+                      'bg-amber-100 text-amber-700': order.status==='recibido',
+                      'bg-violet-100 text-violet-700': order.status==='ajuste_diseno',
+                      'bg-blue-100 text-blue-700': order.status==='produccion',
+                      'bg-emerald-100 text-emerald-700': order.status==='finalizado',
+                      'bg-slate-100 text-slate-500': order.status==='cancelado'
+                    }" 
+                    x-text="order.status?.replace('_',' ')"></span>
                 </div>
                 <p class="text-xs text-slate-400">
                   <span x-text="new Date(order.created).toLocaleString('es-MX')"></span>
                   · <span class="font-semibold" x-text="(order.paper_size||'a4').toUpperCase()"></span>
+                  <template x-if="order.admin_canvas_data">
+                    <span class="ml-2 text-violet-500 font-bold">✓ Editado por Admin</span>
+                  </template>
                 </p>
               </div>
+              
               <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+                <!-- Botón Editar (Siempre) -->
                 <button @click="openInCanvas(order.id)" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">✏️ Editar</button>
-                <button @click="copyPrintUrl(order.id)" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">🔗 URL</button>
+                
+                <!-- Botón A Producción (Si aún no está en prod) -->
+                <template x-if="order.status === 'recibido' || order.status === 'ajuste_diseno'">
+                  <button @click="updateStatus(order.id, 'produccion')" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-200">🚀 A Producción</button>
+                </template>
+
+                <!-- Menú Imprimir -->
                 <button @click="openPrint(order.id)" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-semibold transition">🖨️ Imprimir</button>
-                <template x-if="order.status !== 'impreso'">
-                  <button @click="markPrinted(order.id)" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition">✅ Impreso</button>
+                
+                <!-- Botón Finalizar -->
+                <template x-if="order.status === 'produccion'">
+                  <button @click="updateStatus(order.id, 'finalizado')" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition">✅ Finalizar</button>
+                </template>
+
+                <!-- Botón Cancelar (Oculto en finalizado/cancelado) -->
+                <template x-if="order.status !== 'finalizado' && order.status !== 'cancelado'">
+                  <button @click="if(confirm('¿Cancelar orden?')) updateStatus(order.id, 'cancelado')" class="p-1.5 rounded-xl hover:bg-red-50 text-red-300 hover:text-red-500 transition" title="Cancelar">🚫</button>
                 </template>
               </div>
             </div>
@@ -119,13 +150,12 @@
         },
         openInCanvas(id) { window.location.href = '/canvas?id=' + id; },
         getPrintUrl(id) { return window.location.origin + '/print?id=' + id; },
-        copyPrintUrl(id) { navigator.clipboard.writeText(this.getPrintUrl(id)); alert('URL copiada al portapapeles.'); },
         openPrint(id) { window.open(this.getPrintUrl(id), '_blank'); },
-        async markPrinted(id) {
+        async updateStatus(id, newStatus) {
           try {
-            await this.$store.auth.pb.collection('sticker_orders').update(id, { status: 'impreso' });
+            await this.$store.auth.pb.collection('sticker_orders').update(id, { status: newStatus });
             const o = this.orders.find(x => x.id === id);
-            if (o) o.status = 'impreso';
+            if (o) o.status = newStatus;
           } catch(e) { alert('Error al actualizar el estado.'); }
         }
       }));

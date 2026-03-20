@@ -1317,13 +1317,13 @@
             if (!this._editingAsAdmin) {
               const safeTitle = this.projectTitle.trim() || ('Proyecto ' + new Date().toLocaleDateString());
               fd.append('title', safeTitle);
-              fd.append('status', 'pendiente'); 
+              fd.append('status', 'recibido'); 
               fd.append('paper_size', this.paperSize); 
               fd.append('page_bg', this.pageBg || '#ffffff');
               if (this.$store.auth.user?.id) fd.append('user', this.$store.auth.user.id);
               fd.append('material_type', this.materialType);
             } else {
-              fd.append('status', 'para_imprimir');
+              fd.append('status', 'produccion');
             }
 
             for(let item of itemsToSave){
