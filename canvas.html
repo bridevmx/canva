@@ -1310,7 +1310,11 @@
             this.activePage = 1;
             this.items=items; this.clearSelection(); this.pushHistory();
             if(this.$refs.projectSelect) this.$refs.projectSelect.value='';
-          } catch(err){console.error(err);alert('No se pudo cargar el proyecto.');}
+          } catch(err){
+            console.error(err);
+            alert('No se pudo cargar el proyecto o no tienes permisos para verlo.');
+            window.location.replace('/dashboard');
+          }
         },
         async saveProject() {
           if(this.isSaving) return; this.isSaving=true;

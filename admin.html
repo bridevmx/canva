@@ -136,6 +136,20 @@
         orders: [], loading: false, filter: 'todos',
         async init() {
           await this.loadOrders();
+          this.subscribeRealtime();
+        },
+        async subscribeRealtime() {
+          try {
+            await this.$store.auth.pb.collection('sticker_orders').subscribe('*', (e) => {
+              if (e.action === 'create') {
+                this.orders = [e.record, ...this.orders];
+              } else if (e.action === 'update') {
+                this.orders = this.orders.map(o => o.id === e.record.id ? e.record : o);
+              } else if (e.action === 'delete') {
+                this.orders = this.orders.filter(o => o.id !== e.record.id);
+              }
+            });
+          } catch(err) { console.error('Realtime subscription error', err); }
         },
         async loadOrders() {
           this.loading = true;
