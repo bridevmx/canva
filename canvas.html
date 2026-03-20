@@ -82,12 +82,11 @@
         <!-- Botón Nuevo -->
         <button @click="resetProject()" title="Limpiar lienzo e iniciar un Nuevo Proyecto" class="py-1 px-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"><span class="text-[14px]">📄</span> <span class="hidden sm:inline text-[11px] font-black text-slate-600 uppercase tracking-widest">Nuevo</span></button>
 
-        <template x-if="savedProjects.length > 0">
-          <select x-ref="projectSelect" @change="loadProject($event.target.value)" class="text-xs py-1.5 px-2 text-ellipsis overflow-hidden border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none cursor-pointer w-24 sm:w-auto shrink-0">
-            <option value="">📁 Proy.</option>
-            <template x-for="proj in savedProjects" :key="proj.id"><option :value="proj.id" x-text="proj.name || ('Borrador ' + new Date(proj.date).toLocaleDateString())"></option></template>
-          </select>
-        </template>
+        <!-- Botón Dashboard (Ver Proyectos) -->
+        <button @click="window.location.href='/dashboard'" class="py-1 px-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-white text-slate-700 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm" title="Ir a mis proyectos">
+          <span class="text-[14px]">📁</span>
+          <span class="hidden sm:inline text-[11px] font-black uppercase tracking-widest">Mis Proyectos</span>
+        </button>
 
         <!-- Botón Guardar (Admin) -->
         <template x-if="_editingAsAdmin">
