@@ -74,7 +74,16 @@
             if (this.paperSize === 'a4') { this.sheet.w=794; this.sheet.h=1123; }
             else { this.sheet.w=816; this.sheet.h=1056; }
             
-            let canvasData = rec.canvas_data ? (typeof rec.canvas_data==='string' ? JSON.parse(rec.canvas_data) : rec.canvas_data) : [];
+            let source = rec.admin_canvas_data;
+            let hasAdminItems = false;
+            try {
+              const parsed = typeof source === 'string' ? JSON.parse(source) : source;
+              hasAdminItems = parsed && parsed.items && parsed.items.length > 0;
+            } catch(e) {}
+
+            if (!hasAdminItems) source = rec.canvas_data;
+
+            let canvasData = source ? (typeof source==='string' ? JSON.parse(source) : source) : [];
             let items = [];
             
             if (canvasData && typeof canvasData === 'object' && canvasData.items) {

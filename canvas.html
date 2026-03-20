@@ -732,6 +732,8 @@
         paperSize: 'a4',
         sheet: { w:794, h:1123 },
         savedProjects: [],
+        _editingAsAdmin: false,
+        _currentRecordId: null,
 
         // ── INIT ──────────────────────────────────────────────
         init() {
@@ -1248,16 +1250,30 @@
           try {
             const pb=new PocketBase('https://scraping.pockethost.io');
             const record=await pb.collection('sticker_orders').getOne(id);
+            this._currentRecordId = id;
+            this._editingAsAdmin = this.$store.auth.isAdmin();
+
             this.paperSize=record.paper_size||'a4'; this.updatePaperSize();
-            this.pageColors = { 1: record.page_bg||'#ffffff' }; // fallback temporal
+            this.pageColors = { 1: record.page_bg||'#ffffff' }; 
+            
+            let source = record.canvas_data;
+            if (this._editingAsAdmin) {
+              // Si es admin, prefiere admin_canvas_data si tiene contenido, sino clona el original
+              const adminData = record.admin_canvas_data;
+              const hasAdminItems = adminData && (typeof adminData === 'object' ? adminData.items?.length : JSON.parse(adminData).items?.length);
+              if (hasAdminItems) {
+                source = adminData;
+              }
+            }
+
             let items=[];
-            if(record.canvas_data){
-              let parsed=typeof record.canvas_data==='string'?JSON.parse(record.canvas_data):record.canvas_data;
+            if(source){
+              let parsed=typeof source==='string'?JSON.parse(source):source;
               if (parsed && typeof parsed === 'object' && parsed.hasOwnProperty('items')) {
                 items = parsed.items;
                 if(parsed.pageColors) this.pageColors = { ...parsed.pageColors };
               } else {
-                items = parsed; // formato antiguo array directo
+                items = parsed; 
               }
             }
             let maxPage = 1;
@@ -1284,30 +1300,31 @@
         async saveProject() {
           if(this.isSaving) return; this.isSaving=true;
           try {
-            const pb=new PocketBase('https://scraping.pockethost.io');
-            const itemsToSave=JSON.parse(JSON.stringify(this.items));
-            const fd=new FormData();
-            const safeTitle = this.projectTitle.trim() || ('Proyecto ' + new Date().toLocaleDateString());
-            fd.append('title', safeTitle);
-            fd.append('status','pendiente'); fd.append('paper_size',this.paperSize); fd.append('page_bg',this.pageBg);
+            const pb = new PocketBase('https://scraping.pockethost.io');
+            const itemsToSave = JSON.parse(JSON.stringify(this.items));
+            const fd = new FormData();
+            
+            if (!this._editingAsAdmin) {
+              const safeTitle = this.projectTitle.trim() || ('Proyecto ' + new Date().toLocaleDateString());
+              fd.append('title', safeTitle);
+              fd.append('status', 'pendiente'); 
+              fd.append('paper_size', this.paperSize); 
+              fd.append('page_bg', this.pageBg || '#ffffff');
+              if (this.$store.auth.user?.id) fd.append('user', this.$store.auth.user.id);
+              fd.append('material_type', this.materialType);
+            } else {
+              fd.append('status', 'para_imprimir');
+            }
+
             for(let item of itemsToSave){
-              if(item.type==='image'&&item.src&&item.src.startsWith('data:image')){
-                const res=await fetch(item.src), blob=await res.blob();
-                const fn=`img_${item.id}.png`;
-                fd.append('upload_assets',blob,fn);
-                item.src=`FILE:${fn}`; if(item.originalSrc)item.originalSrc=`FILE:${fn}`;
+              if(item.type==='image' && item.src && item.src.startsWith('data:image')){
+                const res = await fetch(item.src), blob = await res.blob();
+                const fn = `img_${item.id}.png`;
+                fd.append('upload_assets', blob, fn);
+                item.src = `FILE:${fn}`; if(item.originalSrc) item.originalSrc = `FILE:${fn}`;
               }
             }
             
-            // INYECTAR LA RELACIÓN CON LA COLECCIÓN "USERS_CANVA"
-            if (this.$store.auth.user && this.$store.auth.user.id) {
-               fd.append('user', this.$store.auth.user.id);
-            }
-            
-            // INYECTAR EL MATERIAL SELECCIONADO PARA LA ORDEN
-            fd.append('material_type', this.materialType);
-
-            // Empaquetar metadata con items
             const savedState = {
               items: itemsToSave,
               quote: {
@@ -1318,13 +1335,24 @@
               },
               pageColors: this.pageColors
             };
-            fd.append('canvas_data',JSON.stringify(savedState));
 
-            await pb.collection('sticker_orders').create(fd);
+            if (this._editingAsAdmin) {
+              fd.append('admin_canvas_data', JSON.stringify(savedState));
+              await pb.collection('sticker_orders').update(this._currentRecordId, fd);
+            } else {
+              fd.append('canvas_data', JSON.stringify(savedState));
+              if (this._currentRecordId) {
+                await pb.collection('sticker_orders').update(this._currentRecordId, fd);
+              } else {
+                const newRec = await pb.collection('sticker_orders').create(fd);
+                this._currentRecordId = newRec.id;
+              }
+            }
+
             await this.loadUserProjects();
-            alert('¡Enviado a imprimir con éxito!');
-          } catch(err){console.error(err);alert('Error al enviar a impresión.');}
-          finally{this.isSaving=false;}
+            alert('¡Guardado con éxito!');
+          } catch(err){ console.error(err); alert('Error al guardar el proyecto.'); }
+          finally{ this.isSaving=false; }
         }
       };
     }
