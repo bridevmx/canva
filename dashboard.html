@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis Proyectos | StickerMaker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    if (!isAuthenticated()) { window.location.replace('/login?redirectTo=/dashboard'); }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans selection:bg-violet-100">
+
+  <div x-data="customerDashboard" x-init="init()" x-cloak>
+    
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🏠</span>
+          <span class="font-black text-slate-800 tracking-tight">StickerMaker</span>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <span class="hidden sm:inline text-sm font-medium text-slate-500" x-text="$store.auth.user?.username || $store.auth.user?.phone"></span>
+          <button @click="$store.auth.logout()" class="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+      
+      <!-- Bienvenida y Acción Principal -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-3xl font-black text-slate-900 tracking-tight">Mis Pedidos</h1>
+          <p class="text-slate-500 mt-1">Sigue el estado de tus impresiones comestibles.</p>
+        </div>
+        
+        <button @click="window.location.href='/canvas'" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-black rounded-2xl transition shadow-xl shadow-violet-200 transform hover:-translate-y-0.5">
+          <span>✨</span>
+          <span>CREAR NUEVO PROYECTO</span>
+        </button>
+      </div>
+
+      <!-- Grid de Pedidos -->
+      <div x-show="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <template x-for="i in 3">
+          <div class="bg-white rounded-3xl p-6 border border-slate-200 animate-pulse">
+            <div class="w-1/3 h-4 bg-slate-100 rounded mb-4"></div>
+            <div class="w-full h-8 bg-slate-100 rounded mb-6"></div>
+            <div class="w-2/3 h-4 bg-slate-100 rounded"></div>
+          </div>
+        </template>
+      </div>
+
+      <div x-show="!loading && orders.length === 0" class="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+        <div class="text-6xl mb-4">🎨</div>
+        <h3 class="text-xl font-bold text-slate-800">Aún no tienes proyectos</h3>
+        <p class="text-slate-500 mt-2 mb-8">Empieza creando tu primer diseño en el editor.</p>
+        <button @click="window.location.href='/canvas'" class="px-8 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition">Abrir Editor</button>
+      </div>
+
+      <div x-show="!loading && orders.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <template x-for="order in orders" :key="order.id">
+          <div class="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-violet-200 transition-all duration-300 relative overflow-hidden">
+            
+            <!-- Indicador de Status -->
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                :class="{
+                  'bg-amber-100 text-amber-700': order.status==='recibido',
+                  'bg-violet-100 text-violet-700': order.status==='ajuste_diseno',
+                  'bg-blue-100 text-blue-700': order.status==='produccion',
+                  'bg-emerald-100 text-emerald-700': order.status==='finalizado',
+                  'bg-slate-100 text-slate-500': order.status==='cancelado'
+                }"
+                x-text="order.status?.replace('_',' ')"></span>
+              
+              <span class="text-[10px] font-bold text-slate-400" x-text="new Date(order.created).toLocaleDateString()"></span>
+            </div>
+
+            <h3 class="text-lg font-black text-slate-800 leading-tight mb-2 group-hover:text-violet-600 transition" x-text="order.title || 'Proyecto sin nombre'"></h3>
+            
+            <div class="space-y-2 mb-6">
+              <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span class="text-slate-300">📄</span>
+                <span x-text="(order.paper_size || 'a4').toUpperCase() + ' · ' + order.material_type?.replace('_',' ')"></span>
+              </div>
+              
+              <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span class="text-slate-300">💵</span>
+                <span>Total pagado: </span>
+                <span class="font-bold text-slate-700" x-text="'$' + (order.canvas_data?.quote?.total || 0).toFixed(2)"></span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-4 border-t border-slate-50">
+              <button @click="window.location.href='/canvas?id='+order.id" class="flex-1 py-2 text-center text-xs font-bold text-violet-600 bg-violet-50 rounded-xl hover:bg-violet-100 transition">
+                VER DISEÑO
+              </button>
+              <template x-if="order.status === 'finalizado'">
+                <span class="text-emerald-500 text-lg">✅</span>
+              </template>
+            </div>
+
+          </div>
+        </template>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('customerDashboard', () => ({
+        orders: [], loading: true,
+        async init() {
+          try {
+            const pb = new PocketBase('https://scraping.pockethost.io');
+            // PocketBase filtrará automáticamente por el ID del usuario en las Collection Rules (ViewRule: user = @request.auth.id)
+            const result = await pb.collection('sticker_orders').getList(1, 50, {
+              sort: '-created',
+              expand: 'user'
+            });
+            this.orders = result.items;
+          } catch(e) {
+            console.error(e);
+          } finally {
+            this.loading = false;
+          }
+        }
+      }));
+    });
+  </script>
+
+</body>
+</html>

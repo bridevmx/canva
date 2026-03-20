@@ -12,7 +12,7 @@
       const ALLOWED_REDIRECTS = ['/canvas', '/admin', '/register']
       const qs = new URLSearchParams(window.location.search)
       const redirect = qs.get('redirectTo')
-      window.location.replace(ALLOWED_REDIRECTS.includes(redirect) ? redirect : '/canvas')
+      window.location.replace(ALLOWED_REDIRECTS.includes(redirect) ? redirect : '/dashboard')
     }
   </script>
   <style>
@@ -104,7 +104,7 @@
             const qs = new URLSearchParams(window.location.search);
             const ALLOWED = ['/canvas', '/admin']
             const dest = qs.get('redirectTo')
-            window.location.href = ALLOWED.includes(dest) ? dest : '/canvas'
+            window.location.href = ALLOWED.includes(dest) ? dest : '/dashboard'
           } catch(e) {
             this.error = (e?.status === 400 || e?.status === 403)
               ? 'Celular o contraseña incorrectos.'
@@ -138,7 +138,7 @@
             localStorage.setItem('sm_token', authRecord.token);
             localStorage.setItem('sm_user', JSON.stringify(authRecord.record));
             this.$store.auth.pb.authStore.save(authRecord.token, authRecord.record);
-            window.location.href = '/canvas';
+            window.location.href = '/dashboard';
           } catch(e) {
             this.error = e?.data?.message || 'Código incorrecto o expirado.';
           } finally { this.loading = false; }
