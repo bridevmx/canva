@@ -89,11 +89,21 @@
           </select>
         </template>
 
-        <!-- Mostrar Modal Guardar -->
-        <button @click="isSaveModalOpen = true" :disabled="isSaving" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-emerald-400/30">
-          <span class="text-base sm:text-sm" x-text="isSaving ? '⏳' : '🖨️'"></span>
-          <span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide" x-text="isSaving ? 'Enviando...' : 'IMPRIMIR'"></span>
-        </button>
+        <!-- Botón Guardar (Admin) -->
+        <template x-if="_editingAsAdmin">
+          <button @click="saveProject()" :disabled="isSaving" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-violet-400/30">
+            <span class="text-base sm:text-sm" x-text="isSaving ? '⏳' : '💾'"></span>
+            <span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide" x-text="isSaving ? 'Guardando...' : 'GUARDAR CAMBIOS'"></span>
+          </button>
+        </template>
+
+        <!-- Botón Imprimir (Cliente) -->
+        <template x-if="!_editingAsAdmin">
+          <button @click="isSaveModalOpen = true" :disabled="isSaving" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-emerald-400/30">
+            <span class="text-base sm:text-sm" x-text="isSaving ? '⏳' : '🖨️'"></span>
+            <span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide" x-text="isSaving ? 'Enviando...' : 'IMPRIMIR'"></span>
+          </button>
+        </template>
         
       </div>
     </div>
