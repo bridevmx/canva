@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Página no encontrada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 min-h-screen flex items-center justify-center p-6 text-white overflow-hidden">
+    
+    <!-- Efectos de fondo decorativos -->
+    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-rose-600/20 blur-[100px] rounded-full"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/10 blur-[120px] rounded-full"></div>
+
+    <div class="relative z-10 text-center max-w-md w-full">
+        <!-- Icono/Ilustración de Sticker "Pegado" -->
+        <div class="mb-8 inline-block transform -rotate-6 hover:rotate-0 transition-transform duration-500">
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl shadow-2xl relative">
+                <span class="text-8xl">📎</span>
+                <div class="absolute -top-4 -right-4 bg-rose-500 text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm uppercase tracking-tighter">ERROR</div>
+            </div>
+        </div>
+
+        <h1 class="text-9xl font-black mb-2 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">404</h1>
+        <h2 class="text-2xl font-bold mb-4 text-rose-200">¡Vaya! Este sticker se despegó.</h2>
+        <p class="text-slate-400 mb-10 leading-relaxed">
+            La página que buscas no existe o ha sido movida a otro lienzo. No te preocupes, ¡puedes volver al inicio!
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/" class="px-8 py-4 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white font-black rounded-2xl transition shadow-xl shadow-rose-900/40 text-center">
+                Ir al Inicio
+            </a>
+            <a href="/canvas" class="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-black rounded-2xl transition backdrop-blur-sm text-center">
+                Abrir Editor
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
