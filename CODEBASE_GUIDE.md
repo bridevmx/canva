@@ -24,7 +24,7 @@ Este documento es una guía exhaustiva de la arquitectura, lógica y flujo de da
 ---
 
 ## 3. Estructura de Datos (Core State)
-El estado completo de la aplicación reside en el objeto retornado por `stickerMaker()` en `canvas.html`. Las variables más críticas son:
+El estado completo de la aplicación reside en el objeto retornado por `stickerMaker()` en `/canvas`. Las variables más críticas son:
 
 | Variable | Tipo | Descripción |
 | :--- | :--- | :--- |
@@ -56,9 +56,9 @@ Cada objeto dentro del array `items` sigue este patrón:
 
 ## 4. Lógica de Pestañas (Multi-Page Rendering)
 El sistema soporta múltiples obleas en un solo proyecto:
-### En el Editor (`canvas.html`):
+### En el Editor (`/canvas`):
 Usamos un filtro reactivo: `sortedItems().filter(i => (i.page||1) === activePage)`. Esto asegura que solo veas los objetos de la pestaña seleccionada.
-### En la Impresión (`print.html`):
+### En la Impresión (`/print`):
 Usamos un bucle `<template x-for="p in pagesCount">` que genera múltiples `div.sheet`. 
 **Importante:** Se aplica CSS `@media print { .sheet { page-break-after: always; } }` para que la impresora de `Canon G1110` detecte el salto de página automáticamente.
 
@@ -107,7 +107,7 @@ Generadas mediante **SVGs dinámicos** inyectados como fondo (background-image) 
 ## 8. Guía de Mantenimiento para una IA (Pasos a Seguir)
 
 ### ¿Cómo agregar un nuevo tipo de material?
-Ve a `canvas.html` -> objeto `products`. Agregue un nuevo objeto con `code, title, desc, precio`. El cotizador lo tomará automáticamente.
+Ve a `/canvas` -> objeto `products`. Agregue un nuevo objeto con `code, title, desc, precio`. El cotizador lo tomará automáticamente.
 
 ### ¿Cómo solucionar problemas de exportación (CORS)?
 Si al intentar recortar (Crop) o quitar fondos una imagen no funciona, es un error de "Tainted Canvas". 
@@ -126,7 +126,7 @@ location / {
     try_files $uri $uri.html $uri/ /index.html;
 }
 ```
-Esto permite que el archivo físicamente llamado `canvas.html` sea accesible simplemente como `/canvas`. El `Dockerfile` copies `simplehtml/` hacia `/usr/share/nginx/html/` en el contenedor Alpine final.
+Esto permite que el archivo físicamente llamado `canvas.html` sea accesible simplemente como `/canvas`. El `Dockerfile` copies `.` hacia `/usr/share/nginx/html/` en el contenedor Alpine final.
 
 ---
 

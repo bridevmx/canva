@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sticker Maker</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
   <script src="auth.js"></script>
   <script>
-    if (!isAuthenticated()) { window.location.replace('login.html?redirectTo=canvas.html'); }
+    if (!isAuthenticated()) { window.location.replace('/login?redirectTo=/canvas'); }
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Righteous&family=Russo+One&family=Sacramento&family=Satisfy&family=Inter:wght@400;700;900&family=Anton&family=Pacifico&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Bebas+Neue&family=Lobster&family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Chewy&family=Permanent+Marker&family=Nunito:wght@400;700;900&family=Raleway:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Archivo+Black&family=Passion+One:wght@400;700;900&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"/>
@@ -74,7 +74,7 @@
         <div class="flex items-center gap-1.5 border-r border-slate-200 pr-2 sm:pr-3">
           <span class="text-xs font-semibold text-slate-600 max-w-[80px] sm:max-w-[120px] truncate" x-text="$store.auth.user?.username || $store.auth.user?.phone || 'Usuario'"></span>
           <template x-if="$store.auth.isAdmin()">
-            <button @click="window.location.href='admin.html'" class="px-2 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 text-[10px] font-bold transition">⚙️</button>
+            <button @click="window.location.href='/admin'" class="px-2 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 text-[10px] font-bold transition">⚙️</button>
           </template>
           <button @click="$store.auth.logout()" title="Cerrar sesión" class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 font-bold transition flex items-center gap-1"><span class="text-[14px]">🚪</span> <span class="text-[10px] text-slate-600 uppercase">Salir</span></button>
         </div>

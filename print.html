@@ -4,8 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Imprimir Stickers</title>
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <script>
+    // Guard mínimo: si no hay token en authStore, redirige al login
+    // La protección real está en las Collection Rules de PocketBase (viewRule)
+    const _pbCheck = new PocketBase('https://scraping.pockethost.io')
+    if (!_pbCheck.authStore.isValid) {
+      window.location.replace('/login?redirectTo=/print' + window.location.search)
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <!-- No auth user check needed for printing -->
   <style>
     html,body{margin:0;padding:0;background:#f8fafc;font-family:Inter,sans-serif}
@@ -111,6 +120,5 @@
       }));
     });
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>
