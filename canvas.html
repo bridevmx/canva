@@ -858,6 +858,11 @@
           if(!confirm("¿Deseas borrar todo el lienzo e iniciar un proyecto en blanco? Perderás cambios no guardados.")) return;
           this.items=[]; this.history=[]; this.historyIndex=-1; this.projectTitle='';
           this.pagesCount=1; this.activePage=1; this.pageColors={ 1: '#ffffff' };
+          this._currentRecordId = null;
+          this._editingAsAdmin = false;
+          
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
           if(this.$refs.projectSelect) this.$refs.projectSelect.value='';
           this.clearSelection(); this.pushHistory();
         },
