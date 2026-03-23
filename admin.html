@@ -113,12 +113,14 @@
                 <!-- Botón Imprimir Único -->
                 <button 
                   @click="directPrint(order.id)" 
-                  :disabled="isPrinting"
+                  :disabled="!!printingId"
                   class="flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition font-bold text-xs"
-                  :class="isPrinting ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-violet-600 border-violet-600 text-white hover:bg-violet-500 active:scale-95 shadow-lg shadow-violet-200'"
+                  :class="printingId === order.id 
+                    ? 'bg-amber-100 border-amber-200 text-amber-700 animate-pulse' 
+                    : (printingId ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed' : 'bg-violet-600 border-violet-600 text-white hover:bg-violet-500 active:scale-95 shadow-lg shadow-violet-200')"
                 >
-                  <span x-text="isPrinting ? '⏳' : '🖨️'"></span>
-                  <span x-text="isPrinting ? 'Imprimiendo...' : 'Imprimir'"></span>
+                  <span x-text="printingId === order.id ? '⏳' : '🖨️'"></span>
+                  <span x-text="printingId === order.id ? 'Imprimiendo...' : 'Imprimir'"></span>
                 </button>
                 
                 <!-- Botón Finalizar -->
@@ -141,7 +143,7 @@
   <script>
     document.addEventListener('alpine:init', () => {
       Alpine.data('adminView', () => ({
-        orders: [], loading: false, filter: 'todos', isPrinting: false,
+        orders: [], loading: false, filter: 'todos', printingId: null,
         async init() {
           await this.loadOrders();
           this.subscribeRealtime();
@@ -174,8 +176,8 @@
         getPrintUrl(id) { return window.location.origin + '/print?id=' + id; },
         openPrint(id) { window.open(this.getPrintUrl(id), '_blank'); },
         async directPrint(id, printer = 'G1010-series') {
-          if (this.isPrinting) return;
-          this.isPrinting = true;
+          if (this.printingId) return;
+          this.printingId = id;
           const token = this.$store.auth.pb.authStore.token;
           try {
             const response = await fetch('https://printer.tiendagenesis.com/print-edible-media', {
@@ -184,7 +186,6 @@
               body: JSON.stringify({ orderId: id, pbToken: token, printer: printer })
             });
             if (response.ok) {
-              // Notificación sutil (opcional: alert)
               console.log('Impresión enviada correctamente');
             } else {
               alert('Error en el servidor de impresión local');
@@ -192,7 +193,7 @@
           } catch(e) {
             alert('No se pudo conectar con el servidor de impresión. Verifica la conexión.');
           } finally {
-            this.isPrinting = false;
+            this.printingId = null;
           }
         },
         async updateStatus(id, newStatus) {
