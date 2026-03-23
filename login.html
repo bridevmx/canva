@@ -40,8 +40,8 @@
         <template x-if="tab === 'pwd'">
           <div class="space-y-4">
             <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Email o Nombre de Usuario</label>
-              <input x-model="identity" type="text" placeholder="ej. juan@gmail.com o juanperez" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Email, Usuario o Teléfono</label>
+              <input x-model="identity" type="text" placeholder="Correo, usuario o celular" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
             </div>
             <div>
               <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
@@ -75,7 +75,7 @@
         async loginPassword() {
           this.error = ''; this.loading = true;
           try {
-            await this.$store.auth.pb.collection('users').authWithPassword(this.identity, this.password);
+            await this.$store.auth.pb.collection('users_canva').authWithPassword(this.identity, this.password);
             
             // Redirigir según el tipo de usuario o parámetro
             const ALLOWED_REDIRECTS = ['/canvas', '/admin', '/register', '/dashboard'];

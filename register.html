@@ -44,6 +44,10 @@
               <input x-model="email" type="email" placeholder="tu@correo.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
             </div>
             <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Teléfono Celular</label>
+              <input x-model="phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+            </div>
+            <div>
               <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
               <input x-model="password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
             </div>
@@ -51,7 +55,7 @@
               <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Confirmar Contraseña</label>
               <input x-model="passwordConfirm" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="registerEmail()"/>
             </div>
-            <button @click="registerEmail()" :disabled="loading || !email || !password || !username" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
+            <button @click="registerEmail()" :disabled="loading || !email || !password || !username || !phone" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
               <span x-text="loading ? 'Creando cuenta...' : 'Registrarse con Email'"></span>
             </button>
           </div>
@@ -101,7 +105,9 @@
               password: this.password,
               passwordConfirm: this.passwordConfirm,
               name: this.username,
-              emailVisibility: true
+              emailVisibility: true,
+              phone: this.phone,
+              role: 'user'
             });
 
             // 2. Solicitar verificación de email
