@@ -95,7 +95,7 @@
             const pb = this.$store.auth.pb;
             
             // 1. Crear el usuario
-            await pb.collection('users').create({
+            await pb.collection('users_canva').create({
               username: this.username,
               email: this.email,
               password: this.password,
@@ -105,7 +105,7 @@
             });
 
             // 2. Solicitar verificación de email
-            await pb.collection('users').requestVerification(this.email);
+            await pb.collection('users_canva').requestVerification(this.email);
 
             this.successMessage = '¡Cuenta creada! Revisa tu correo para verificar tu cuenta.';
             this.email = ''; this.username = ''; this.password = ''; this.passwordConfirm = '';
