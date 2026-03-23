@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StickerMaker - Registro SMS</title>
+  <title>StickerMaker - Registro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="auth.js"></script>
   <script>
     if (isAuthenticated()) window.location.replace('/dashboard')
@@ -16,56 +17,53 @@
   <div x-data="registerView" class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4 text-white">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
-        <span class="text-5xl">📱</span>
+        <span class="text-5xl">✨</span>
         <h1 class="text-2xl font-black mt-3 tracking-tight" x-text="'Registro en ' + $store.app.name">Registro</h1>
-        <p class="text-slate-400 text-sm mt-1" x-text="step === 1 ? 'Crea tu cuenta de acceso' : 'Te hemos enviado el PIN por SMS'"></p>
+        <p class="text-slate-400 text-sm mt-1" x-text="step === 1 ? 'Crea tu cuenta de acceso' : 'Verifica tu información'"></p>
       </div>
       
       <div class="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-4 backdrop-blur-sm shadow-xl">
         <div x-show="error" x-cloak class="bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center" x-text="error"></div>
         <div x-show="successMessage" x-cloak class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center" x-text="successMessage"></div>
 
-        <!-- PASO 1: Ingresar Teléfono -->
-        <template x-if="step === 1">
-          <div>
-            <div class="space-y-3">
-              <div>
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre (Username)</label>
-                <input x-model="username" type="text" maxlength="24" placeholder="Ej. JuanPerez" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Teléfono Celular</label>
-                <input x-model="phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
-                <input x-model="password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="requestOTP()"/>
-              </div>
+        <!-- TABS (HIDDEN FOR NOW) -->
+        <!-- <div class="flex bg-white/10 rounded-xl p-1 mb-6">
+          <button @click="method = 'email'; error = ''; successMessage = ''; step = 1" :class="method === 'email' ? 'bg-white/20 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition">Email / Usuario</button>
+          <button @click="method = 'phone'; error = ''; successMessage = ''; step = 1" :class="method === 'phone' ? 'bg-white/20 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition">Teléfono (SMS)</button>
+        </div> -->
+
+        <!-- REGISTRO CON EMAIL (MÉTODO POCKETBASE) -->
+        <template x-if="method === 'email'">
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre de Usuario</label>
+              <input x-model="username" type="text" placeholder="Ej. juanito123" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
             </div>
-            <button @click="requestOTP()" :disabled="loading || !phone || !username || !password" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
-              <span x-text="loading ? 'Enviando SMS...' : 'Enviar Código'"></span>
+            <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Correo Electrónico</label>
+              <input x-model="email" type="email" placeholder="tu@correo.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
+              <input x-model="password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Confirmar Contraseña</label>
+              <input x-model="passwordConfirm" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="registerEmail()"/>
+            </div>
+            <button @click="registerEmail()" :disabled="loading || !email || !password || !username" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
+              <span x-text="loading ? 'Creando cuenta...' : 'Registrarse con Email'"></span>
             </button>
           </div>
         </template>
 
-        <!-- PASO 2: Ingresar OTP -->
-        <template x-if="step === 2">
-          <div>
-            <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Código de Verificación Militar (OTP)</label>
-              <input x-model="otpCode" type="text" maxlength="6" placeholder="000000" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition" @keydown.enter="verifyOTP()"/>
-            </div>
-            <button @click="verifyOTP()" :disabled="loading || otpCode.length < 4" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-4 shadow-lg">
-              <span x-text="loading ? 'Verificando...' : 'Verificar y Entrar'"></span>
-            </button>
-            <button @click="step = 1; otpCode = ''; error = ''" class="w-full bg-transparent hover:bg-white/10 rounded-xl py-2 mt-2 text-xs font-semibold text-slate-400 transition">
-              Cambiar número de teléfono
-            </button>
-          </div>
-        </template>
+        <!-- REGISTRO CON TELÉFONO (LEGACY SMS - OCULTO) -->
+        <!-- <template x-if="method === 'phone'">
+          ... código oculto ...
+        </template> -->
 
         <p class="text-center text-slate-600 text-xs pt-3 mt-4 border-t border-white/10">
-          ¿Ya tienes cuenta? <a href="/login" class="text-violet-400 hover:text-violet-300 transition">Inicia sesión</a>
+          ¿Ya tienes cuenta? <a href="/login" class="text-violet-400 hover:text-violet-300 transition font-bold">Inicia sesión</a>
         </p>
       </div>
     </div>
@@ -74,8 +72,48 @@
   <script>
     document.addEventListener('alpine:init', () => {
       Alpine.data('registerView', () => ({
-        step: 1, phone: '', username: '', password: '', otpCode: '', loading: false, error: '', successMessage: '',
+        method: 'email', 
+        step: 1, 
+        email: '', 
+        username: '', 
+        password: '', 
+        passwordConfirm: '',
+        phone: '', 
+        otpCode: '', 
+        loading: false, 
+        error: '', 
+        successMessage: '',
         
+        async registerEmail() {
+          this.error = ''; this.successMessage = '';
+          if (this.password !== this.passwordConfirm) {
+            this.error = 'Las contraseñas no coinciden';
+            return;
+          }
+          this.loading = true;
+          try {
+            const pb = this.$store.auth.pb;
+            
+            // 1. Crear el usuario
+            await pb.collection('users').create({
+              username: this.username,
+              email: this.email,
+              password: this.password,
+              passwordConfirm: this.passwordConfirm,
+              name: this.username,
+              emailVisibility: true
+            });
+
+            // 2. Solicitar verificación de email
+            await pb.collection('users').requestVerification(this.email);
+
+            this.successMessage = '¡Cuenta creada! Revisa tu correo para verificar tu cuenta.';
+            this.email = ''; this.username = ''; this.password = ''; this.passwordConfirm = '';
+          } catch(e) {
+            this.error = e?.data?.message || e.message || 'Error al crear la cuenta';
+          } finally { this.loading = false; }
+        },
+
         async requestOTP() {
           this.error = ''; this.successMessage = ''; this.loading = true;
           try {
@@ -87,38 +125,30 @@
                  password: this.password
                }
             });
-            this.step = 2; // Pasa a la pantalla 2
-            this.successMessage = 'Se ha solicitado un SMS nuevo.';
+            this.step = 2;
+            this.successMessage = 'Se ha enviado un código a tu celular.';
           } catch(e) {
-            this.error = e?.data?.message || 'Error al solicitar el código. ¿Límite de 3 alcanzado?';
+            this.error = e?.data?.message || 'Error al solicitar el código.';
           } finally { this.loading = false; }
         },
 
         async verifyOTP() {
           this.error = ''; this.loading = true;
           try {
-            // Llama a tu endpoint mágico de validación
-            const authRecord = await this.$store.auth.pb.send("/api/auth/register-validate", {
-               method: "POST",
-               body: { phone: this.phone, otp: this.otpCode }
+            const res = await this.$store.auth.pb.send("/api/auth/verify-otp", {
+              method: "POST",
+              body: { phone: this.phone, code: this.otpCode }
             });
-            
-            // Reutilizamos el guardado interno de auth.js
-            this.$store.auth.token = authRecord.token; 
-            this.$store.auth.user = authRecord.record;
-            localStorage.setItem('sm_token', authRecord.token);
-            localStorage.setItem('sm_user', JSON.stringify(authRecord.record));
-            this.$store.auth.pb.authStore.save(authRecord.token, authRecord.record);
-            
-            // Éxito, vámonos al Canvas.
-            window.location.href = '/dashboard';
+            if (res.token) {
+              this.$store.auth.pb.authStore.save(res.token, res.record);
+              window.location.replace('/dashboard');
+            }
           } catch(e) {
-            this.error = 'Código incorrecto o expirado.';
+            this.error = e?.data?.message || 'Código inválido';
           } finally { this.loading = false; }
         }
       }));
     });
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </body>
 </html>
