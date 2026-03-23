@@ -3,129 +3,224 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Imprimir Stickers</title>
+  <title>Impresión de Pedido</title>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
-  <script>
-    // Guard mínimo: si no hay token en authStore, redirige al login
-    // La protección real está en las Collection Rules de PocketBase (viewRule)
-    const _pbCheck = new PocketBase('https://scraping.pockethost.io')
-    if (!_pbCheck.authStore.isValid) {
-      window.location.replace('/login?redirectTo=/print' + window.location.search)
-    }
-  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-  <!-- No auth user check needed for printing -->
   <style>
-    html,body{margin:0;padding:0;background:#f8fafc;font-family:Inter,sans-serif}
-    .sheet{position:relative;overflow:hidden;background:white;box-shadow:0 10px 30px rgba(0,0,0,.18);user-select:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .text-box{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;word-break:break-word;line-height:1.05;padding:6px}
-    @media print{
-      html,body{background:white!important;margin:0!important;padding:0!important}
-      .no-print{display:none!important}
-      .sheet{box-shadow:none!important;margin:0!important; page-break-after: always; break-after: page;}
+    /* Estilos base optimizados para impresión */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      font-family: Inter, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    [x-cloak]{display:none!important}
+    .sheet {
+      position: relative;
+      overflow: hidden;
+      background: white;
+      page-break-after: always;
+      break-after: page;
+    }
+    .text-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.05;
+      padding: 6px;
+    }
+    .no-render { display: none !important; }
+    [x-cloak] { display: none !important; }
+    
+    /* Reglas específicas para Puppeteer */
+    @media screen {
+      body { background: #f1f5f9; padding: 2rem; }
+      .sheet { margin: 0 auto 2rem auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    }
   </style>
 </head>
-<body>
-  <div x-data="printView" x-init="init()">
-    <div x-show="status !== 'ready'" class="no-print min-h-screen flex items-center justify-center bg-slate-50">
-      <div class="text-center">
-        <div x-show="status === 'loading'" class="text-4xl mb-3 animate-pulse">⏳</div>
-        <div x-show="status === 'error'" class="text-4xl mb-3">❌</div>
-        <p class="text-slate-500 text-sm" x-text="status === 'loading' ? 'Cargando proyecto…' : 'Error al cargar el proyecto. Verifica el ID.'"></p>
-      </div>
-    </div>
-    <div x-show="status === 'ready'" id="print-sheet" class="flex flex-col items-center gap-8 print:gap-0">
-      <template x-for="p in pagesCount" :key="p">
-        <div class="sheet" :style="{ background: pageColors[p] || '#ffffff', width: sheet.w + 'px', height: sheet.h + 'px' }">
-          <template x-for="item in sortedItems().filter(i => (i.page||1) === p)" :key="item.id">
-            <div :style="itemStyle(item)">
-              <template x-if="item.type === 'image'">
-                <img :src="item.src" draggable="false" class="w-full h-full" :style="{ objectFit: item.fit || 'contain' }" alt="" />
-              </template>
-              <template x-if="item.type === 'text'">
-                <div class="text-box" :style="{ fontFamily: item.fontFamily, color: item.color, fontSize: item.fontSize + 'px', fontWeight: item.fontWeight, textShadow: item.textShadow ? item.shadowOffsetX+'px '+item.shadowOffsetY+'px '+item.shadowBlur+'px '+item.shadowColor : 'none', '-webkit-text-stroke': item.textOutline ? item.outlineWidth+'px '+item.outlineColor : 'none' }" x-text="item.text"></div>
-              </template>
-              <template x-if="item.type === 'shape'">
-                <div class="w-full h-full" :style="{ background: item.fillColor ?? '#3b82f6', borderRadius: item.shapeType === 'circle' ? '50%' : '4px', border: (item.strokeWidth??0)>0 ? item.strokeWidth+'px solid '+item.strokeColor : 'none', boxSizing: 'border-box' }"></div>
-              </template>
-            </div>
-          </template>
-        </div>
+<body x-data="headlessPrint" x-init="init()">
+
+  <!-- Pantalla de Estado (Visible solo en navegador normal, Puppeteer la ignorará si el selector es .sheet) -->
+  <div x-show="!ready" class="fixed inset-0 flex items-center justify-center bg-white z-[9999]">
+    <div class="text-center">
+      <template x-if="status === 'loading'">
+        <div class="animate-spin text-4xl mb-4">🌀</div>
       </template>
+      <template x-if="status === 'error'">
+        <div class="text-4xl mb-4">⚠️</div>
+      </template>
+      <p class="text-slate-600 font-bold" x-text="statusText"></p>
     </div>
   </div>
 
+  <!-- Contenedor Principal de Impresión -->
+  <div id="print-container" x-show="ready" x-cloak>
+    <template x-for="p in pagesCount" :key="p">
+      <div class="sheet" :style="{ background: pageColors[p] || '#ffffff', width: sheet.w + 'px', height: sheet.h + 'px' }">
+        <template x-for="item in sortedItems().filter(i => (i.page||1) === p)" :key="item.id">
+          <div :style="itemStyle(item)" class="absolute pointer-events-none">
+            
+            <!-- Imagen -->
+            <template x-if="item.type === 'image'">
+              <img :src="item.src" class="w-full h-full" :style="{ objectFit: item.fit || 'contain' }" />
+            </template>
+            
+            <!-- Texto -->
+            <template x-if="item.type === 'text'">
+              <div class="text-box" :style="{ 
+                fontFamily: item.fontFamily, 
+                color: item.color, 
+                fontSize: item.fontSize + 'px', 
+                fontWeight: item.fontWeight, 
+                textShadow: item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none', 
+                '-webkit-text-stroke': item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none' 
+              }" x-text="item.text"></div>
+            </template>
+            
+            <!-- Forma -->
+            <template x-if="item.type === 'shape'">
+              <div class="w-full h-full" :style="{ 
+                background: item.fillColor ?? '#3b82f6', 
+                borderRadius: item.shapeType === 'circle' ? '50%' : '4px', 
+                border: (item.strokeWidth ?? 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none', 
+                boxSizing: 'border-box' 
+              }"></div>
+            </template>
+
+          </div>
+        </template>
+      </div>
+    </template>
+  </div>
+
   <script>
-    const PB_URL = 'https://scraping.pockethost.io';
+    // Flag global para que Puppeteer sepa cuando terminar
+    window.RENDER_READY = false;
+
     document.addEventListener('alpine:init', () => {
-      Alpine.data('printView', () => ({
-        items: [], pageColors: { 1: '#ffffff' }, pagesCount: 1, sheet: { w: 794, h: 1123 }, paperSize: 'a4', status: 'loading',
+      Alpine.data('headlessPrint', () => ({
+        ready: false,
+        status: 'loading',
+        statusText: 'Cargando datos...',
+        items: [],
+        pageColors: { 1: '#ffffff' },
+        pagesCount: 1,
+        sheet: { w: 794, h: 1123 },
+        paperSize: 'a4',
+
         async init() {
+          const pb = new PocketBase('https://scraping.pockethost.io');
           const qs = new URLSearchParams(window.location.search);
           const id = qs.get('id');
-          if (!id) { this.status = 'error'; return; }
+          const token = qs.get('token');
+
+          // Aplicar token si viene en la URL (para el bot de impresión)
+          if (token) pb.authStore.save(token, null);
+
+          // Redirección de seguridad si no hay sesión válida (para humanos)
+          if (!pb.authStore.isValid) {
+            window.location.replace('/login?redirectTo=/print' + window.location.search);
+            return;
+          }
+          
+          if (!id) {
+            this.status = 'error';
+            this.statusText = 'ID de pedido faltante';
+            return;
+          }
+
           try {
-            const pb = new PocketBase(PB_URL);
             const rec = await pb.collection('sticker_orders').getOne(id);
             this.paperSize = rec.paper_size || 'a4';
-            if (this.paperSize === 'a4') { this.sheet.w=794; this.sheet.h=1123; }
-            else { this.sheet.w=816; this.sheet.h=1056; }
             
-            let source = rec.admin_canvas_data;
-            let hasAdminItems = false;
-            try {
-              const parsed = typeof source === 'string' ? JSON.parse(source) : source;
-              hasAdminItems = parsed && parsed.items && parsed.items.length > 0;
-            } catch(e) {}
+            // Configuración de página
+            if (this.paperSize === 'a4') { this.sheet = { w: 794, h: 1123 }; }
+            else { this.sheet = { w: 816, h: 1056 }; }
 
-            if (!hasAdminItems) source = rec.canvas_data;
+            // Inyección de estilos de página para el PDF
+            const style = document.createElement('style');
+            style.innerHTML = `@page { size: ${this.paperSize === 'a4' ? 'A4' : 'letter'}; margin: 0; }`;
+            document.head.appendChild(style);
 
-            let canvasData = source ? (typeof source==='string' ? JSON.parse(source) : source) : [];
-            let items = [];
-            
-            if (canvasData && typeof canvasData === 'object' && canvasData.items) {
-              items = canvasData.items;
-              this.pageColors = canvasData.pageColors || { 1: rec.page_bg || '#ffffff' };
-            } else {
-              items = canvasData; // Formato antiguo
-              this.pageColors = { 1: rec.page_bg || '#ffffff' };
+            // Determinar fuente de datos (Admin vs Cliente)
+            let rawData = rec.admin_canvas_data;
+            if (!rawData || (typeof rawData === 'string' && rawData.length < 5)) {
+              rawData = rec.canvas_data;
             }
 
+            const data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+            this.items = data.items || [];
+            this.pageColors = data.pageColors || { 1: rec.page_bg || '#ffffff' };
+            
             let maxPage = 1;
-            items.forEach(item => {
+            this.items.forEach(item => {
               if (item.page === undefined) item.page = 1;
               if (item.page > maxPage) maxPage = item.page;
               
-              if (item.type==='image' && item.src?.startsWith('FILE:')) {
+              // Resolver URLs de imágenes de PocketBase
+              if (item.type === 'image' && item.src?.startsWith('FILE:')) {
                 const prefix = item.src.replace('FILE:','').split('.')[0].replace(/-/g,'_');
-                const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : (rec.upload_assets ? [rec.upload_assets] : []);
+                const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : [rec.upload_assets];
                 const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
                 if (fn) item.src = pb.files.getUrl(rec, fn);
               }
             });
-            
             this.pagesCount = maxPage;
-            this.items = items; 
-            this.status = 'ready';
-            let el = document.getElementById('print-page-style');
-            if (!el) { el=document.createElement('style'); el.id='print-page-style'; document.head.appendChild(el); }
-            el.innerHTML = `@page{size:${this.paperSize==='a4'?'A4':'letter'};margin:0}@media print{html,body{margin:0!important;padding:0!important;background:white!important}}`;
-            this.$nextTick(() => {
-              const imgs = document.querySelectorAll('#print-sheet img');
-              if (!imgs.length) { setTimeout(()=>window.print(), 600); return; }
-              let pending = imgs.length;
-              const done = () => { if(--pending<=0) setTimeout(()=>window.print(), 400); };
-              imgs.forEach(img => { if(img.complete) done(); else { img.onload=done; img.onerror=done; } });
+
+            // Esperar a que las imágenes se carguen completamente
+            this.$nextTick(async () => {
+              const images = Array.from(document.querySelectorAll('img'));
+              await Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                  img.onload = resolve;
+                  img.onerror = resolve;
+                });
+              }));
+              
+              // Margen de seguridad para renderizado de fuentes
+              setTimeout(() => {
+                this.ready = true;
+                this.status = 'ready';
+                window.RENDER_READY = true;
+                
+                // Disparar impresión automática (ideal con --kiosk-printing)
+                window.print();
+                
+                console.log('--- RENDER_READY & PRINTING ---');
+              }, 500);
             });
-          } catch(err) { console.error(err); this.status='error'; }
+
+          } catch (e) {
+            console.error(e);
+            this.status = 'error';
+            this.statusText = 'Error al recuperar el pedido';
+          }
         },
+
         itemStyle(item) {
-          return { position:'absolute', left:item.x+'px', top:item.y+'px', width:item.w+'px', height:item.h+'px', zIndex:item.z, opacity:item.opacity??1, transform:item.rotation?`rotate(${item.rotation}deg)`:'none' };
+          return {
+            left: item.x + 'px',
+            top: item.y + 'px',
+            width: item.w + 'px',
+            height: item.h + 'px',
+            zIndex: item.z,
+            opacity: item.opacity ?? 1,
+            transform: item.rotation ? `rotate(${item.rotation}deg)` : 'none'
+          };
         },
-        sortedItems() { return [...this.items].sort((a,b)=>a.z-b.z); }
+
+        sortedItems() {
+          return [...this.items].sort((a, b) => a.z - b.z);
+        }
       }));
     });
   </script>
