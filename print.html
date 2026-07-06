@@ -120,14 +120,28 @@
           const pb = new PocketBase('https://scraping.pockethost.io');
           const qs = new URLSearchParams(window.location.search);
           const id = qs.get('id');
-          const token = qs.get('token');
+          let token = qs.get('token');
 
-          // Aplicar token si viene en la URL (para el bot de impresión)
+          // FIX #1 (seguridad): el token en URL se elimina inmediatamente del historial
+          // y se mueve a sessionStorage (no persiste en logs futuros/Referer).
+          // El bot de impresión debe seguir enviando ?id=…&token=… pero la URL
+          // se sanitiza en cuanto carga.
+          if (token) {
+            sessionStorage.setItem('print_token', token);
+            // Limpia la URL sin recargar: elimina el token del historial y del Referer
+            const clean = new URL(window.location.href);
+            clean.searchParams.delete('token');
+            window.history.replaceState({}, document.title, clean.pathname + (clean.search ? clean.search : '') + clean.hash);
+          } else {
+            // Intenta recuperar token de sessionStorage si ya fue sanitizado
+            token = sessionStorage.getItem('print_token');
+          }
+
           if (token) pb.authStore.save(token, null);
 
           // Redirección de seguridad si no hay sesión válida (para humanos)
           if (!pb.authStore.isValid) {
-            window.location.replace('/login?redirectTo=/print' + window.location.search);
+            window.location.replace('/login?redirectTo=/print?id=' + encodeURIComponent(id || ''));
             return;
           }
           

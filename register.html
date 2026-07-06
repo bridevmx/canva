@@ -6,7 +6,7 @@
   <title>StickerMaker - Registro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="auth.js"></script>
   <script>
     if (isAuthenticated()) window.location.replace('/dashboard')
@@ -105,7 +105,7 @@
               password: this.password,
               passwordConfirm: this.passwordConfirm,
               name: this.username,
-              emailVisibility: true,
+              emailVisibility: false,  // FIX N4: email privado por defecto (anti-enumeración)
               phone: this.phone,
               role: 'user'
             });
@@ -116,7 +116,8 @@
             this.successMessage = '¡Cuenta creada! Revisa tu correo para verificar tu cuenta.';
             this.email = ''; this.username = ''; this.password = ''; this.passwordConfirm = '';
           } catch(e) {
-            this.error = e?.data?.message || e.message || 'Error al crear la cuenta';
+            // FIX #9: mensaje genérico para evitar enumeración de usuarios por email
+            this.error = 'No se pudo crear la cuenta. Verifica los datos o intenta con otro correo.';
           } finally { this.loading = false; }
         },
 

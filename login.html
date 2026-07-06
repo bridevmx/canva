@@ -6,11 +6,12 @@
   <title>StickerMaker - Iniciar sesión</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="auth.js"></script>
   <script>
     if (isAuthenticated()) {
-      const ALLOWED_REDIRECTS = ['/canvas', '/admin', '/register', '/dashboard']
+      // FIX #5: lista blanca reducida — /admin NO debe dereivar login de usuario normal
+      const ALLOWED_REDIRECTS = ['/canvas', '/dashboard']
       const qs = new URLSearchParams(window.location.search)
       const redirect = qs.get('redirectTo')
       window.location.replace(ALLOWED_REDIRECTS.includes(redirect) ? redirect : '/dashboard')
@@ -79,7 +80,7 @@
             await this.$store.auth.pb.collection('users_canva').authWithPassword(this.identity, this.password);
             
             // Redirigir según el tipo de usuario o parámetro
-            const ALLOWED_REDIRECTS = ['/canvas', '/admin', '/register', '/dashboard'];
+            const ALLOWED_REDIRECTS = ['/canvas', '/dashboard'];  // FIX #5: sin /admin
             const qs = new URLSearchParams(window.location.search);
             const redirect = qs.get('redirectTo');
             window.location.replace(ALLOWED_REDIRECTS.includes(redirect) ? redirect : '/dashboard');
