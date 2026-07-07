@@ -1,11 +1,11 @@
 // canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
 
-import { CanvasEditor } from './CanvasEditor.js?v=1.4.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.4.0';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.4.0';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.4.0';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.4.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.4.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.4.1';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.4.1';
+import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.4.1';
+import { AuthManager }       from '../auth/AuthManager.js?v=1.4.1';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.4.1';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.4.1';
 
 const PX_PER_CM = 37.8095;
 
@@ -85,6 +85,8 @@ function registerStickerMaker(Alpine) {
         main.addEventListener('touchstart', e => this.onCanvasTouchStart(e), { passive: true });
         main.addEventListener('touchmove',  e => this.onCanvasTouchMove(e),  { passive: false });
         main.addEventListener('touchend',   e => this.onCanvasTouchEnd(e),   { passive: true });
+
+        window.addEventListener('editor:change', () => sync.call(this));
 
         await persistence.loadUserProjects();
 

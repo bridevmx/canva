@@ -183,7 +183,7 @@ export class CanvasEditor {
 
   async _onKey(ev) {
     if (this.crop.active) {
-      if (ev.key === 'Enter')    { ev.preventDefault(); ev.stopImmediatePropagation(); await this.applyCrop(); }
+      if (ev.key === 'Enter')    { ev.preventDefault(); ev.stopImmediatePropagation(); await this.applyCrop(); window.dispatchEvent(new CustomEvent('editor:change')); }
       else if (ev.key === 'Escape') { ev.preventDefault(); this.cancelCrop(); }
       return;
     }
@@ -194,15 +194,19 @@ export class CanvasEditor {
 
     if ((ev.key === 'Delete' || ev.key === 'Backspace') && this.selectedId) {
       ev.preventDefault(); this.deleteSelected();
+      window.dispatchEvent(new CustomEvent('editor:change'));
     }
     if (ev.key.toLowerCase() === 'd' && (ev.ctrlKey || ev.metaKey) && this.selectedId) {
       ev.preventDefault(); this.duplicateSelected();
+      window.dispatchEvent(new CustomEvent('editor:change'));
     }
     if (ev.key.toLowerCase() === 'z' && (ev.ctrlKey || ev.metaKey)) {
       ev.preventDefault(); ev.shiftKey ? this.history.redo() : this.history.undo();
+      window.dispatchEvent(new CustomEvent('editor:change'));
     }
     if (ev.key.toLowerCase() === 'y' && (ev.ctrlKey || ev.metaKey)) {
       ev.preventDefault(); this.history.redo();
+      window.dispatchEvent(new CustomEvent('editor:change'));
     }
     if (ev.key.startsWith('Arrow') && this.selected && !this.selected.locked) {
       ev.preventDefault();
