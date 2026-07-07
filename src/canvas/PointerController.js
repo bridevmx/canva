@@ -1,6 +1,6 @@
 // PointerController.js — Drag/resize/rotate. FIX BUG B: swap w/h en rotación 90°/270°.
 
-import { clamp } from './StickerItem.js?v=1.7.4';
+import { clamp, getRotatedBounds } from './StickerItem.js?v=1.7.5';
 
 const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize' };
 
@@ -110,10 +110,18 @@ export class PointerController {
       const sheet = editor.paper.sheet;
       let nx = action.itemX + dx;
       let ny = action.itemY + dy;
-      
-      // Calcular guías para snapping
+
+      // Para items rotados, permitir que el rectángulo original se salga del lienzo
+      // hasta el AABB, de forma que el contenido visual pueda llegar al borde.
+      const bounds = getRotatedBounds(item.w, item.h, item.rotation);
+      const minX = -bounds.offsetX;
+      const minY = -bounds.offsetY;
+      const maxX = sheet.w - item.w + bounds.offsetX;
+      const maxY = sheet.h - item.h + bounds.offsetY;
+
+      // Calcular guías para snapping (usar posición visual del AABB)
       editor.guides.compute(item, editor.items, nx, ny);
-      
+
       // Aplicar snapping magnético si está a menos de 6px
       for (const guide of editor.guides.guides) {
         if (guide.type === 'v') {
@@ -126,14 +134,14 @@ export class PointerController {
           else if (Math.abs(ny + item.h - guide.pos) < 6) { ny = guide.pos - item.h; }
         }
       }
-      
-      item.x = clamp(nx, 0, sheet.w - item.w);
-      item.y = clamp(ny, 0, sheet.h - item.h);
-      
+
+      item.x = clamp(nx, minX, maxX);
+      item.y = clamp(ny, minY, maxY);
+
       // Re-calcular guías en la posición final (snapped/clamped) para dibujarlas
       editor.guides.compute(item, editor.items, item.x, item.y);
       this._applyStyle(item);
-      
+
       // Dibujar guías temporalmente en el DOM
       const el = this._itemEl(item.id);
       const sheetEl = el ? el.closest('.sheet') : null;

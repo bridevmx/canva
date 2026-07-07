@@ -12,6 +12,25 @@ export function generateId() {
 
 export function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v))); }
 
+/**
+ * Calcula el Axis-Aligned Bounding Box (AABB) de un rectángulo rotado.
+ * Devuelve el tamaño del AABB y el offset desde la esquina superior izquierda
+ * del rectángulo original hasta la esquina superior izquierda del AABB.
+ */
+export function getRotatedBounds(w, h, rotation) {
+  const rad = Math.abs(rotation || 0) * Math.PI / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const aabbW = w * cos + h * sin;
+  const aabbH = w * sin + h * cos;
+  return {
+    w: aabbW,
+    h: aabbH,
+    offsetX: (aabbW - w) / 2,
+    offsetY: (aabbH - h) / 2
+  };
+}
+
 export class StickerItem {
   constructor(cfg = {}) {
     this.id       = cfg.id ?? generateId();
@@ -55,9 +74,16 @@ export class StickerItem {
   }
 
   toStyle(sheetW, sheetH) {
+    // Para items rotados permitimos que el rectángulo original se salga del lienzo
+    // hasta el AABB, de forma que el contenido visual pueda llegar al borde.
+    const bounds = getRotatedBounds(this.w, this.h, this.rotation);
+    const minX = -bounds.offsetX;
+    const minY = -bounds.offsetY;
+    const maxX = sheetW - this.w + bounds.offsetX;
+    const maxY = sheetH - this.h + bounds.offsetY;
     return {
-      left:   clamp(this.x, 0, sheetW - this.w) + 'px',
-      top:    clamp(this.y, 0, sheetH - this.h) + 'px',
+      left:   clamp(this.x, minX, maxX) + 'px',
+      top:    clamp(this.y, minY, maxY) + 'px',
       width:  clamp(this.w, 20, sheetW) + 'px',
       height: clamp(this.h, 20, sheetH) + 'px',
       zIndex: this.z,

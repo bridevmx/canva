@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.7.4';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.4';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.4';
-import { AuthManager } from '../auth/AuthManager.js?v=1.7.4';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.4';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.4';
+import { CanvasEditor } from './CanvasEditor.js?v=1.7.5';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.5';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.5';
+import { AuthManager } from '../auth/AuthManager.js?v=1.7.5';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.5';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.5';
 
 const PX_PER_CM = 37.8095;
 
