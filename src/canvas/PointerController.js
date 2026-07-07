@@ -8,6 +8,7 @@ export class PointerController {
   constructor(editor) {
     Object.defineProperty(this, 'editor', { value: editor, enumerable: false, writable: true, configurable: true });
     this.action = null;
+    this.notify = null; // callback que la componente Alpine setea para sync
     this._bindGlobal();
   }
 
@@ -71,6 +72,7 @@ export class PointerController {
       item.x = clamp(action.itemX + dx, 0, sheet.w - item.w);
       item.y = clamp(action.itemY + dy, 0, sheet.h - item.h);
       editor.guides.compute(item, editor.items, item.x, item.y);
+      if (this.notify) this.notify();
     }
 
     else if (action.mode === ACTION.RESIZE && item) {
@@ -79,6 +81,7 @@ export class PointerController {
       const sheet = editor.paper.sheet;
       item.w = clamp(action.itemW + dx, 20, sheet.w - item.x);
       item.h = clamp(action.itemH + dy, 20, sheet.h - item.y);
+      if (this.notify) this.notify();
     }
 
     else if (action.mode === ACTION.ROTATE && item) {
@@ -88,6 +91,7 @@ export class PointerController {
       if (ev.shiftKey) newRot = Math.round(newRot / 15) * 15;
       item.rotation = Math.round(newRot) % 360;
       if (item.rotation < 0) item.rotation += 360;
+      if (this.notify) this.notify();
     }
 
     else if (action.mode === ACTION.CROP_MOVE) {
@@ -110,6 +114,7 @@ export class PointerController {
     this.action = null;
     this.editor.guides.clear();
     document.body.classList.remove('drag-locked');
+    if (this.notify) this.notify();
   }
 
   _bindGlobal() {

@@ -1,11 +1,11 @@
 // canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
 
-import { CanvasEditor } from './CanvasEditor.js?v=1.4.1';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.4.1';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.4.1';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.4.1';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.4.1';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.4.1';
+import { CanvasEditor } from './CanvasEditor.js?v=1.5.0';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.5.0';
+import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.5.0';
+import { AuthManager }       from '../auth/AuthManager.js?v=1.5.0';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.5.0';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.5.0';
 
 const PX_PER_CM = 37.8095;
 
@@ -75,6 +75,8 @@ function registerStickerMaker(Alpine) {
 
         this._bindResize();
         await this._waitForRefs();
+
+        editor.pointer.notify = () => sync.call(this);
 
         editor.fitZoom(this.$refs.canvasMain);
         this.syncZoom();
