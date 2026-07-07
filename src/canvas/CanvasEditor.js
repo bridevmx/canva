@@ -184,7 +184,7 @@ export class CanvasEditor {
   async _onKey(ev) {
     if (this.crop.active) {
       if (ev.key === 'Enter')    { ev.preventDefault(); ev.stopImmediatePropagation(); await this.applyCrop(); window.dispatchEvent(new CustomEvent('editor:change')); }
-      else if (ev.key === 'Escape') { ev.preventDefault(); this.cancelCrop(); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); this.cancelCrop(); window.dispatchEvent(new CustomEvent('editor:change')); }
       return;
     }
 
