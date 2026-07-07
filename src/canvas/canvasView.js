@@ -1,11 +1,12 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.7.7';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.7';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.7';
-import { AuthManager } from '../auth/AuthManager.js?v=1.7.7';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.7';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.7';
+import { CanvasEditor } from './CanvasEditor.js?v=1.7.8';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.8';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.8';
+import { AuthManager } from '../auth/AuthManager.js?v=1.7.8';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.8';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.8';
+import { previewTrim, trimWhiteBorders as applyTrimWhiteBorders } from './TrimService.js?v=1.7.8';
 
 const PX_PER_CM = 37.8095;
 
@@ -97,6 +98,8 @@ async function initCanvas(canvasMainRef) {
   canvasMainRef.addEventListener('touchend', e => onCanvasTouchEnd(e), { passive: true });
 
   window.addEventListener('editor:change', () => sync());
+
+  _bindTrimPreviewModal();
 
   await persistence.loadUserProjects();
 
@@ -295,10 +298,78 @@ function getCropHandles() {
 }
 
 // ── Trim ──
-async function trimWhiteBorders() {
-  await editor.trimWhiteSelected();
+let trimPreviewItem = null;
+let trimPreviewThreshold = 245;
+
+function openTrimPreview(item) {
+  if (!item || item.type !== 'image') return;
+  trimPreviewItem = item;
+  trimPreviewThreshold = Number(item.whiteThreshold ?? 245);
+  const modal = document.getElementById('trim-preview-modal');
+  const originalImg = document.getElementById('trim-preview-original');
+  const resultImg = document.getElementById('trim-preview-result');
+  const slider = document.getElementById('trim-threshold');
+  const valueLabel = document.getElementById('trim-threshold-value');
+  if (!modal || !originalImg || !resultImg || !slider || !valueLabel) return;
+
+  originalImg.src = item.originalSrc || item.src;
+  slider.value = trimPreviewThreshold;
+  valueLabel.textContent = trimPreviewThreshold;
+  resultImg.src = '';
+  modal.classList.remove('hidden');
+  updateTrimPreview();
+}
+
+async function updateTrimPreview() {
+  if (!trimPreviewItem) return;
+  const resultImg = document.getElementById('trim-preview-result');
+  const src = trimPreviewItem.originalSrc || trimPreviewItem.src;
+  const previewSrc = await previewTrim(src, trimPreviewThreshold);
+  if (resultImg && previewSrc) resultImg.src = previewSrc;
+}
+
+function closeTrimPreview() {
+  const modal = document.getElementById('trim-preview-modal');
+  if (modal) modal.classList.add('hidden');
+  trimPreviewItem = null;
+}
+
+async function applyTrimPreview() {
+  if (!trimPreviewItem) return;
+  await applyTrimWhiteBorders(trimPreviewItem, trimPreviewThreshold);
   editor.history.push();
+  closeTrimPreview();
   sync();
+}
+
+function _bindTrimPreviewModal() {
+  const modal = document.getElementById('trim-preview-modal');
+  const closeBtn = document.getElementById('trim-preview-close');
+  const cancelBtn = document.getElementById('trim-preview-cancel');
+  const applyBtn = document.getElementById('trim-preview-apply');
+  const slider = document.getElementById('trim-threshold');
+  const valueLabel = document.getElementById('trim-threshold-value');
+
+  if (!modal || !slider) return;
+
+  slider.addEventListener('input', () => {
+    trimPreviewThreshold = parseInt(slider.value, 10);
+    if (valueLabel) valueLabel.textContent = trimPreviewThreshold;
+    updateTrimPreview();
+  });
+
+  closeBtn?.addEventListener('click', closeTrimPreview);
+  cancelBtn?.addEventListener('click', closeTrimPreview);
+  applyBtn?.addEventListener('click', applyTrimPreview);
+
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeTrimPreview();
+  });
+}
+
+async function trimWhiteBorders() {
+  const sel = getSelected();
+  openTrimPreview(sel);
 }
 function restoreOriginalImage() {
   editor.restoreOriginal();
