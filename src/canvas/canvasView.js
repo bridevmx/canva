@@ -4,7 +4,7 @@ import { CanvasEditor } from './CanvasEditor.js';
 import { CanvasPersistence } from './CanvasPersistence.js';
 import { QuoteCalculator }   from '../ui/QuoteCalculator.js';
 import { AuthManager }       from '../auth/AuthManager.js';
-import { PRODUCTS, PAPER_SIZES } from '../pb.config.js';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js';
 import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js';
 
 const PX_PER_CM = 37.8095;
@@ -271,9 +271,18 @@ function registerStickerMaker(Alpine) {
   });
 }
 
-// ── Bootstrap: registrar con Alpine (maneja race condition con defer) ──────
-if (window.Alpine) {
-  registerStickerMaker(window.Alpine);
-} else {
-  document.addEventListener('alpine:init', () => registerStickerMaker(window.Alpine));
-}
+// ── Bootstrap: registrar con Alpine garantizando el orden de carga ────────
+// PROMESA: el listener alpine:init SIEMPRE se añade antes de que Alpine dispare el evento.
+// 1. Registramos el listener de alpine:init (sincrono, no espera a imports).
+// 2. Cargamos Alpine dinamicamente desde el CDN.
+// 3. Cuando Alpine arranca dispara alpine:init, nuestro listener registra stickerMaker.
+// 4. Alpine camina el DOM y encuentra el componente ya registrado.
+document.addEventListener('alpine:init', () => registerStickerMaker(window.Alpine));
+
+(function loadAlpine() {
+  if (window.Alpine) return; // Ya cargado (no deberia, pero por seguridad)
+  const s = document.createElement('script');
+  s.src = ALPINE_CDN_URL;
+  s.defer = true;
+  document.head.appendChild(s);
+})();
