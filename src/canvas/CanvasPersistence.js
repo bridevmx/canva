@@ -5,9 +5,9 @@ import { StickerItem }  from './StickerItem.js';
 
 export class CanvasPersistence {
   constructor(editor, pb, auth) {
-    this.editor  = editor;
-    this.pb      = pb;
-    this.auth    = auth;
+    Object.defineProperty(this, 'editor', { value: editor, enumerable: false, writable: true, configurable: true });
+    Object.defineProperty(this, 'pb',     { value: pb,     enumerable: false, writable: true, configurable: true });
+    Object.defineProperty(this, 'auth',   { value: auth,   enumerable: false, writable: true, configurable: true });
     this.savedProjects    = [];
     this.currentRecordId  = null;
     this.editingAsAdmin   = false;

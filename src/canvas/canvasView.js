@@ -1,11 +1,11 @@
 // canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
 
-import { CanvasEditor } from './CanvasEditor.js?v=1.1.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.1.0';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.1.0';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.1.0';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.1.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.1.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.2.0';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.2.0';
+import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.2.0';
+import { AuthManager }       from '../auth/AuthManager.js?v=1.2.0';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.2.0';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.2.0';
 
 const PX_PER_CM = 37.8095;
 
@@ -124,6 +124,7 @@ function registerStickerMaker(Alpine) {
       redo()        { editor.history.redo(); },
       canUndo()     { return editor.history.canUndo(); },
       canRedo()     { return editor.history.canRedo(); },
+      pushHistory() { editor.history.push(); },
 
       // ── Print
       async printCanvas() {
@@ -192,6 +193,7 @@ function registerStickerMaker(Alpine) {
       startCropMode()             { editor.startCrop(); },
       async applyCropFromOverlay() { await editor.applyCrop(); },
       cancelCropMode()            { editor.cancelCrop(); },
+      cropBoxStyle()              { return editor.crop.boxStyle(); },
 
       // ── Trim
       async trimWhiteBorders() {
