@@ -11,7 +11,9 @@ const PX_PER_CM = 37.8095;
 
 function registerStickerMaker(Alpine) {
   Alpine.data('stickerMaker', () => {
-    const editor = new CanvasEditor();
+    // Alpine.reactive hace que los cambios en las propiedades del editor
+    // disparen re-renderizado automático en el template.
+    const editor = Alpine.reactive(new CanvasEditor());
     let persistence = null;
     let calculator  = null;
     let auth        = null;
@@ -24,7 +26,7 @@ function registerStickerMaker(Alpine) {
       projectTitle: '',
       isSaveModalOpen: false,
 
-      // ── getters delegados al editor
+      // ── getters delegados al editor (reactivo gracias a Alpine.reactive)
       get items()        { return editor.items; },
       get selected()     { return editor.selected; },
       get selectedId()   { return editor.selectedId; },
