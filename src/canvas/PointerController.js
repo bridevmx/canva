@@ -6,7 +6,7 @@ const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-
 
 export class PointerController {
   constructor(editor) {
-    this.editor = editor;
+    Object.defineProperty(this, 'editor', { value: editor, enumerable: false, writable: true, configurable: true });
     this.action = null;
     this._bindGlobal();
   }

@@ -6,7 +6,7 @@ const MAX_HISTORY = 60;
 
 export class HistoryManager {
   constructor(editor) {
-    this.editor = editor;
+    Object.defineProperty(this, 'editor', { value: editor, enumerable: false, writable: true, configurable: true });
     this.history = [];
     this.index   = -1;
   }

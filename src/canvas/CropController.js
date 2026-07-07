@@ -6,7 +6,7 @@ import { clamp } from './StickerItem.js';
 
 export class CropController {
   constructor(editor) {
-    this.editor     = editor;
+    Object.defineProperty(this, 'editor', { value: editor, enumerable: false, writable: true, configurable: true });
     this.active      = false;
     this.id          = null;
     this.x = 0; this.y = 0; this.w = 0; this.h = 0;
