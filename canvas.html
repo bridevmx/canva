@@ -280,7 +280,7 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.7.3';
+  } from './src/canvas/canvasView.js?v=1.7.4';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -313,8 +313,7 @@
   // ── Debounce de renderSheet ──
   // Se define antes que cualquier suscripción para evitar TDZ.
   let renderSheetScheduled = false;
-  function scheduleRenderSheet(source = 'unknown') {
-    console.log('[render] scheduleRenderSheet from', source, 'active:', isPointerActive(), 'scheduled:', renderSheetScheduled);
+  function scheduleRenderSheet() {
     if (renderSheetScheduled) return;
     // No re-renderizar durante drag/resize/rotate para no perder captura ni generar parpadeo.
     if (isPointerActive()) return;
@@ -489,7 +488,7 @@
     elGridIcon.classList.toggle('text-violet-600', show);
     elGridLabel.classList.toggle('text-violet-600', show);
     elGridLabel.classList.toggle('font-bold', show);
-    scheduleRenderSheet('showGrid');
+    scheduleRenderSheet();
   });
 
   // ── Habilitar/deshabilitar botones de toolbar ──
@@ -508,12 +507,12 @@
     // Crop visibility
     updateCropButtonVisibility();
     renderPropertyBars();
-    scheduleRenderSheet('selectedId-toolbar');
+    scheduleRenderSheet();
   });
 
   $cropActive.subscribe(() => {
     updateCropButtonVisibility();
-    scheduleRenderSheet('cropActive-toolbar');
+    scheduleRenderSheet();
   });
 
   function updateCropButtonVisibility() {
@@ -1059,15 +1058,15 @@
 
   // ── Reactividad de items ──
   // $selectedId y $cropActive ya llaman scheduleRenderSheet() en suscripciones de toolbar.
-  $items.subscribe(() => scheduleRenderSheet('items'));
-  $cropId.subscribe(() => scheduleRenderSheet('cropId'));
-  $editingTextId.subscribe(() => scheduleRenderSheet('editingTextId'));
+  $items.subscribe(() => scheduleRenderSheet());
+  $cropId.subscribe(() => scheduleRenderSheet());
+  $editingTextId.subscribe(() => scheduleRenderSheet());
   $activePage.subscribe(() => {
     elInputPageBg.value = currentPageBg();
-    scheduleRenderSheet('activePage');
+    scheduleRenderSheet();
   });
-  $pagesCount.subscribe(() => scheduleRenderSheet('pagesCount'));
-  $pageColors.subscribe(() => scheduleRenderSheet('pageColors'));
+  $pagesCount.subscribe(() => scheduleRenderSheet());
+  $pageColors.subscribe(() => scheduleRenderSheet());
 
   // Page background input
   elInputPageBg.addEventListener('input', () => {

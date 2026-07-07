@@ -1,6 +1,6 @@
 // PointerController.js — Drag/resize/rotate. FIX BUG B: swap w/h en rotación 90°/270°.
 
-import { clamp } from './StickerItem.js?v=1.7.3';
+import { clamp } from './StickerItem.js?v=1.7.4';
 
 const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize' };
 
@@ -19,7 +19,6 @@ export class PointerController {
     this.editor.select(item.id);
     this.action = { mode: ACTION.DRAG, id: item.id, startX: ev.clientX, startY: ev.clientY, itemX: item.x, itemY: item.y };
     document.body.classList.add('drag-locked');
-    console.log('[PointerController] startDrag', item.id);
   }
 
   startResize(item, ev) {
@@ -27,7 +26,6 @@ export class PointerController {
     this.editor.select(item.id);
     this.action = { mode: ACTION.RESIZE, id: item.id, startX: ev.clientX, startY: ev.clientY, itemW: item.w, itemH: item.h };
     document.body.classList.add('drag-locked');
-    console.log('[PointerController] startResize', item.id);
   }
 
   startRotate(item, sheetRect, ev) {
@@ -42,7 +40,6 @@ export class PointerController {
       _lastSnapped: item.rotation
     };
     document.body.classList.add('drag-locked');
-    console.log('[PointerController] startRotate', item.id);
   }
 
   // crop handlers delegados a CropController
@@ -146,9 +143,22 @@ export class PointerController {
     }
 
     else if (action.mode === ACTION.RESIZE && item) {
-      const dx = (ev.clientX - action.startX) / z;
-      const dy = (ev.clientY - action.startY) / z;
+      let dx = (ev.clientX - action.startX) / z;
+      let dy = (ev.clientY - action.startY) / z;
       const sheet = editor.paper.sheet;
+
+      // Cuando el item está rotado, proyectamos el movimiento del mouse
+      // sobre los ejes locales del item para que el resize sea natural.
+      if (item.rotation) {
+        const rad = item.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const localDx = dx * cos + dy * sin;
+        const localDy = -dx * sin + dy * cos;
+        dx = localDx;
+        dy = localDy;
+      }
+
       item.w = clamp(action.itemW + dx, 20, sheet.w - item.x);
       item.h = clamp(action.itemH + dy, 20, sheet.h - item.y);
       this._applyStyle(item);
@@ -180,7 +190,6 @@ export class PointerController {
   }
 
   end() {
-    console.log('[PointerController] end', this.action?.mode);
     if (this.action && [ACTION.DRAG, ACTION.RESIZE, ACTION.ROTATE].includes(this.action.mode)) {
       this.editor.history.push();
     }
