@@ -119,6 +119,12 @@ function registerStickerMaker(Alpine) {
       zoomPercent() { return Math.round(this.canvasZoom * 100) + '%'; },
       fitZoom()  { editor.fitZoom(this.$refs.canvasMain); this.syncZoom(); },
 
+      // ── Undo/Redo
+      undo()        { editor.history.undo(); },
+      redo()        { editor.history.redo(); },
+      canUndo()     { return editor.history.canUndo(); },
+      canRedo()     { return editor.history.canRedo(); },
+
       // ── Print
       async printCanvas() {
         editor.clearSelection();
