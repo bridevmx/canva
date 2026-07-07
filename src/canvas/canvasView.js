@@ -1,11 +1,11 @@
 // canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
 
-import { CanvasEditor } from './CanvasEditor.js?v=1.3.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.3.0';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.3.0';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.3.0';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.3.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.3.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.4.0';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.4.0';
+import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.4.0';
+import { AuthManager }       from '../auth/AuthManager.js?v=1.4.0';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.4.0';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.4.0';
 
 const PX_PER_CM = 37.8095;
 
@@ -16,6 +16,12 @@ function registerStickerMaker(Alpine) {
     let calculator  = null;
     let auth        = null;
 
+    function sync() {
+      // Copia superficial: mismos objetos, nuevo array reactivo
+      this._items = [...editor.items];
+      this._selectedId = editor.selectedId;
+    }
+
     return {
       editor,
       products: PRODUCTS,
@@ -23,32 +29,32 @@ function registerStickerMaker(Alpine) {
       printQuantity: 1,
       projectTitle: '',
       isSaveModalOpen: false,
-      canvasZoom: 1.0, // <-- Reactividad en Alpine
+      canvasZoom: 1.0,
 
-      // ── getters delegados al editor
-      get items()        { return editor.items; },
-      get selected()     { return editor.selected; },
-      get selectedId()   { return editor.selectedId; },
-      get showGrid()     { return editor.showGrid; },
-      get isSaving()     { return editor.isSaving; },
-      get isPrinting()   { return editor.isPrinting; },
-      get editingTextId(){ return editor.editingTextId; },
-      get fonts()        { return editor.fonts; },
-      get crop()         { return editor.crop; },
-      get guides()       { return editor.guides.guides; },
-      get sheet()        { return editor.paper.sheet; },
-      get pagesCount()   { return editor.paper.pagesCount; },
-      get activePage()   { return editor.paper.activePage; },
-      get pageColors()   { return editor.paper.pageColors; },
-      get paperSize()    { return editor.paper.paperSize; },
-      get _editingAsAdmin() { return persistence?.editingAsAdmin || false; },
+      // Arrays/ids reactivos sincronizados con el editor raw
+      _items: [],
+      _selectedId: null,
 
-      get pageBg()       { return editor.paper.getPageColor(editor.paper.activePage); },
-
-      get currentPageColor() { return editor.paper.getPageColor(editor.paper.activePage); },
+      get items()          { return this._items; },
+      get selectedId()     { return this._selectedId; },
+      get selected()       { return this._items.find(i => i.id === this._selectedId) || null; },
+      get showGrid()       { return editor.showGrid; },
+      get isSaving()       { return editor.isSaving; },
+      get isPrinting()     { return editor.isPrinting; },
+      get editingTextId()  { return editor.editingTextId; },
+      get fonts()          { return editor.fonts; },
+      get crop()           { return editor.crop; },
+      get guides()         { return editor.guides.guides; },
+      get sheet()          { return editor.paper.sheet; },
+      get pagesCount()     { return editor.paper.pagesCount; },
+      get activePage()     { return editor.paper.activePage; },
+      get pageColors()     { return editor.paper.pageColors; },
+      get paperSize()      { return editor.paper.paperSize; },
+      get _editingAsAdmin(){ return persistence?.editingAsAdmin || false; },
+      get pageBg()         { return editor.paper.getPageColor(editor.paper.activePage); },
+      get currentPageColor(){ return editor.paper.getPageColor(editor.paper.activePage); },
       set currentPageColor(v) { editor.paper.setPageColor(editor.paper.activePage, v); },
 
-      // ── Cotización reactiva
       get quote() {
         if (!calculator) return { total: 0, finalUnitPrice: 0, pct: 0, warning: null };
         return calculator.compute();
@@ -73,17 +79,15 @@ function registerStickerMaker(Alpine) {
         editor.fitZoom(this.$refs.canvasMain);
         this.syncZoom();
         editor.history.push();
+        sync.call(this);
 
-        // Touch listeners
         const main = this.$refs.canvasMain;
         main.addEventListener('touchstart', e => this.onCanvasTouchStart(e), { passive: true });
         main.addEventListener('touchmove',  e => this.onCanvasTouchMove(e),  { passive: false });
         main.addEventListener('touchend',   e => this.onCanvasTouchEnd(e),   { passive: true });
 
-        // Load user projects
         await persistence.loadUserProjects();
 
-        // Load project from ?id=
         const qs = new URLSearchParams(window.location.search);
         const id = qs.get('id');
         if (id) {
@@ -104,8 +108,8 @@ function registerStickerMaker(Alpine) {
       },
 
       // ── Selection
-      select(id)         { editor.select(id); },
-      clearSelection()   { editor.clearSelection(); },
+      select(id)         { editor.select(id); sync.call(this); },
+      clearSelection()   { editor.clearSelection(); sync.call(this); },
 
       // ── Zoom
       syncZoom() { this.canvasZoom = editor.canvasZoom; },
@@ -115,8 +119,8 @@ function registerStickerMaker(Alpine) {
       fitZoom()  { editor.fitZoom(this.$refs.canvasMain); this.syncZoom(); },
 
       // ── Undo/Redo
-      undo()        { editor.history.undo(); },
-      redo()        { editor.history.redo(); },
+      undo()        { editor.history.undo(); sync.call(this); },
+      redo()        { editor.history.redo(); sync.call(this); },
       canUndo()     { return editor.history.canUndo(); },
       canRedo()     { return editor.history.canRedo(); },
       pushHistory() { editor.history.push(); },
@@ -139,6 +143,7 @@ function registerStickerMaker(Alpine) {
         if (editor.paper.activePage > editor.paper.pagesCount) editor.paper.activePage = editor.paper.pagesCount;
         editor.clearSelection();
         editor.history.push();
+        sync.call(this);
       },
       updatePaperSize() {
         editor.paper.setSize(this.paperSize);
@@ -152,14 +157,15 @@ function registerStickerMaker(Alpine) {
       },
 
       // ── Elementos
-      addText()     { editor.addText(); },
-      addShape(t)   { editor.addShape(t); },
+      addText()     { editor.addText(); sync.call(this); },
+      addShape(t)   { editor.addShape(t); sync.call(this); },
       async handleFiles(event) {
         const files = [...(event.target.files || [])];
         for (let i = 0; i < files.length; i++) {
           await editor.addImageFromFile(files[i], { x: 40 + ((i * 30) % 180), y: 40 + ((i * 30) % 180) });
         }
         event.target.value = '';
+        sync.call(this);
       },
       async handlePaste(event) {
         const items = [...(event.clipboardData?.items || [])];
@@ -167,40 +173,42 @@ function registerStickerMaker(Alpine) {
         if (!imgItem) return;
         const file = imgItem.getAsFile();
         if (file) await editor.addImageFromClipboardFile(file);
+        sync.call(this);
       },
-      duplicateSelected() { editor.duplicateSelected(); },
-      deleteSelected()    { editor.deleteSelected(); },
-      bringForward()      { editor.bringForward(); },
-      sendToBack()        { editor.sendToBack(); },
-      moveOneUp()         { editor.moveOneUp(); },
-      moveOneDown()       { editor.moveOneDown(); },
+      duplicateSelected() { editor.duplicateSelected(); sync.call(this); },
+      deleteSelected()    { editor.deleteSelected(); sync.call(this); },
+      bringForward()      { editor.bringForward(); sync.call(this); },
+      sendToBack()        { editor.sendToBack(); sync.call(this); },
+      moveOneUp()         { editor.moveOneUp(); sync.call(this); },
+      moveOneDown()       { editor.moveOneDown(); sync.call(this); },
 
-      sortedItems()  { return editor.sortedItems(); },
-      itemsOnPage(p) { return editor.itemsOnPage(p); },
+      sortedItems()  { return [...this._items].sort((a, b) => a.z - b.z); },
+      itemsOnPage(p) { return this.sortedItems().filter(i => (i.page || 1) === p); },
       itemStyle(item){ return item.toStyle(editor.paper.sheet.w, editor.paper.sheet.h); },
 
-      // crop handles (Array estable para x-for)
       get cropHandles() { return ['nw','n','ne','e','se','s','sw','w']; },
 
       set showGrid(v) { editor.showGrid = v; },
 
       // ── Crop
-      startCropMode()             { editor.startCrop(); },
-      async applyCropFromOverlay() { await editor.applyCrop(); },
-      cancelCropMode()            { editor.cancelCrop(); },
-      cropBoxStyle()              { return editor.crop.boxStyle(); },
+      startCropMode()               { editor.startCrop(); },
+      async applyCropFromOverlay()  { await editor.applyCrop(); sync.call(this); },
+      cancelCropMode()              { editor.cancelCrop(); },
+      cropBoxStyle()                { return editor.crop.boxStyle(); },
 
       // ── Trim
       async trimWhiteBorders() {
         await editor.trimWhiteSelected();
         editor.history.push();
+        sync.call(this);
       },
-      restoreOriginalImage() { editor.restoreOriginal(); editor.history.push(); },
+      restoreOriginalImage() { editor.restoreOriginal(); editor.history.push(); sync.call(this); },
 
       // ── Grid fill
       gridFill() {
         const r = editor.gridFill();
         if (r) alert(`Cuadrícula: ${r.cols}×${r.rows} = ${r.total} stickers`);
+        sync.call(this);
       },
 
       // ── Reset
@@ -209,6 +217,7 @@ function registerStickerMaker(Alpine) {
         editor.resetProject();
         persistence.reset();
         window.history.replaceState({}, document.title, window.location.pathname);
+        sync.call(this);
       },
 
       // ── Rulers & grid
@@ -238,7 +247,6 @@ function registerStickerMaker(Alpine) {
         ev.currentTarget?.setPointerCapture?.(ev.pointerId);
       },
 
-      // Crop pointer handlers (delegados a PointerController)
       startCropMove(ev) {
         editor.pointer.startCropMove(ev);
         ev.currentTarget?.setPointerCapture?.(ev.pointerId);
