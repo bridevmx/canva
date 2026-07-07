@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId } from './StickerItem.js?v=1.7.9';
-import { ImageItem }      from './ImageItem.js?v=1.7.9';
-import { TextItem }       from './TextItem.js?v=1.7.9';
-import { ShapeItem }     from './ShapeItem.js?v=1.7.9';
-import { CropController } from './CropController.js?v=1.7.9';
-import { trimWhiteBorders } from './TrimService.js?v=1.7.9';
-import { HistoryManager } from './HistoryManager.js?v=1.7.9';
-import { GuidesManager }  from './GuidesManager.js?v=1.7.9';
-import { PointerController } from './PointerController.js?v=1.7.9';
-import { PaperManager }   from './PaperManager.js?v=1.7.9';
-import { FONTS }          from '../pb.config.js?v=1.7.9';
+import { StickerItem, clamp, generateId } from './StickerItem.js?v=1.8.0';
+import { ImageItem }      from './ImageItem.js?v=1.8.0';
+import { TextItem }       from './TextItem.js?v=1.8.0';
+import { ShapeItem }     from './ShapeItem.js?v=1.8.0';
+import { CropController } from './CropController.js?v=1.8.0';
+
+import { HistoryManager } from './HistoryManager.js?v=1.8.0';
+import { GuidesManager }  from './GuidesManager.js?v=1.8.0';
+import { PointerController } from './PointerController.js?v=1.8.0';
+import { PaperManager }   from './PaperManager.js?v=1.8.0';
+import { FONTS }          from '../pb.config.js?v=1.8.0';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -142,9 +142,6 @@ export class CanvasEditor {
   startCrop() { if (this.selected?.type === 'image') this.crop.start(this.selected); }
   cancelCrop() { this.crop.cancel(); }
   applyCrop()  { return this.crop.apply(); }
-
-  trimWhiteSelected() { if (this.selected?.type === 'image') return trimWhiteBorders(this.selected); }
-  restoreOriginal()    { if (this.selected?.type === 'image' && this.selected.originalSrc) this.selected.src = this.selected.originalSrc; }
 
   // ── Zoom ───────────────────────────────────────────
   setZoom(z) { this.canvasZoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)) * 100) / 100; }

@@ -1,12 +1,12 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.7.9';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.9';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.9';
-import { AuthManager } from '../auth/AuthManager.js?v=1.7.9';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.9';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.9';
-import { computeTrimBounds, previewTrim, trimWhiteBorders as applyTrimWhiteBorders } from './TrimService.js?v=1.7.9';
+import { CanvasEditor } from './CanvasEditor.js?v=1.8.0';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.8.0';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.8.0';
+import { AuthManager } from '../auth/AuthManager.js?v=1.8.0';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.8.0';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.8.0';
+
 
 const PX_PER_CM = 37.8095;
 
@@ -98,8 +98,6 @@ async function initCanvas(canvasMainRef) {
   canvasMainRef.addEventListener('touchend', e => onCanvasTouchEnd(e), { passive: true });
 
   window.addEventListener('editor:change', () => sync());
-
-  _bindTrimPreviewModal();
 
   await persistence.loadUserProjects();
 
@@ -297,123 +295,6 @@ function getCropHandles() {
   return ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 }
 
-// ── Trim ──
-let trimPreviewItem = null;
-let trimPreviewThreshold = 245;
-let trimPreviewDebounce = null;
-
-function openTrimPreview(item) {
-  if (!item || item.type !== 'image') return;
-  trimPreviewItem = item;
-  trimPreviewThreshold = Number(item.whiteThreshold ?? 245);
-  const modal = document.getElementById('trim-preview-modal');
-  const originalImg = document.getElementById('trim-preview-original');
-  const resultImg = document.getElementById('trim-preview-result');
-  const slider = document.getElementById('trim-threshold');
-  const valueLabel = document.getElementById('trim-threshold-value');
-  if (!modal || !originalImg || !resultImg || !slider || !valueLabel) return;
-
-  originalImg.src = item.originalSrc || item.src;
-  slider.value = trimPreviewThreshold;
-  valueLabel.textContent = trimPreviewThreshold;
-  resultImg.src = '';
-  const msgEl = document.getElementById('trim-preview-msg');
-  const applyBtn = document.getElementById('trim-preview-apply');
-  if (msgEl) msgEl.classList.add('hidden');
-  if (applyBtn) applyBtn.disabled = false;
-  modal.classList.remove('hidden');
-  updateTrimPreview();
-}
-
-async function updateTrimPreview() {
-  if (!trimPreviewItem) return;
-  const resultImg = document.getElementById('trim-preview-result');
-  const msgEl = document.getElementById('trim-preview-msg');
-  const applyBtn = document.getElementById('trim-preview-apply');
-  const src = trimPreviewItem.originalSrc || trimPreviewItem.src;
-
-  const bounds = await computeTrimBounds(src, trimPreviewThreshold);
-  const hasTrim = bounds && (bounds.cw < bounds.w || bounds.ch < bounds.h);
-
-  if (!bounds) {
-    if (resultImg) resultImg.src = src;
-    if (msgEl) {
-      msgEl.textContent = 'No se detectaron bordes blancos para recortar con este umbral.';
-      msgEl.classList.remove('hidden');
-    }
-    if (applyBtn) applyBtn.disabled = true;
-    return;
-  }
-
-  const out = document.createElement('canvas');
-  out.width = bounds.cw; out.height = bounds.ch;
-  out.getContext('2d').drawImage(bounds.canvas, bounds.left, bounds.top, bounds.cw, bounds.ch, 0, 0, bounds.cw, bounds.ch);
-  if (resultImg) resultImg.src = out.toDataURL('image/png');
-
-  if (msgEl) {
-    if (hasTrim) {
-      msgEl.className = 'text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded mt-2';
-      msgEl.textContent = `Se recortarán ${bounds.w - bounds.cw}px de ancho y ${bounds.h - bounds.ch}px de alto.`;
-    } else {
-      msgEl.className = 'text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1.5 rounded mt-2';
-      msgEl.textContent = 'No se detectaron bordes blancos para recortar con este umbral.';
-    }
-    msgEl.classList.remove('hidden');
-  }
-  if (applyBtn) applyBtn.disabled = !hasTrim;
-}
-
-function closeTrimPreview() {
-  const modal = document.getElementById('trim-preview-modal');
-  if (modal) modal.classList.add('hidden');
-  if (trimPreviewDebounce) { clearTimeout(trimPreviewDebounce); trimPreviewDebounce = null; }
-  trimPreviewItem = null;
-}
-
-async function applyTrimPreview() {
-  if (!trimPreviewItem) return;
-  await applyTrimWhiteBorders(trimPreviewItem, trimPreviewThreshold);
-  editor.history.push();
-  closeTrimPreview();
-  sync();
-}
-
-function _bindTrimPreviewModal() {
-  const modal = document.getElementById('trim-preview-modal');
-  const closeBtn = document.getElementById('trim-preview-close');
-  const cancelBtn = document.getElementById('trim-preview-cancel');
-  const applyBtn = document.getElementById('trim-preview-apply');
-  const slider = document.getElementById('trim-threshold');
-  const valueLabel = document.getElementById('trim-threshold-value');
-
-  if (!modal || !slider) return;
-
-  slider.addEventListener('input', () => {
-    trimPreviewThreshold = parseInt(slider.value, 10);
-    if (valueLabel) valueLabel.textContent = trimPreviewThreshold;
-    if (trimPreviewDebounce) clearTimeout(trimPreviewDebounce);
-    trimPreviewDebounce = setTimeout(() => updateTrimPreview(), 80);
-  });
-
-  closeBtn?.addEventListener('click', closeTrimPreview);
-  cancelBtn?.addEventListener('click', closeTrimPreview);
-  applyBtn?.addEventListener('click', applyTrimPreview);
-
-  modal.addEventListener('click', e => {
-    if (e.target === modal) closeTrimPreview();
-  });
-}
-
-async function trimWhiteBorders() {
-  const sel = getSelected();
-  openTrimPreview(sel);
-}
-function restoreOriginalImage() {
-  editor.restoreOriginal();
-  editor.history.push();
-  sync();
-}
-
 // ── Grid fill ──
 function gridFill() {
   const r = editor.gridFill();
@@ -563,7 +444,6 @@ export {
   bringForward, sendToBack, moveOneUp, moveOneDown,
   toggleGrid,
   startCropMode, applyCrop, cancelCropMode, cropBoxStyle, getCropHandles,
-  trimWhiteBorders, restoreOriginalImage,
   gridFill, resetProject,
   getRulerXStyle, getRulerYStyle, getGridStyle,
   onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
