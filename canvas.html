@@ -278,7 +278,7 @@
     getRulerXStyle, getRulerYStyle, getGridStyle,
     onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
-    computeQuote, currentPageBg, setCurrentPageColor,
+    computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
   } from './src/canvas/canvasView.js?v=1.7.0';
 
@@ -315,6 +315,8 @@
   let renderSheetScheduled = false;
   function scheduleRenderSheet() {
     if (renderSheetScheduled) return;
+    // No re-renderizar durante drag/resize/rotate para no perder captura ni generar parpadeo.
+    if (isPointerActive()) return;
     renderSheetScheduled = true;
     requestAnimationFrame(() => {
       renderSheetScheduled = false;

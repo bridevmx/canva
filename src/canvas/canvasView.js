@@ -328,20 +328,28 @@ function getRulerYStyle() { return rulerYStyle(); }
 function getGridStyle() { return gridStyle(); }
 
 // ── Pointer handlers ──
+// Capturamos el puntero sobre document.body en lugar del elemento temporal.
+// Así, si renderSheet() reemplaza el item durante el arrastre, no perdemos la captura.
+function capturePointer(ev) {
+  try {
+    if (document.body.setPointerCapture) document.body.setPointerCapture(ev.pointerId);
+  } catch {}
+}
+
 function onItemPointerDown(ev, id) {
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
   if (item.locked) { select(id); return; }
   editor.pointer.startDrag(item, ev);
   $selectedId.set(id);
-  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+  capturePointer(ev);
 }
 function onResizeHandlePointerDown(ev, id) {
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
   editor.pointer.startResize(item, ev);
   $selectedId.set(id);
-  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+  capturePointer(ev);
 }
 function onRotateHandlePointerDown(ev, id) {
   const item = editor.items.find(i => i.id === id);
@@ -349,16 +357,20 @@ function onRotateHandlePointerDown(ev, id) {
   const sheetRect = ev.currentTarget.closest('.sheet').getBoundingClientRect();
   editor.pointer.startRotate(item, sheetRect, ev);
   $selectedId.set(id);
-  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+  capturePointer(ev);
 }
 
 function startCropMove(ev) {
   editor.pointer.startCropMove(ev);
-  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+  capturePointer(ev);
 }
 function startCropResize(ev, handle) {
   editor.pointer.startCropResize(handle, ev);
-  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+  capturePointer(ev);
+}
+
+function isPointerActive() {
+  return !!editor.pointer.action;
 }
 
 // ── Save ──
@@ -449,6 +461,6 @@ export {
   onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
   startCropMove, startCropResize,
   saveProject, getEditableAsAdmin,
-  computeQuote, currentPageBg, setCurrentPageColor,
+  computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
   FONTS, PRODUCTS, PAPER_SIZES,
 };
