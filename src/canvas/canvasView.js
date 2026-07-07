@@ -18,6 +18,9 @@ function registerStickerMaker(Alpine) {
 
     function sync() {
       this._items = [...editor.items];
+      this._selectedId = editor.selectedId;
+      this._cropActive = editor.crop.active;
+      this._cropId = editor.crop.id;
     }
 
     return {
@@ -32,6 +35,8 @@ function registerStickerMaker(Alpine) {
       // Arrays/ids reactivos sincronizados con el editor raw
       _items: [],
       _selectedId: null,
+      _cropActive: false,
+      _cropId: null,
 
       get items()          { return this._items; },
       get selectedId()     { return this._selectedId; },
@@ -41,7 +46,7 @@ function registerStickerMaker(Alpine) {
       get isPrinting()     { return editor.isPrinting; },
       get editingTextId()  { return editor.editingTextId; },
       get fonts()          { return editor.fonts; },
-      get crop()           { return editor.crop; },
+      get crop()           { return { active: this._cropActive, id: this._cropId }; },
       get guides()         { return editor.guides.guides; },
       get sheet()          { return editor.paper.sheet; },
       get pagesCount()     { return editor.paper.pagesCount; },
@@ -193,9 +198,9 @@ function registerStickerMaker(Alpine) {
       set showGrid(v) { editor.showGrid = v; },
 
       // ── Crop
-      startCropMode()               { editor.startCrop(); },
+      startCropMode()               { editor.startCrop(); sync.call(this); },
       async applyCropFromOverlay()  { await editor.applyCrop(); sync.call(this); },
-      cancelCropMode()              { editor.cancelCrop(); },
+      cancelCropMode()              { editor.cancelCrop(); sync.call(this); },
       cropBoxStyle()                { return editor.crop.boxStyle(); },
 
       // ── Trim
@@ -246,7 +251,7 @@ function registerStickerMaker(Alpine) {
       onRotateHandlePointerDown(ev, id) {
         const item = editor.items.find(i => i.id === id);
         if (!item) return;
-        const sheetRect = this.$refs.sheet.getBoundingClientRect();
+        const sheetRect = ev.currentTarget.closest('.sheet').getBoundingClientRect();
         editor.pointer.startRotate(item, sheetRect, ev);
         this._selectedId = id;
         ev.currentTarget?.setPointerCapture?.(ev.pointerId);

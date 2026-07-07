@@ -70,6 +70,33 @@ export class PointerController {
     el.style.transform = item.rotation ? `rotate(${item.rotation}deg)` : 'none';
   }
 
+  _applyCropStyle() {
+    const el = document.querySelector('.crop-box');
+    if (!el) return;
+    el.style.left   = this.editor.crop.x + 'px';
+    el.style.top    = this.editor.crop.y + 'px';
+    el.style.width  = this.editor.crop.w + 'px';
+    el.style.height = this.editor.crop.h + 'px';
+  }
+
+  _applyGuidesStyle(sheetEl, guides, sheetW, sheetH) {
+    sheetEl.querySelectorAll('.temp-guide').forEach(el => el.remove());
+    for (const guide of guides) {
+      const gEl = document.createElement('div');
+      gEl.className = 'temp-guide ' + (guide.type === 'v' ? 'guide-v' : 'guide-h');
+      if (guide.type === 'v') {
+        gEl.style.left = guide.pos + 'px';
+        gEl.style.height = sheetH + 'px';
+        gEl.style.top = '0';
+      } else {
+        gEl.style.top = guide.pos + 'px';
+        gEl.style.width = sheetW + 'px';
+        gEl.style.left = '0';
+      }
+      sheetEl.appendChild(gEl);
+    }
+  }
+
   onMove(ev) {
     if (!this.action) return;
     const action = this.action;
@@ -81,10 +108,38 @@ export class PointerController {
       const dx = (ev.clientX - action.startX) / z;
       const dy = (ev.clientY - action.startY) / z;
       const sheet = editor.paper.sheet;
-      item.x = clamp(action.itemX + dx, 0, sheet.w - item.w);
-      item.y = clamp(action.itemY + dy, 0, sheet.h - item.h);
+      let nx = action.itemX + dx;
+      let ny = action.itemY + dy;
+      
+      // Calcular guías para snapping
+      editor.guides.compute(item, editor.items, nx, ny);
+      
+      // Aplicar snapping magnético si está a menos de 6px
+      for (const guide of editor.guides.guides) {
+        if (guide.type === 'v') {
+          if (Math.abs(nx - guide.pos) < 6) { nx = guide.pos; }
+          else if (Math.abs(nx + item.w / 2 - guide.pos) < 6) { nx = guide.pos - item.w / 2; }
+          else if (Math.abs(nx + item.w - guide.pos) < 6) { nx = guide.pos - item.w; }
+        } else if (guide.type === 'h') {
+          if (Math.abs(ny - guide.pos) < 6) { ny = guide.pos; }
+          else if (Math.abs(ny + item.h / 2 - guide.pos) < 6) { ny = guide.pos - item.h / 2; }
+          else if (Math.abs(ny + item.h - guide.pos) < 6) { ny = guide.pos - item.h; }
+        }
+      }
+      
+      item.x = clamp(nx, 0, sheet.w - item.w);
+      item.y = clamp(ny, 0, sheet.h - item.h);
+      
+      // Re-calcular guías en la posición final (snapped/clamped) para dibujarlas
       editor.guides.compute(item, editor.items, item.x, item.y);
       this._applyStyle(item);
+      
+      // Dibujar guías temporalmente en el DOM
+      const el = this._itemEl(item.id);
+      const sheetEl = el ? el.closest('.sheet') : null;
+      if (sheetEl) {
+        this._applyGuidesStyle(sheetEl, editor.guides.guides, sheet.w, sheet.h);
+      }
     }
 
     else if (action.mode === ACTION.RESIZE && item) {
@@ -110,12 +165,14 @@ export class PointerController {
       const dx = (ev.clientX - action.startX) / z;
       const dy = (ev.clientY - action.startY) / z;
       editor.crop.move(dx, dy, { x: action.cropX, y: action.cropY });
+      this._applyCropStyle();
     }
 
     else if (action.mode === ACTION.CROP_RESIZE) {
       const dx = (ev.clientX - action.startX) / z;
       const dy = (ev.clientY - action.startY) / z;
       editor.crop.resize(action.handle, dx, dy, { x: action.cropX, y: action.cropY, w: action.cropW, h: action.cropH });
+      this._applyCropStyle();
     }
   }
 
@@ -123,6 +180,7 @@ export class PointerController {
     if (this.action && [ACTION.DRAG, ACTION.RESIZE, ACTION.ROTATE].includes(this.action.mode)) {
       this.editor.history.push();
     }
+    document.querySelectorAll('.temp-guide').forEach(el => el.remove());
     this.action = null;
     this.editor.guides.clear();
     document.body.classList.remove('drag-locked');
