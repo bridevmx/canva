@@ -1,12 +1,12 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.7.8';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.8';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.8';
-import { AuthManager } from '../auth/AuthManager.js?v=1.7.8';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.8';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.8';
-import { previewTrim, trimWhiteBorders as applyTrimWhiteBorders } from './TrimService.js?v=1.7.8';
+import { CanvasEditor } from './CanvasEditor.js?v=1.7.9';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.9';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.9';
+import { AuthManager } from '../auth/AuthManager.js?v=1.7.9';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.9';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.9';
+import { computeTrimBounds, previewTrim, trimWhiteBorders as applyTrimWhiteBorders } from './TrimService.js?v=1.7.9';
 
 const PX_PER_CM = 37.8095;
 
@@ -300,6 +300,7 @@ function getCropHandles() {
 // ── Trim ──
 let trimPreviewItem = null;
 let trimPreviewThreshold = 245;
+let trimPreviewDebounce = null;
 
 function openTrimPreview(item) {
   if (!item || item.type !== 'image') return;
@@ -316,6 +317,10 @@ function openTrimPreview(item) {
   slider.value = trimPreviewThreshold;
   valueLabel.textContent = trimPreviewThreshold;
   resultImg.src = '';
+  const msgEl = document.getElementById('trim-preview-msg');
+  const applyBtn = document.getElementById('trim-preview-apply');
+  if (msgEl) msgEl.classList.add('hidden');
+  if (applyBtn) applyBtn.disabled = false;
   modal.classList.remove('hidden');
   updateTrimPreview();
 }
@@ -323,14 +328,45 @@ function openTrimPreview(item) {
 async function updateTrimPreview() {
   if (!trimPreviewItem) return;
   const resultImg = document.getElementById('trim-preview-result');
+  const msgEl = document.getElementById('trim-preview-msg');
+  const applyBtn = document.getElementById('trim-preview-apply');
   const src = trimPreviewItem.originalSrc || trimPreviewItem.src;
-  const previewSrc = await previewTrim(src, trimPreviewThreshold);
-  if (resultImg && previewSrc) resultImg.src = previewSrc;
+
+  const bounds = await computeTrimBounds(src, trimPreviewThreshold);
+  const hasTrim = bounds && (bounds.cw < bounds.w || bounds.ch < bounds.h);
+
+  if (!bounds) {
+    if (resultImg) resultImg.src = src;
+    if (msgEl) {
+      msgEl.textContent = 'No se detectaron bordes blancos para recortar con este umbral.';
+      msgEl.classList.remove('hidden');
+    }
+    if (applyBtn) applyBtn.disabled = true;
+    return;
+  }
+
+  const out = document.createElement('canvas');
+  out.width = bounds.cw; out.height = bounds.ch;
+  out.getContext('2d').drawImage(bounds.canvas, bounds.left, bounds.top, bounds.cw, bounds.ch, 0, 0, bounds.cw, bounds.ch);
+  if (resultImg) resultImg.src = out.toDataURL('image/png');
+
+  if (msgEl) {
+    if (hasTrim) {
+      msgEl.className = 'text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded mt-2';
+      msgEl.textContent = `Se recortarán ${bounds.w - bounds.cw}px de ancho y ${bounds.h - bounds.ch}px de alto.`;
+    } else {
+      msgEl.className = 'text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1.5 rounded mt-2';
+      msgEl.textContent = 'No se detectaron bordes blancos para recortar con este umbral.';
+    }
+    msgEl.classList.remove('hidden');
+  }
+  if (applyBtn) applyBtn.disabled = !hasTrim;
 }
 
 function closeTrimPreview() {
   const modal = document.getElementById('trim-preview-modal');
   if (modal) modal.classList.add('hidden');
+  if (trimPreviewDebounce) { clearTimeout(trimPreviewDebounce); trimPreviewDebounce = null; }
   trimPreviewItem = null;
 }
 
@@ -355,7 +391,8 @@ function _bindTrimPreviewModal() {
   slider.addEventListener('input', () => {
     trimPreviewThreshold = parseInt(slider.value, 10);
     if (valueLabel) valueLabel.textContent = trimPreviewThreshold;
-    updateTrimPreview();
+    if (trimPreviewDebounce) clearTimeout(trimPreviewDebounce);
+    trimPreviewDebounce = setTimeout(() => updateTrimPreview(), 80);
   });
 
   closeBtn?.addEventListener('click', closeTrimPreview);

@@ -1,7 +1,7 @@
 // TrimService.js — Trim de bordes blancos con preview y umbral configurable.
 
-import { clamp } from './StickerItem.js?v=1.7.8';
-import { imageDimensions } from './ImageItem.js?v=1.7.8';
+import { clamp } from './StickerItem.js?v=1.7.9';
+import { imageDimensions } from './ImageItem.js?v=1.7.9';
 
 export async function computeTrimBounds(src, threshold = 245) {
   const img = new Image();

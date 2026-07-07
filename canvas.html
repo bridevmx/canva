@@ -265,6 +265,7 @@
           </div>
           <input id="trim-threshold" type="range" min="200" max="255" value="245" class="w-full accent-blue-600 cursor-pointer">
           <p class="text-[10px] text-slate-400 mt-1">Ajusta hasta que el recorte abarque todo el fondo blanco sin cortar el contenido.</p>
+          <p id="trim-preview-msg" class="hidden text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1.5 rounded mt-2"></p>
         </div>
       </div>
       <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 shrink-0 flex items-center justify-end gap-3 rounded-b-2xl">
@@ -332,7 +333,7 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.7.8';
+  } from './src/canvas/canvasView.js?v=1.7.9';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
