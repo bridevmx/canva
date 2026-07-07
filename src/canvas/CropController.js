@@ -2,7 +2,7 @@
 // FIX BUG A: guard contra reentrancia en applyCropFromOverlay().
 // FIX BUG B: actualiza tanto item.w como item.h proporcionalmente al recorte.
 
-import { clamp } from './StickerItem.js';
+import { clamp } from './StickerItem.js?v=1.7.3';
 
 export class CropController {
   constructor(editor) {

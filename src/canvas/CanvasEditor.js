@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId } from './StickerItem.js';
-import { ImageItem }      from './ImageItem.js';
-import { TextItem }       from './TextItem.js';
-import { ShapeItem }     from './ShapeItem.js';
-import { CropController } from './CropController.js';
-import { trimWhiteBorders } from './TrimService.js';
-import { HistoryManager } from './HistoryManager.js';
-import { GuidesManager }  from './GuidesManager.js';
-import { PointerController } from './PointerController.js';
-import { PaperManager }   from './PaperManager.js';
-import { FONTS }          from '../pb.config.js';
+import { StickerItem, clamp, generateId } from './StickerItem.js?v=1.7.3';
+import { ImageItem }      from './ImageItem.js?v=1.7.3';
+import { TextItem }       from './TextItem.js?v=1.7.3';
+import { ShapeItem }     from './ShapeItem.js?v=1.7.3';
+import { CropController } from './CropController.js?v=1.7.3';
+import { trimWhiteBorders } from './TrimService.js?v=1.7.3';
+import { HistoryManager } from './HistoryManager.js?v=1.7.3';
+import { GuidesManager }  from './GuidesManager.js?v=1.7.3';
+import { PointerController } from './PointerController.js?v=1.7.3';
+import { PaperManager }   from './PaperManager.js?v=1.7.3';
+import { FONTS }          from '../pb.config.js?v=1.7.3';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
