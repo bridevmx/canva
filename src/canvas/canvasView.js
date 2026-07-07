@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.7.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.0';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.0';
-import { AuthManager } from '../auth/AuthManager.js?v=1.7.0';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.7.2';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.2';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.2';
+import { AuthManager } from '../auth/AuthManager.js?v=1.7.2';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.2';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.2';
 
 const PX_PER_CM = 37.8095;
 
@@ -332,11 +332,17 @@ function getGridStyle() { return gridStyle(); }
 // Así, si renderSheet() reemplaza el item durante el arrastre, no perdemos la captura.
 function capturePointer(ev) {
   try {
-    if (document.body.setPointerCapture) document.body.setPointerCapture(ev.pointerId);
-  } catch {}
+    if (document.body.setPointerCapture) {
+      document.body.setPointerCapture(ev.pointerId);
+      console.log('[pointer] capture body ok', ev.pointerId);
+    }
+  } catch (err) {
+    console.warn('[pointer] capture body failed', err);
+  }
 }
 
 function onItemPointerDown(ev, id) {
+  console.log('[pointer] item pointerdown', id, 'action:', editor.pointer.action?.mode);
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
   if (item.locked) { select(id); return; }
@@ -345,6 +351,7 @@ function onItemPointerDown(ev, id) {
   capturePointer(ev);
 }
 function onResizeHandlePointerDown(ev, id) {
+  console.log('[pointer] resize pointerdown', id);
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
   editor.pointer.startResize(item, ev);
@@ -352,6 +359,7 @@ function onResizeHandlePointerDown(ev, id) {
   capturePointer(ev);
 }
 function onRotateHandlePointerDown(ev, id) {
+  console.log('[pointer] rotate pointerdown', id);
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
   const sheetRect = ev.currentTarget.closest('.sheet').getBoundingClientRect();
@@ -361,10 +369,12 @@ function onRotateHandlePointerDown(ev, id) {
 }
 
 function startCropMove(ev) {
+  console.log('[pointer] crop move pointerdown');
   editor.pointer.startCropMove(ev);
   capturePointer(ev);
 }
 function startCropResize(ev, handle) {
+  console.log('[pointer] crop resize pointerdown', handle);
   editor.pointer.startCropResize(handle, ev);
   capturePointer(ev);
 }

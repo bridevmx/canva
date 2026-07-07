@@ -19,6 +19,7 @@ export class PointerController {
     this.editor.select(item.id);
     this.action = { mode: ACTION.DRAG, id: item.id, startX: ev.clientX, startY: ev.clientY, itemX: item.x, itemY: item.y };
     document.body.classList.add('drag-locked');
+    console.log('[PointerController] startDrag', item.id);
   }
 
   startResize(item, ev) {
@@ -26,6 +27,7 @@ export class PointerController {
     this.editor.select(item.id);
     this.action = { mode: ACTION.RESIZE, id: item.id, startX: ev.clientX, startY: ev.clientY, itemW: item.w, itemH: item.h };
     document.body.classList.add('drag-locked');
+    console.log('[PointerController] startResize', item.id);
   }
 
   startRotate(item, sheetRect, ev) {
@@ -40,6 +42,7 @@ export class PointerController {
       _lastSnapped: item.rotation
     };
     document.body.classList.add('drag-locked');
+    console.log('[PointerController] startRotate', item.id);
   }
 
   // crop handlers delegados a CropController
@@ -177,6 +180,7 @@ export class PointerController {
   }
 
   end() {
+    console.log('[PointerController] end', this.action?.mode);
     if (this.action && [ACTION.DRAG, ACTION.RESIZE, ACTION.ROTATE].includes(this.action.mode)) {
       this.editor.history.push();
     }
