@@ -153,11 +153,14 @@ export class CanvasEditor {
   zoomPercent() { return Math.round(this.canvasZoom * 100) + '%'; }
 
   fitZoom(container) {
-    if (!container) return;
+    if (!container || container.clientWidth <= 0 || container.clientHeight <= 0) {
+      this.canvasZoom = 0.8; // Fallback seguro si el contenedor aún no tiene dimensiones en el DOM
+      return;
+    }
     const availW = container.clientWidth - 48;
     const availH = container.clientHeight - 80;
     const fit = Math.min(availW / this.paper.sheet.w, availH / this.paper.sheet.h, 1.0);
-    this.canvasZoom = Math.round(fit * 100) / 100;
+    this.setZoom(fit); // Usa setZoom para asegurar el limitador de escala ZOOM_MIN/MAX
   }
 
   // ── Reset ───────────────────────────────────────────
