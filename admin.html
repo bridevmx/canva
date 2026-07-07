@@ -8,28 +8,24 @@
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
   <script src="auth.js"></script>
   <script>
-    if (!isAuthenticated()) { window.location.replace('/login'); }  // FIX #5: sin redirectTo=/admin
+    if (!isAuthenticated()) { window.location.replace('/login'); }
     else if (!isAdmin()) { window.location.replace('/canvas'); }
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-  <style>
-    [x-cloak]{display:none!important}
-  </style>
 </head>
 <body>
-  <div x-data="adminView" x-init="init()" class="min-h-screen bg-slate-100" x-cloak>
+  <div id="app" class="min-h-screen bg-slate-100">
     <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-50">
-      <div @click="window.location.href='/admin'" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard Cliente">
+      <div onclick="window.location.href='/admin'" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard Admin">
         <span class="text-xl">🏠</span>
         <span class="font-bold text-slate-800">StickerMaker</span>
         <span class="text-xs bg-violet-100 text-violet-700 rounded-full px-2 py-0.5 font-bold ml-1">Admin</span>
       </div>
       <div class="flex items-center gap-2">
-        <button @click="window.location.href='/canvas'" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+        <button onclick="window.location.href='/canvas'" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
           ✏️ Canvas
         </button>
-        <span class="text-sm text-slate-500 hidden sm:inline truncate max-w-[120px]" x-text="$store.auth.user?.name || $store.auth.user?.email"></span>
-        <button @click="$store.auth.logout()" class="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition">
+        <span id="user-name" class="text-sm text-slate-500 hidden sm:inline truncate max-w-[120px]"></span>
+        <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition">
           Salir
         </button>
       </div>
@@ -40,177 +36,309 @@
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
-          <p class="text-3xl font-black text-slate-800 mt-1" x-text="orders.length"></p>
+          <p id="stat-total" class="text-3xl font-black text-slate-800 mt-1">0</p>
         </div>
         <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
           <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Recibidos</p>
-          <p class="text-3xl font-black text-amber-700 mt-1" x-text="orders.filter(o=>o.status==='recibido').length"></p>
+          <p id="stat-recibido" class="text-3xl font-black text-amber-700 mt-1">0</p>
         </div>
         <div class="bg-violet-50 rounded-2xl p-4 border border-violet-200 shadow-sm">
           <p class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">En Ajuste</p>
-          <p class="text-3xl font-black text-violet-700 mt-1" x-text="orders.filter(o=>o.status==='ajuste_diseno').length"></p>
+          <p id="stat-ajuste_diseno" class="text-3xl font-black text-violet-700 mt-1">0</p>
         </div>
         <div class="bg-blue-50 rounded-2xl p-4 border border-blue-200 shadow-sm">
           <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Producción</p>
-          <p class="text-3xl font-black text-blue-700 mt-1" x-text="orders.filter(o=>o.status==='produccion').length"></p>
+          <p id="stat-produccion" class="text-3xl font-black text-blue-700 mt-1">0</p>
         </div>
         <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 shadow-sm">
           <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Finalizados</p>
-          <p class="text-3xl font-black text-emerald-700 mt-1" x-text="orders.filter(o=>o.status==='finalizado').length"></p>
+          <p id="stat-finalizado" class="text-3xl font-black text-emerald-700 mt-1">0</p>
         </div>
       </div>
 
       <!-- Filtros -->
       <div class="flex items-center gap-2 mb-4 flex-wrap">
         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Filtrar:</span>
-        <template x-for="f in ['todos','recibido','ajuste_diseno','produccion','finalizado','cancelado','error']" :key="f">
-          <button @click="filter=f" 
-            :class="filter===f ? 'bg-slate-800 text-white shadow' : 'bg-white text-slate-700 border border-slate-200'" 
-            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition" 
-            x-text="f==='todos' ? 'Todos' : f.replace('_',' ')"></button>
-        </template>
-        <button @click="loadOrders()" class="ml-auto px-3 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-semibold transition flex items-center gap-1">
-          <span :class="loading ? 'animate-spin inline-block' : ''">↻</span> Actualizar
+        <div id="filter-buttons" class="flex items-center gap-2 flex-wrap"></div>
+        <button id="btn-refresh" class="ml-auto px-3 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-semibold transition flex items-center gap-1">
+          <span id="refresh-icon">↻</span> Actualizar
         </button>
       </div>
 
       <!-- Lista de Pedidos -->
-      <div class="space-y-3">
-        <template x-for="order in filteredOrders()" :key="order.id">
-          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap mb-1">
-                  <h3 class="font-bold text-slate-800 truncate" x-text="order.title || 'Sin nombre'"></h3>
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 uppercase tracking-wide" 
-                    :class="{
-                      'bg-amber-100 text-amber-700': order.status==='recibido',
-                      'bg-violet-100 text-violet-700': order.status==='ajuste_diseno',
-                      'bg-blue-100 text-blue-700': order.status==='produccion',
-                      'bg-emerald-100 text-emerald-700': order.status==='finalizado',
-                      'bg-slate-100 text-slate-500': order.status==='cancelado',
-                      'bg-red-600 text-white animate-pulse': order.status==='error'
-                    }" 
-                    x-text="order.status?.replace('_',' ')"></span>
-                </div>
-                <p class="text-xs text-slate-400">
-                  <span x-text="new Date(order.created).toLocaleString('es-MX')"></span>
-                  · <span class="font-semibold" x-text="(order.paper_size||'a4').toUpperCase()"></span>
-                  <template x-if="order.admin_canvas_data">
-                    <span class="ml-2 text-violet-500 font-bold">✓ Editado por Admin</span>
-                  </template>
-                </p>
-              </div>
-              
-              <div class="flex items-center gap-1.5 flex-wrap shrink-0">
-                <!-- Botón Editar (Siempre) -->
-                <button @click="openInCanvas(order.id)" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">✏️ Editar</button>
-                
-                <!-- Botón A Producción (Si aún no está en prod) -->
-                <template x-if="order.status === 'recibido' || order.status === 'ajuste_diseno'">
-                  <button @click="updateStatus(order.id, 'produccion')" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-200">🚀 A Producción</button>
-                </template>
-
-                <!-- Botón Imprimir Único -->
-                <button 
-                  @click="directPrint(order.id)" 
-                  :disabled="!!printingId"
-                  class="flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition font-bold text-xs"
-                  :class="printingId === order.id 
-                    ? 'bg-amber-100 border-amber-200 text-amber-700 animate-pulse' 
-                    : (printingId ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed' : 'bg-violet-600 border-violet-600 text-white hover:bg-violet-500 active:scale-95 shadow-lg shadow-violet-200')"
-                >
-                  <span x-text="printingId === order.id ? '⏳' : '🖨️'"></span>
-                  <span x-text="printingId === order.id ? 'Imprimiendo...' : 'Imprimir'"></span>
-                </button>
-                
-                <!-- Botón Finalizar -->
-                <template x-if="order.status === 'produccion'">
-                  <button @click="updateStatus(order.id, 'finalizado')" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition">✅ Finalizar</button>
-                </template>
-
-                <!-- Botón Cancelar (Oculto en finalizado/cancelado) -->
-                <template x-if="order.status !== 'finalizado' && order.status !== 'cancelado'">
-                  <button @click="if(confirm('¿Cancelar orden?')) updateStatus(order.id, 'cancelado')" class="p-1.5 rounded-xl hover:bg-red-50 text-red-300 hover:text-red-500 transition" title="Cancelar">🚫</button>
-                </template>
-              </div>
-            </div>
-          </div>
-        </template>
-      </div>
+      <div id="orders-list" class="space-y-3"></div>
     </main>
   </div>
 
-  <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('adminView', () => ({
-        orders: [], loading: false, filter: 'todos', printingId: null,
-        async init() {
-          await this.loadOrders();
-          this.subscribeRealtime();
-        },
-        async subscribeRealtime() {
-          try {
-            await this.$store.auth.pb.collection('sticker_orders').subscribe('*', (e) => {
-              if (e.action === 'create') {
-                this.orders = [e.record, ...this.orders];
-              } else if (e.action === 'update') {
-                this.orders = this.orders.map(o => o.id === e.record.id ? e.record : o);
-              } else if (e.action === 'delete') {
-                this.orders = this.orders.filter(o => o.id !== e.record.id);
-              }
-            });
-          } catch(err) { console.error('Realtime subscription error', err); }
-        },
-        async loadOrders() {
-          this.loading = true;
-          try {
-            const result = await this.$store.auth.pb.collection('sticker_orders').getList(1, 200, { sort: '-created' });
-            this.orders = result.items;
-          } catch(e) { console.error(e); }
-          finally { this.loading = false; }
-        },
-        filteredOrders() {
-          return this.filter === 'todos' ? this.orders : this.orders.filter(o => o.status === this.filter);
-        },
-        openInCanvas(id) { window.location.href = '/canvas?id=' + id; },
-        getPrintUrl(id) { return window.location.origin + '/print?id=' + id; },
-        openPrint(id) { window.open(this.getPrintUrl(id), '_blank'); },
-        async directPrint(id, printer = 'G1010-series') {
-          if (this.printingId) return;
-          this.printingId = id;
-          // FIX #4: NO enviamos el token completo PB al servicio externo.
-          // El servicio de impresión debe usar su propio mecanismo de auth.
-          // Mientras tanto, enviamos solo el orderId y printer sin credenciales PB.
-          try {
-            const response = await fetch('https://printer.tiendagenesis.com/print-edible-media', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId: id, printer: printer })
-            });
+  <script type="module">
+    import { atom } from 'https://cdn.jsdelivr.net/npm/nanostores@0.11.3/+esm';
+    import { $authUser, initAuth, logout, getAuthPb } from './src/auth/authStore.js';
 
-            const result = await response.json();
+    await initAuth();
 
-            if (response.ok && result.success) {
-              console.log('✅ Impresión enviada con éxito');
-            } else {
-              alert(`⚠️ No se pudo imprimir: ${result.error || 'Error desconocido'}`);
-            }
-          } catch(e) {
-            alert('🔴 Error Crítico: No se pudo conectar con el servidor de impresión. Revisa que printer.tiendagenesis.com esté en línea.');
-          } finally {
-            this.printingId = null;
-          }
-        },
-        async updateStatus(id, newStatus) {
-          try {
-            await this.$store.auth.pb.collection('sticker_orders').update(id, { status: newStatus });
-            const o = this.orders.find(x => x.id === id);
-            if (o) o.status = newStatus;
-          } catch(e) { alert('Error al actualizar el estado.'); }
-        }
-      }));
+    const $orders = atom([]);
+    const $loading = atom(false);
+    const $filter = atom('todos');
+    const $printingId = atom(null);
+
+    const pb = getAuthPb();
+    const FILTERS = ['todos', 'recibido', 'ajuste_diseno', 'produccion', 'finalizado', 'cancelado', 'error'];
+    const STATUS_COLORS = {
+      recibido: 'bg-amber-100 text-amber-700',
+      ajuste_diseno: 'bg-violet-100 text-violet-700',
+      produccion: 'bg-blue-100 text-blue-700',
+      finalizado: 'bg-emerald-100 text-emerald-700',
+      cancelado: 'bg-slate-100 text-slate-500',
+      error: 'bg-red-600 text-white animate-pulse'
+    };
+
+    // ─── UI References ───
+    const elUserName = document.getElementById('user-name');
+    const elBtnLogout = document.getElementById('btn-logout');
+    const elFilterButtons = document.getElementById('filter-buttons');
+    const elOrdersList = document.getElementById('orders-list');
+    const elBtnRefresh = document.getElementById('btn-refresh');
+    const elRefreshIcon = document.getElementById('refresh-icon');
+
+    // ─── Auth UI ───
+    $authUser.subscribe(user => {
+      elUserName.textContent = user?.name || user?.email || '';
     });
+    elBtnLogout.addEventListener('click', () => logout());
+
+    // ─── Filtros ───
+    function renderFilters() {
+      elFilterButtons.innerHTML = '';
+      FILTERS.forEach(f => {
+        const btn = document.createElement('button');
+        btn.textContent = f === 'todos' ? 'Todos' : f.replace('_', ' ');
+        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition';
+        btn.addEventListener('click', () => $filter.set(f));
+        elFilterButtons.appendChild(btn);
+      });
+      updateFilterStyles();
+    }
+    renderFilters();
+
+    $filter.subscribe(filter => {
+      updateFilterStyles();
+      renderOrders();
+      updateStats();
+    });
+
+    function updateFilterStyles() {
+      const current = $filter.get();
+      const buttons = elFilterButtons.querySelectorAll('button');
+      buttons.forEach((btn, i) => {
+        const f = FILTERS[i];
+        if (f === current) {
+          btn.className = 'bg-slate-800 text-white shadow px-3 py-1.5 rounded-xl text-xs font-semibold transition';
+        } else {
+          btn.className = 'bg-white text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition';
+        }
+      });
+    }
+
+    // ─── Stats ───
+    function updateStats() {
+      const orders = $orders.get();
+      const filter = $filter.get();
+      const filtered = filter === 'todos' ? orders : orders.filter(o => o.status === filter);
+
+      document.getElementById('stat-total').textContent = orders.length;
+      document.getElementById('stat-recibido').textContent = orders.filter(o => o.status === 'recibido').length;
+      document.getElementById('stat-ajuste_diseno').textContent = orders.filter(o => o.status === 'ajuste_diseno').length;
+      document.getElementById('stat-produccion').textContent = orders.filter(o => o.status === 'produccion').length;
+      document.getElementById('stat-finalizado').textContent = orders.filter(o => o.status === 'finalizado').length;
+    }
+
+    function filteredOrders() {
+      const f = $filter.get();
+      const all = $orders.get();
+      return f === 'todos' ? all : all.filter(o => o.status === f);
+    }
+
+    // ─── Render Orders ───
+    function renderOrders() {
+      const orders = filteredOrders();
+      const printingId = $printingId.get();
+      elOrdersList.innerHTML = '';
+
+      orders.forEach(order => {
+        const status = order.status || 'recibido';
+        const statusClass = STATUS_COLORS[status] || STATUS_COLORS.recibido;
+        const isPrinting = printingId === order.id;
+
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition';
+        card.setAttribute('data-order-id', order.id);
+
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <h3 class="font-bold text-slate-800 truncate">${escapeHtml(order.title || 'Sin nombre')}</h3>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 uppercase tracking-wide ${statusClass}">
+                  ${status.replace('_', ' ')}
+                </span>
+              </div>
+              <p class="text-xs text-slate-400">
+                <span>${new Date(order.created).toLocaleString('es-MX')}</span>
+                · <span class="font-semibold">${(order.paper_size || 'a4').toUpperCase()}</span>
+                ${order.admin_canvas_data ? '<span class="ml-2 text-violet-500 font-bold">✓ Editado por Admin</span>' : ''}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+              <button class="btn-edit px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition" data-order-id="${order.id}">✏️ Editar</button>
+
+              ${(status === 'recibido' || status === 'ajuste_diseno') ? `
+                <button class="btn-produccion px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-200" data-order-id="${order.id}">🚀 A Producción</button>
+              ` : ''}
+
+              <button class="btn-print px-3 py-2 rounded-xl border-2 transition font-bold text-xs ${isPrinting
+                ? 'bg-amber-100 border-amber-200 text-amber-700 animate-pulse'
+                : (printingId ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed' : 'bg-violet-600 border-violet-600 text-white hover:bg-violet-500 active:scale-95 shadow-lg shadow-violet-200')
+              }" data-order-id="${order.id}" ${printingId && !isPrinting ? 'disabled' : ''}>
+                <span>${isPrinting ? '⏳' : '🖨️'}</span>
+                <span>${isPrinting ? 'Imprimiendo...' : 'Imprimir'}</span>
+              </button>
+
+              ${status === 'produccion' ? `
+                <button class="btn-finalizar px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition" data-order-id="${order.id}">✅ Finalizar</button>
+              ` : ''}
+
+              ${(status !== 'finalizado' && status !== 'cancelado') ? `
+                <button class="btn-cancelar p-1.5 rounded-xl hover:bg-red-50 text-red-300 hover:text-red-500 transition" data-order-id="${order.id}" title="Cancelar">🚫</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        elOrdersList.appendChild(card);
+      });
+
+      // ─── Event Listeners ───
+      elOrdersList.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openInCanvas(btn.dataset.orderId));
+      });
+      elOrdersList.querySelectorAll('.btn-produccion').forEach(btn => {
+        btn.addEventListener('click', () => updateStatus(btn.dataset.orderId, 'produccion'));
+      });
+      elOrdersList.querySelectorAll('.btn-print').forEach(btn => {
+        btn.addEventListener('click', () => directPrint(btn.dataset.orderId));
+      });
+      elOrdersList.querySelectorAll('.btn-finalizar').forEach(btn => {
+        btn.addEventListener('click', () => updateStatus(btn.dataset.orderId, 'finalizado'));
+      });
+      elOrdersList.querySelectorAll('.btn-cancelar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (confirm('¿Cancelar orden?')) updateStatus(btn.dataset.orderId, 'cancelado');
+        });
+      });
+    }
+
+    // ─── Actions ───
+    function openInCanvas(id) {
+      window.location.href = '/canvas?id=' + id;
+    }
+
+    async function updateStatus(id, newStatus) {
+      try {
+        await pb.collection('sticker_orders').update(id, { status: newStatus });
+        const orders = $orders.get();
+        const o = orders.find(x => x.id === id);
+        if (o) {
+          o.status = newStatus;
+          $orders.set([...orders]);
+        }
+      } catch (e) {
+        alert('Error al actualizar el estado.');
+      }
+    }
+
+    async function directPrint(id, printer = 'G1010-series') {
+      if ($printingId.get()) return;
+      $printingId.set(id);
+
+      try {
+        const response = await fetch('https://printer.tiendagenesis.com/print-edible-media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: id, printer: printer })
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+          console.log('✅ Impresión enviada con éxito');
+        } else {
+          alert(`⚠️ No se pudo imprimir: ${result.error || 'Error desconocido'}`);
+        }
+      } catch (e) {
+        alert('🔴 Error Crítico: No se pudo conectar con el servidor de impresión. Revisa que printer.tiendagenesis.com esté en línea.');
+      } finally {
+        $printingId.set(null);
+      }
+    }
+
+    // ─── Load Orders ───
+    async function loadOrders() {
+      $loading.set(true);
+      try {
+        const result = await pb.collection('sticker_orders').getList(1, 200, { sort: '-created' });
+        $orders.set(result.items);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        $loading.set(false);
+      }
+    }
+
+    elBtnRefresh.addEventListener('click', loadOrders);
+
+    $loading.subscribe(loading => {
+      if (loading) {
+        elRefreshIcon.className = 'animate-spin inline-block';
+      } else {
+        elRefreshIcon.className = '';
+      }
+    });
+
+    // ─── Realtime Subscription ───
+    async function subscribeRealtime() {
+      try {
+        await pb.collection('sticker_orders').subscribe('*', (e) => {
+          let orders = $orders.get();
+          if (e.action === 'create') {
+            $orders.set([e.record, ...orders]);
+          } else if (e.action === 'update') {
+            $orders.set(orders.map(o => o.id === e.record.id ? e.record : o));
+          } else if (e.action === 'delete') {
+            $orders.set(orders.filter(o => o.id !== e.record.id));
+          }
+        });
+      } catch (err) {
+        console.error('Realtime subscription error', err);
+      }
+    }
+
+    // ─── Reactivity ───
+    $orders.subscribe(() => {
+      renderOrders();
+      updateStats();
+    });
+
+    $printingId.subscribe(() => renderOrders());
+
+    // ─── Init ───
+    await loadOrders();
+    await subscribeRealtime();
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
   </script>
 </body>
 </html>

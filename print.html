@@ -6,9 +6,10 @@
   <title>Impresión de Pedido</title>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Righteous&family=Russo+One&family=Sacramento&family=Satisfy&family=Inter:wght@400;700;900&family=Anton&family=Pacifico&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Bebas+Neue&family=Lobster&family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Chewy&family=Permanent+Marker&family=Nunito:wght@400;700;900&family=Raleway:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Archivo+Black&family=Passion+One:wght@400;700;900&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
-    /* Estilos base optimizados para impresión */
     html, body {
       margin: 0;
       padding: 0;
@@ -37,206 +38,198 @@
       padding: 6px;
     }
     .no-render { display: none !important; }
-    [x-cloak] { display: none !important; }
-    
-    /* Reglas específicas para Puppeteer */
     @media screen {
       body { background: #f1f5f9; padding: 2rem; }
       .sheet { margin: 0 auto 2rem auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     }
   </style>
 </head>
-<body x-data="headlessPrint" x-init="init()">
+<body>
 
-  <!-- Pantalla de Estado (Visible solo en navegador normal, Puppeteer la ignorará si el selector es .sheet) -->
-  <div x-show="!ready" class="fixed inset-0 flex items-center justify-center bg-white z-[9999]">
+  <!-- Loading screen -->
+  <div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-white z-[9999]">
     <div class="text-center">
-      <template x-if="status === 'loading'">
-        <div class="animate-spin text-4xl mb-4">🌀</div>
-      </template>
-      <template x-if="status === 'error'">
-        <div class="text-4xl mb-4">⚠️</div>
-      </template>
-      <p class="text-slate-600 font-bold" x-text="statusText"></p>
+      <div id="loading-spinner" class="text-4xl mb-4">🌀</div>
+      <div id="error-icon" class="hidden text-4xl mb-4">⚠️</div>
+      <p id="status-text" class="text-slate-600 font-bold">Cargando datos...</p>
     </div>
   </div>
 
-  <!-- Contenedor Principal de Impresión -->
-  <div id="print-container" x-show="ready" x-cloak>
-    <template x-for="p in pagesCount" :key="p">
-      <div class="sheet" :style="{ background: pageColors[p] || '#ffffff', width: sheet.w + 'px', height: sheet.h + 'px' }">
-        <template x-for="item in sortedItems().filter(i => (i.page||1) === p)" :key="item.id">
-          <div :style="itemStyle(item)" class="absolute pointer-events-none">
-            
-            <!-- Imagen -->
-            <template x-if="item.type === 'image'">
-              <img :src="item.src" class="w-full h-full" :style="{ objectFit: item.fit || 'contain' }" />
-            </template>
-            
-            <!-- Texto -->
-            <template x-if="item.type === 'text'">
-              <div class="text-box" :style="{ 
-                fontFamily: item.fontFamily, 
-                color: item.color, 
-                fontSize: item.fontSize + 'px', 
-                fontWeight: item.fontWeight, 
-                textShadow: item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none', 
-                '-webkit-text-stroke': item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none' 
-              }" x-text="item.text"></div>
-            </template>
-            
-            <!-- Forma -->
-            <template x-if="item.type === 'shape'">
-              <div class="w-full h-full" :style="{ 
-                background: item.fillColor ?? '#3b82f6', 
-                borderRadius: item.shapeType === 'circle' ? '50%' : '4px', 
-                border: (item.strokeWidth ?? 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none', 
-                boxSizing: 'border-box' 
-              }"></div>
-            </template>
+  <!-- Print container -->
+  <div id="print-container" style="display:none"></div>
 
-          </div>
-        </template>
-      </div>
-    </template>
-  </div>
-
-  <script>
-    // Flag global para que Puppeteer sepa cuando terminar
+  <script type="module">
     window.RENDER_READY = false;
 
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('headlessPrint', () => ({
-        ready: false,
-        status: 'loading',
-        statusText: 'Cargando datos...',
-        items: [],
-        pageColors: { 1: '#ffffff' },
-        pagesCount: 1,
-        sheet: { w: 794, h: 1123 },
-        paperSize: 'a4',
+    const pb = new PocketBase('https://scraping.pockethost.io');
+    const qs = new URLSearchParams(window.location.search);
+    const id = qs.get('id');
+    let token = qs.get('token');
+    let paperSize = 'a4';
+    let sheet = { w: 794, h: 1123 };
+    let items = [];
+    let pageColors = { 1: '#ffffff' };
+    let pagesCount = 1;
 
-        async init() {
-          const pb = new PocketBase('https://scraping.pockethost.io');
-          const qs = new URLSearchParams(window.location.search);
-          const id = qs.get('id');
-          let token = qs.get('token');
+    const elLoadingScreen = document.getElementById('loading-screen');
+    const elPrintContainer = document.getElementById('print-container');
+    const elLoadingSpinner = document.getElementById('loading-spinner');
+    const elErrorIcon = document.getElementById('error-icon');
+    const elStatusText = document.getElementById('status-text');
 
-          // FIX #1 (seguridad): el token en URL se elimina inmediatamente del historial
-          // y se mueve a sessionStorage (no persiste en logs futuros/Referer).
-          // El bot de impresión debe seguir enviando ?id=…&token=… pero la URL
-          // se sanitiza en cuanto carga.
-          if (token) {
-            sessionStorage.setItem('print_token', token);
-            // Limpia la URL sin recargar: elimina el token del historial y del Referer
-            const clean = new URL(window.location.href);
-            clean.searchParams.delete('token');
-            window.history.replaceState({}, document.title, clean.pathname + (clean.search ? clean.search : '') + clean.hash);
-          } else {
-            // Intenta recuperar token de sessionStorage si ya fue sanitizado
-            token = sessionStorage.getItem('print_token');
-          }
+    function setStatus(type, text) {
+      if (type === 'error') {
+        elLoadingSpinner.classList.add('hidden');
+        elErrorIcon.classList.remove('hidden');
+      } else {
+        elLoadingSpinner.classList.remove('hidden');
+        elErrorIcon.classList.add('hidden');
+      }
+      elStatusText.textContent = text;
+    }
 
-          if (token) pb.authStore.save(token, null);
+    // Sanitizar token de URL
+    if (token) {
+      sessionStorage.setItem('print_token', token);
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete('token');
+      window.history.replaceState({}, document.title, clean.pathname + (clean.search ? clean.search : '') + clean.hash);
+    } else {
+      token = sessionStorage.getItem('print_token');
+    }
 
-          // Redirección de seguridad si no hay sesión válida (para humanos)
-          if (!pb.authStore.isValid) {
-            window.location.replace('/login?redirectTo=/print?id=' + encodeURIComponent(id || ''));
-            return;
-          }
-          
-          if (!id) {
-            this.status = 'error';
-            this.statusText = 'ID de pedido faltante';
-            return;
-          }
+    if (token) pb.authStore.save(token, null);
 
-          try {
-            const rec = await pb.collection('sticker_orders').getOne(id);
-            this.paperSize = rec.paper_size || 'a4';
-            
-            // Configuración de página
-            if (this.paperSize === 'a4') { this.sheet = { w: 794, h: 1123 }; }
-            else { this.sheet = { w: 816, h: 1056 }; }
+    if (!pb.authStore.isValid) {
+      window.location.replace('/login?redirectTo=/print?id=' + encodeURIComponent(id || ''));
+      throw new Error('Not authenticated');
+    }
 
-            // Inyección de estilos de página para el PDF
-            const style = document.createElement('style');
-            style.innerHTML = `@page { size: ${this.paperSize === 'a4' ? 'A4' : 'letter'}; margin: 0; }`;
-            document.head.appendChild(style);
+    if (!id) {
+      setStatus('error', 'ID de pedido faltante');
+      return;
+    }
 
-            // Determinar fuente de datos (Admin vs Cliente)
-            let rawData = rec.admin_canvas_data;
-            if (!rawData || (typeof rawData === 'string' && rawData.length < 5)) {
-              rawData = rec.canvas_data;
-            }
+    try {
+      const rec = await pb.collection('sticker_orders').getOne(id);
+      paperSize = rec.paper_size || 'a4';
 
-            const data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-            this.items = data.items || [];
-            this.pageColors = data.pageColors || { 1: rec.page_bg || '#ffffff' };
-            
-            let maxPage = 1;
-            this.items.forEach(item => {
-              if (item.page === undefined) item.page = 1;
-              if (item.page > maxPage) maxPage = item.page;
-              
-              // Resolver URLs de imágenes de PocketBase
-              if (item.type === 'image' && item.src?.startsWith('FILE:')) {
-                const prefix = item.src.replace('FILE:','').split('.')[0].replace(/-/g,'_');
-                const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : [rec.upload_assets];
-                const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
-                if (fn) item.src = pb.files.getUrl(rec, fn);
-              }
-            });
-            this.pagesCount = maxPage;
+      if (paperSize === 'a4') { sheet = { w: 794, h: 1123 }; }
+      else { sheet = { w: 816, h: 1056 }; }
 
-            // Esperar a que las imágenes se carguen completamente
-            this.$nextTick(async () => {
-              const images = Array.from(document.querySelectorAll('img'));
-              await Promise.all(images.map(img => {
-                if (img.complete) return Promise.resolve();
-                return new Promise(resolve => {
-                  img.onload = resolve;
-                  img.onerror = resolve;
-                });
-              }));
-              
-              // Margen de seguridad para renderizado de fuentes
-              setTimeout(() => {
-                this.ready = true;
-                this.status = 'ready';
-                window.RENDER_READY = true;
-                
-                // Disparar impresión automática (ideal con --kiosk-printing)
-                window.print();
-                
-                console.log('--- RENDER_READY & PRINTING ---');
-              }, 500);
-            });
+      const style = document.createElement('style');
+      style.innerHTML = `@page { size: ${paperSize === 'a4' ? 'A4' : 'letter'}; margin: 0; }`;
+      document.head.appendChild(style);
 
-          } catch (e) {
-            console.error(e);
-            this.status = 'error';
-            this.statusText = 'Error al recuperar el pedido';
-          }
-        },
+      let rawData = rec.admin_canvas_data;
+      if (!rawData || (typeof rawData === 'string' && rawData.length < 5)) {
+        rawData = rec.canvas_data;
+      }
 
-        itemStyle(item) {
-          return {
-            left: item.x + 'px',
-            top: item.y + 'px',
-            width: item.w + 'px',
-            height: item.h + 'px',
-            zIndex: item.z,
-            opacity: item.opacity ?? 1,
-            transform: item.rotation ? `rotate(${item.rotation}deg)` : 'none'
-          };
-        },
+      const data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+      items = data.items || [];
+      pageColors = data.pageColors || { 1: rec.page_bg || '#ffffff' };
 
-        sortedItems() {
-          return [...this.items].sort((a, b) => a.z - b.z);
+      let maxPage = 1;
+      items.forEach(item => {
+        if (item.page === undefined) item.page = 1;
+        if (item.page > maxPage) maxPage = item.page;
+
+        if (item.type === 'image' && item.src?.startsWith('FILE:')) {
+          const prefix = item.src.replace('FILE:', '').split('.')[0].replace(/-/g, '_');
+          const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : [rec.upload_assets];
+          const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
+          if (fn) item.src = pb.files.getUrl(rec, fn);
         }
+      });
+      pagesCount = maxPage;
+
+      // Renderizar hojas
+      renderSheets();
+
+      // Mostrar contenedor, ocultar loading
+      elLoadingScreen.style.display = 'none';
+      elPrintContainer.style.display = 'block';
+
+      // Esperar a que las imágenes se carguen
+      await new Promise(resolve => requestAnimationFrame(resolve));
+
+      const images = Array.from(document.querySelectorAll('#print-container img'));
+      await Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
       }));
-    });
+
+      setTimeout(() => {
+        window.RENDER_READY = true;
+        window.print();
+        console.log('--- RENDER_READY & PRINTING ---');
+      }, 500);
+
+    } catch (e) {
+      console.error(e);
+      setStatus('error', 'Error al recuperar el pedido');
+    }
+
+    function renderSheets() {
+      elPrintContainer.innerHTML = '';
+
+      for (let p = 1; p <= pagesCount; p++) {
+        const bg = pageColors[p] || '#ffffff';
+        const sheetEl = document.createElement('div');
+        sheetEl.className = 'sheet';
+        sheetEl.style.background = bg;
+        sheetEl.style.width = sheet.w + 'px';
+        sheetEl.style.height = sheet.h + 'px';
+
+        const pageItems = [...items].sort((a, b) => a.z - b.z).filter(i => (i.page || 1) === p);
+
+        pageItems.forEach(item => {
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = itemStyle(item);
+
+          if (item.type === 'image') {
+            const img = document.createElement('img');
+            img.src = item.src;
+            img.style.cssText = `width:100%;height:100%;object-fit:${item.fit || 'contain'}`;
+            wrapper.appendChild(img);
+          } else if (item.type === 'text') {
+            const div = document.createElement('div');
+            div.className = 'text-box';
+            div.textContent = item.text;
+            div.style.cssText = `font-family:${item.fontFamily};color:${item.color};font-size:${item.fontSize}px;font-weight:${item.fontWeight};` +
+              (item.textShadow ? `text-shadow:${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor};` : '') +
+              (item.textOutline ? `-webkit-text-stroke:${item.outlineWidth}px ${item.outlineColor};` : '');
+            wrapper.appendChild(div);
+          } else if (item.type === 'shape') {
+            const div = document.createElement('div');
+            div.style.cssText = `width:100%;height:100%;` +
+              `background:${item.fillColor || '#3b82f6'};` +
+              `border-radius:${item.shapeType === 'circle' ? '50%' : '4px'};` +
+              ((item.strokeWidth ?? 0) > 0 ? `border:${item.strokeWidth}px solid ${item.strokeColor};` : '') +
+              `box-sizing:border-box`;
+            wrapper.appendChild(div);
+          }
+
+          sheetEl.appendChild(wrapper);
+        });
+
+        elPrintContainer.appendChild(sheetEl);
+      }
+    }
+
+    function itemStyle(item) {
+      return `position:absolute;` +
+        `left:${item.x}px;top:${item.y}px;` +
+        `width:${item.w}px;height:${item.h}px;` +
+        `z-index:${item.z};` +
+        `opacity:${item.opacity ?? 1};` +
+        `transform:${item.rotation ? `rotate(${item.rotation}deg)` : 'none'};` +
+        `pointer-events:none`;
+    }
   </script>
 </body>
 </html>

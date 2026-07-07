@@ -10,15 +10,10 @@
   <script>
     if (!isAuthenticated()) { window.location.replace('/login?redirectTo=/dashboard'); }
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-  <style>
-    [x-cloak]{display:none!important}
-  </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans selection:bg-violet-100">
 
-  <div x-data="customerDashboard" x-init="init()" x-cloak>
-    
+  <div id="app">
     <!-- Navbar -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
       <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -28,8 +23,8 @@
         </div>
         
         <div class="flex items-center gap-4">
-          <span class="hidden sm:inline text-sm font-medium text-slate-500" x-text="$store.auth.user?.username || $store.auth.user?.phone"></span>
-          <button @click="$store.auth.logout()" class="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">Salir</button>
+          <span id="user-name" class="hidden sm:inline text-sm font-medium text-slate-500"></span>
+          <button id="btn-logout" class="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">Salir</button>
         </div>
       </div>
     </header>
@@ -43,101 +38,172 @@
           <p class="text-slate-500 mt-1">Sigue el estado de tus impresiones comestibles.</p>
         </div>
         
-        <button @click="window.location.href='/canvas'" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-black rounded-2xl transition shadow-xl shadow-violet-200 transform hover:-translate-y-0.5">
+        <button onclick="window.location.href='/canvas'" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-black rounded-2xl transition shadow-xl shadow-violet-200 transform hover:-translate-y-0.5">
           <span>✨</span>
           <span>CREAR NUEVO PROYECTO</span>
         </button>
       </div>
 
-      <!-- Grid de Pedidos -->
-      <div x-show="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <template x-for="i in 3">
-          <div class="bg-white rounded-3xl p-6 border border-slate-200 animate-pulse">
-            <div class="w-1/3 h-4 bg-slate-100 rounded mb-4"></div>
-            <div class="w-full h-8 bg-slate-100 rounded mb-6"></div>
-            <div class="w-2/3 h-4 bg-slate-100 rounded"></div>
-          </div>
-        </template>
+      <!-- Skeleton loading -->
+      <div id="loading-skeleton" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 animate-pulse">
+          <div class="w-1/3 h-4 bg-slate-100 rounded mb-4"></div>
+          <div class="w-full h-8 bg-slate-100 rounded mb-6"></div>
+          <div class="w-2/3 h-4 bg-slate-100 rounded"></div>
+        </div>
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 animate-pulse">
+          <div class="w-1/3 h-4 bg-slate-100 rounded mb-4"></div>
+          <div class="w-full h-8 bg-slate-100 rounded mb-6"></div>
+          <div class="w-2/3 h-4 bg-slate-100 rounded"></div>
+        </div>
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 animate-pulse">
+          <div class="w-1/3 h-4 bg-slate-100 rounded mb-4"></div>
+          <div class="w-full h-8 bg-slate-100 rounded mb-6"></div>
+          <div class="w-2/3 h-4 bg-slate-100 rounded"></div>
+        </div>
       </div>
 
-      <div x-show="!loading && orders.length === 0" class="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+      <!-- Empty state -->
+      <div id="empty-state" class="hidden text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200">
         <div class="text-6xl mb-4">🎨</div>
         <h3 class="text-xl font-bold text-slate-800">Aún no tienes proyectos</h3>
         <p class="text-slate-500 mt-2 mb-8">Empieza creando tu primer diseño en el editor.</p>
-        <button @click="window.location.href='/canvas'" class="px-8 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition">Abrir Editor</button>
+        <button onclick="window.location.href='/canvas'" class="px-8 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition">Abrir Editor</button>
       </div>
 
-      <div x-show="!loading && orders.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <template x-for="order in orders" :key="order.id">
-          <div class="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-violet-200 transition-all duration-300 relative overflow-hidden">
-            
-            <!-- Indicador de Status -->
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
-                :class="{
-                  'bg-amber-100 text-amber-700': order.status==='recibido',
-                  'bg-violet-100 text-violet-700': order.status==='ajuste_diseno',
-                  'bg-blue-100 text-blue-700': order.status==='produccion',
-                  'bg-emerald-100 text-emerald-700': order.status==='finalizado',
-                  'bg-slate-100 text-slate-500': order.status==='cancelado'
-                }"
-                x-text="order.status?.replace('_',' ')"></span>
-              
-              <span class="text-[10px] font-bold text-slate-400" x-text="new Date(order.created).toLocaleDateString()"></span>
-            </div>
-
-            <h3 class="text-lg font-black text-slate-800 leading-tight mb-2 group-hover:text-violet-600 transition" x-text="order.title || 'Proyecto sin nombre'"></h3>
-            
-            <div class="space-y-2 mb-6">
-              <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <span class="text-slate-300">📄</span>
-                <span x-text="(order.paper_size || 'a4').toUpperCase() + ' · ' + order.material_type?.replace('_',' ')"></span>
-              </div>
-              
-              <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <span class="text-slate-300">💵</span>
-                <span>Total pagado: </span>
-                <span class="font-bold text-slate-700" x-text="'$' + (order.canvas_data?.quote?.total || 0).toFixed(2)"></span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 pt-4 border-t border-slate-50">
-              <button @click="window.location.href='/canvas?id='+order.id" class="flex-1 py-2 text-center text-xs font-bold text-violet-600 bg-violet-50 rounded-xl hover:bg-violet-100 transition">
-                VER DISEÑO
-              </button>
-              <template x-if="order.status === 'finalizado'">
-                <span class="text-emerald-500 text-lg">✅</span>
-              </template>
-            </div>
-
-          </div>
-        </template>
-      </div>
+      <!-- Orders grid -->
+      <div id="orders-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
     </main>
   </div>
 
-  <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('customerDashboard', () => ({
-        orders: [], loading: true,
-        async init() {
-          try {
-            const pb = new PocketBase('https://scraping.pockethost.io');
-            // PocketBase filtrará automáticamente por el ID del usuario en las Collection Rules (ViewRule: user = @request.auth.id)
-            const result = await pb.collection('sticker_orders').getList(1, 50, {
-              sort: '-created',
-              expand: 'user'
-            });
-            this.orders = result.items;
-          } catch(e) {
-            console.error(e);
-          } finally {
-            this.loading = false;
-          }
-        }
-      }));
+  <script type="module">
+    import { atom } from 'https://cdn.jsdelivr.net/npm/nanostores@0.11.3/+esm';
+    import { $authUser, initAuth, logout, getAuthPb } from './src/auth/authStore.js';
+
+    await initAuth();
+
+    const pb = getAuthPb();
+
+    const $orders = atom([]);
+    const $loading = atom(true);
+
+    const elUserName = document.getElementById('user-name');
+    const elLoadingSkeleton = document.getElementById('loading-skeleton');
+    const elEmptyState = document.getElementById('empty-state');
+    const elOrdersGrid = document.getElementById('orders-grid');
+    const elBtnLogout = document.getElementById('btn-logout');
+
+    // Mostrar nombre de usuario
+    $authUser.subscribe(user => {
+      elUserName.textContent = user?.username || user?.phone || '';
     });
+
+    // Logout
+    elBtnLogout.addEventListener('click', () => logout());
+
+    // Cargar pedidos
+    try {
+      const result = await pb.collection('sticker_orders').getList(1, 50, {
+        sort: '-created',
+        expand: 'user'
+      });
+      $orders.set(result.items);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      $loading.set(false);
+    }
+
+    // Reactividad
+    $loading.subscribe(loading => {
+      elLoadingSkeleton.classList.toggle('hidden', !loading);
+    });
+
+    function updateUI(orders, loading) {
+      elLoadingSkeleton.classList.toggle('hidden', !loading);
+      if (loading) {
+        elEmptyState.classList.add('hidden');
+        elOrdersGrid.classList.add('hidden');
+        return;
+      }
+
+      if (orders.length === 0) {
+        elEmptyState.classList.remove('hidden');
+        elOrdersGrid.classList.add('hidden');
+      } else {
+        elEmptyState.classList.add('hidden');
+        elOrdersGrid.classList.remove('hidden');
+        renderOrders(orders);
+      }
+    }
+
+    function renderOrders(orders) {
+      elOrdersGrid.innerHTML = '';
+
+      orders.forEach(order => {
+        const status = order.status || 'recibido';
+        const statusColors = {
+          recibido: 'bg-amber-100 text-amber-700',
+          ajuste_diseno: 'bg-violet-100 text-violet-700',
+          produccion: 'bg-blue-100 text-blue-700',
+          finalizado: 'bg-emerald-100 text-emerald-700',
+          cancelado: 'bg-slate-100 text-slate-500'
+        };
+
+        const card = document.createElement('div');
+        card.className = 'group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-violet-200 transition-all duration-300 relative overflow-hidden';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${statusColors[status] || statusColors.recibido}">
+              ${status.replace('_', ' ')}
+            </span>
+            <span class="text-[10px] font-bold text-slate-400">
+              ${new Date(order.created).toLocaleDateString()}
+            </span>
+          </div>
+          <h3 class="text-lg font-black text-slate-800 leading-tight mb-2 group-hover:text-violet-600 transition">
+            ${escapeHtml(order.title || 'Proyecto sin nombre')}
+          </h3>
+          <div class="space-y-2 mb-6">
+            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <span class="text-slate-300">📄</span>
+              <span>${(order.paper_size || 'a4').toUpperCase()} · ${(order.material_type || '').replace(/_/g, ' ')}</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <span class="text-slate-300">💵</span>
+              <span>Total pagado: </span>
+              <span class="font-bold text-slate-700">$${(order.canvas_data?.quote?.total || 0).toFixed(2)}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 pt-4 border-t border-slate-50">
+            <button data-order-id="${order.id}" class="btn-view flex-1 py-2 text-center text-xs font-bold text-violet-600 bg-violet-50 rounded-xl hover:bg-violet-100 transition">
+              VER DISEÑO
+            </button>
+            ${order.status === 'finalizado' ? '<span class="text-emerald-500 text-lg">✅</span>' : ''}
+          </div>
+        `;
+
+        elOrdersGrid.appendChild(card);
+      });
+
+      // Event delegation para botones "VER DISEÑO"
+      elOrdersGrid.querySelectorAll('.btn-view').forEach(btn => {
+        btn.addEventListener('click', () => {
+          window.location.href = '/canvas?id=' + btn.dataset.orderId;
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    $orders.subscribe(orders => updateUI(orders, $loading.get()));
+    $loading.subscribe(loading => updateUI($orders.get(), loading));
   </script>
 
 </body>

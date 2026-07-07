@@ -7,18 +7,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
   <script src="auth.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-  <style> [x-cloak]{display:none!important} </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white overflow-y-auto font-sans selection:bg-rose-500/30">
-  <div x-data="landing" class="min-h-screen flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <!-- Navbar -->
     <nav class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
       <div class="flex items-center gap-3">
         <span class="text-3xl">🌸</span>
-        <span class="font-black text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-200 to-rose-400" x-text="$store.app.name"></span>
+        <span class="font-black text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-200 to-rose-400">StickerMaker</span>
       </div>
-      <button @click="goToLogin()" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold backdrop-blur-sm transition border border-white/10">
+      <button onclick="goToLogin()" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold backdrop-blur-sm transition border border-white/10">
         Iniciar sesión
       </button>
     </nav>
@@ -35,7 +33,7 @@
         Herramientas de expertos, para los repósteros más exigentes.<br class="hidden sm:block"> 
         Configura tus tamaños, elige tu lienzo y haz magia.
       </p>
-      <button @click="goToCanvas()" class="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 font-black text-lg text-white transition-all shadow-xl shadow-rose-900/40 hover:scale-105">
+      <button onclick="goToCanvas()" class="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 font-black text-lg text-white transition-all shadow-xl shadow-rose-900/40 hover:scale-105">
         <span>Abrir Editor de Impresión</span>
         <span>→</span>
       </button>
@@ -121,7 +119,7 @@
       <div class="flex items-center justify-center gap-2 mt-2 text-[10px] text-slate-600 uppercase font-bold tracking-widest">
         <span>#ImpresionComestible</span>
         <span>·</span>
-        <span x-text="$store.app.name"></span>
+        <span>StickerMaker</span>
         <span>·</span>
         <span>#ReposteriaCreativa</span>
       </div>
@@ -129,12 +127,8 @@
   </div>
 
   <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('landing', () => ({
-        goToLogin() { window.location.href = '/login'; },
-        goToCanvas() { window.location.href = isAuthenticated() ? '/canvas' : '/login'; }
-      }));
-    });
+    function goToLogin() { window.location.href = '/login'; }
+    function goToCanvas() { window.location.href = isAuthenticated() ? '/canvas' : '/login'; }
   </script>
 </body>
 </html>

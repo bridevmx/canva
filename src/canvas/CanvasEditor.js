@@ -31,12 +31,6 @@ export class CanvasEditor {
     this.crop       = new CropController(this);
     this.pointer    = new PointerController(this);
 
-    // Evita que Alpine recorra en profundidad las referencias circulares.
-    // Los 3 objetos que tienen this (editor) como backreference reciben __v_skip.
-    this.crop.__v_skip    = true;
-    this.pointer.__v_skip = true;
-    this.history.__v_skip = true;
-
     this._bindKeyboard();
   }
 
@@ -215,6 +209,8 @@ export class CanvasEditor {
       if (ev.key === 'ArrowDown')  this.selected.y += step;
       if (ev.key === 'ArrowLeft')  this.selected.x -= step;
       if (ev.key === 'ArrowRight') this.selected.x += step;
+      this.history.push();
+      window.dispatchEvent(new CustomEvent('editor:change'));
     }
   }
 

@@ -12,7 +12,7 @@ export class AuthManager {
     this.isReady = false;
   }
 
-  async init(alpineRegister = null) {
+  async init(onChangeFn = null) {
     // Esperar a que PocketBase global esté disponible (auth.js lo carga)
     if (!window.PocketBase) {
       await new Promise(res => {
@@ -27,7 +27,7 @@ export class AuthManager {
     this._pb.authStore.onChange((token, record) => {
       this.token = token;
       this.user  = record;
-      if (alpineRegister) alpineRegister(token, record);
+      if (onChangeFn) onChangeFn(token, record);
     }, true);
 
     // Validar token contra el servidor (no solo localStorage)
@@ -54,7 +54,7 @@ export class AuthManager {
     window.location.href = '/';
   }
 
-  // Guards síncronos (usados en <script> antes de que Alpine arranque)
+  // Guards síncronos (usados en <script> antes de que el módulo arranque)
   static isAuthenticated() {
     if (!window.PocketBase) return false;
     const pb = new window.PocketBase(PB_URL);

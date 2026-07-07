@@ -91,8 +91,8 @@ export const APP_CONFIG = {
 
   minOrderTotal: 80,
 
-  // AlpineJS CDN (versión exacta fijada por seguridad — fix #7)
-  alpineCdnUrl: 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js'
+  // Nanostores CDN (versión exacta fijada por seguridad)
+  nanostoresCdnUrl: 'https://cdn.jsdelivr.net/npm/nanostores@0.11.3/+esm'
 };
 
 // ── Helpers de acceso rápido ─────────────────────────────────────────────────
@@ -109,5 +109,5 @@ export const PRODUCTS          = APP_CONFIG.products;
 export const FONTS             = APP_CONFIG.fonts;
 export const DISCOUNT_TIERS    = APP_CONFIG.discountTiers;
 export const MIN_ORDER_TOTAL   = APP_CONFIG.minOrderTotal;
-export const ALPINE_CDN_URL    = APP_CONFIG.alpineCdnUrl;
+export const NANOSTORES_CDN_URL = APP_CONFIG.nanostoresCdnUrl;
 export const PRINTER_API_URL   = PB_CONFIG.printerApiUrl;

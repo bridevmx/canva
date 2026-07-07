@@ -10,7 +10,9 @@
   <script>
     if (!isAuthenticated()) { window.location.replace('/login?redirectTo=/canvas'); }
   </script>
-  <script type="module" src="./src/canvas/canvasView.js?v=1.6.1"></script>
+  <script type="importmap">
+    { "imports": { "nanostores": "https://cdn.jsdelivr.net/npm/nanostores@0.11.3/+esm" } }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Righteous&family=Russo+One&family=Sacramento&family=Satisfy&family=Inter:wght@400;700;900&family=Anton&family=Pacifico&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Bebas+Neue&family=Lobster&family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Chewy&family=Permanent+Marker&family=Nunito:wght@400;700;900&family=Raleway:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Archivo+Black&family=Passion+One:wght@400;700;900&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"/>
@@ -37,7 +39,6 @@
     .tb-scroll::-webkit-scrollbar{height:3px}.tb-scroll::-webkit-scrollbar-track{background:transparent}.tb-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:9999px}
     .drag-locked{overflow:hidden!important;touch-action:none!important}
     .canvas-zoom-outer{position:relative}.canvas-zoom-inner{transform-origin:top left}
-    .ruler-grid{position:absolute;inset:0;pointer-events:none;z-index:5;background-image:repeating-linear-gradient(to right,transparent,transparent 36.809px,rgba(0,0,0,0.15) 36.809px,rgba(0,0,0,0.15) 37.809px),repeating-linear-gradient(to bottom,transparent,transparent 36.809px,rgba(0,0,0,0.15) 36.809px,rgba(0,0,0,0.15) 37.809px)}
     @media(pointer:coarse){.resize-handle{width:28px!important;height:28px!important;right:-14px!important;bottom:-14px!important}.rotate-handle{width:28px!important;height:28px!important;top:-40px!important;left:calc(50% - 14px)!important}.rotate-handle::after{left:10px!important;top:26px!important}}
     @media print{
       html,body{background:white!important;margin:0!important;padding:0!important}
@@ -50,565 +51,203 @@
       .item,.item.selected{outline:none!important}
       .resize-handle,.rotate-handle{display:none!important}
     }
-    [x-cloak]{display:none!important}
+    .hidden{display:none!important}
   </style>
 </head>
 <body>
-<div x-data="stickerMaker()" x-init="init()" class="h-screen flex flex-col bg-slate-100 print:min-h-0 print:bg-white print:block">
+<div class="h-screen flex flex-col bg-slate-100 print:min-h-0 print:bg-white print:block">
 
   <!-- ══════════════ HEADER ══════════════ -->
   <header class="no-print w-full bg-white shadow z-50 shrink-0">
 
-    <!-- FILA 1: Menú Principal Fijo (Mobile-friendly) -->
+    <!-- FILA 1: Menú Principal Fijo -->
     <div class="flex items-center justify-between h-14 border-b border-slate-200 px-3 sm:px-4">
       
-      <!-- Logo -->
-      <div @click="window.location.href='/dashboard'" class="flex items-center shrink-0 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard">
+      <div id="btn-dashboard" class="flex items-center shrink-0 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard">
         <span class="text-xl sm:text-2xl mr-1 sm:mr-2">🏠</span>
         <span class="hidden sm:inline text-base font-black tracking-tight text-slate-700">StickerMaker</span>
       </div>
 
-      <!-- Derecha -->
       <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-        
         <div class="flex items-center gap-1.5 border-r border-slate-200 pr-2 sm:pr-3">
-          <span class="text-xs font-semibold text-slate-600 max-w-[80px] sm:max-w-[120px] truncate" x-text="$store.auth.user?.username || $store.auth.user?.phone || 'Usuario'"></span>
-          <template x-if="$store.auth.isAdmin()">
-            <button @click="window.location.href='/admin'" class="px-2 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 text-[10px] font-bold transition">⚙️</button>
-          </template>
-          <button @click="$store.auth.logout()" title="Cerrar sesión" class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 font-bold transition flex items-center gap-1"><span class="text-[14px]">🚪</span> <span class="text-[10px] text-slate-600 uppercase">Salir</span></button>
+          <span id="header-username" class="text-xs font-semibold text-slate-600 max-w-[80px] sm:max-w-[120px] truncate">Usuario</span>
+          <button id="btn-admin" class="hidden px-2 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 text-[10px] font-bold transition">⚙️</button>
+          <button id="btn-logout" title="Cerrar sesión" class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 font-bold transition flex items-center gap-1"><span class="text-[14px]">🚪</span> <span class="text-[10px] text-slate-600 uppercase">Salir</span></button>
         </div>
 
-        <!-- Botón Nuevo -->
-        <button @click="resetProject()" title="Limpiar lienzo e iniciar un Nuevo Proyecto" class="py-1 px-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"><span class="text-[14px]">📄</span> <span class="hidden sm:inline text-[11px] font-black text-slate-600 uppercase tracking-widest">Nuevo</span></button>
+        <button id="btn-reset" title="Limpiar lienzo e iniciar un Nuevo Proyecto" class="py-1 px-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"><span class="text-[14px]">📄</span> <span class="hidden sm:inline text-[11px] font-black text-slate-600 uppercase tracking-widest">Nuevo</span></button>
+        <button id="btn-mis-proyectos" class="py-1 px-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-white text-slate-700 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm" title="Ir a mis proyectos"><span class="text-[14px]">📁</span><span class="hidden sm:inline text-[11px] font-black uppercase tracking-widest">Mis Proyectos</span></button>
 
-        <!-- Botón Dashboard (Ver Proyectos) -->
-        <button @click="window.location.href='/dashboard'" class="py-1 px-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-white text-slate-700 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm" title="Ir a mis proyectos">
-          <span class="text-[14px]">📁</span>
-          <span class="hidden sm:inline text-[11px] font-black uppercase tracking-widest">Mis Proyectos</span>
-        </button>
-
-        <!-- Botón Guardar (Admin) -->
-        <template x-if="_editingAsAdmin">
-          <button @click="saveProject()" :disabled="isSaving" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-violet-400/30">
-            <span class="text-base sm:text-sm" x-text="isSaving ? '⏳' : '💾'"></span>
-            <span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide" x-text="isSaving ? 'Guardando...' : 'GUARDAR CAMBIOS'"></span>
+        <div id="btn-save-admin" class="hidden">
+          <button id="btn-save-admin-btn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-violet-400/30">
+            <span class="text-base sm:text-sm">💾</span><span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide">GUARDAR CAMBIOS</span>
           </button>
-        </template>
+        </div>
 
-        <!-- Botón Imprimir (Cliente) -->
-        <template x-if="!_editingAsAdmin">
-          <button @click="isSaveModalOpen = true" :disabled="isSaving" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-emerald-400/30">
-            <span class="text-base sm:text-sm" x-text="isSaving ? '⏳' : '🖨️'"></span>
-            <span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide" x-text="isSaving ? 'Enviando...' : 'IMPRIMIR'"></span>
+        <div id="btn-imprimir-cliente">
+          <button id="btn-imprimir-cliente-btn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-emerald-400/30">
+            <span class="text-base sm:text-sm">🖨️</span><span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide">IMPRIMIR</span>
           </button>
-        </template>
-        
+        </div>
       </div>
     </div>
 
-    <!-- FILA 2: Herramientas (Scroll horizontal horizontal) -->
+    <!-- FILA 2: Herramientas -->
     <div class="flex items-center overflow-x-auto tb-scroll px-2 border-b border-slate-200 min-h-[48px] gap-0.5">
       
-      <!-- Imagen -->
-      <button @click="$refs.fileInput.click()" class="tbtn shrink-0" title="Agregar imagen (Ctrl+V para pegar)">
+      <button id="tool-btn-imagen" class="tbtn shrink-0" title="Agregar imagen (Ctrl+V para pegar)">
         <span class="tbtn-icon">🖼️</span><span class="tbtn-label">Imagen</span>
       </button>
-      <input x-ref="fileInput" type="file" accept="image/*" multiple class="hidden" @change="handleFiles($event)" />
+      <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
 
-      <!-- Texto -->
-      <button @click="addText()" class="tbtn shrink-0" title="Agregar texto">
+      <button id="tool-btn-texto" class="tbtn shrink-0" title="Agregar texto">
         <span class="tbtn-icon">📝</span><span class="tbtn-label">Texto</span>
       </button>
 
-      <!-- Forma -->
-      <button @click="addShape('rect')" class="tbtn shrink-0" title="Agregar forma">
+      <button id="tool-btn-forma" class="tbtn shrink-0" title="Agregar forma">
         <span class="tbtn-icon">▭</span><span class="tbtn-label">Forma</span>
       </button>
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <!-- Undo / Redo -->
-      <button @click="undo()" :disabled="!canUndo()" class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
+      <button id="tool-btn-undo" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
         <span class="tbtn-icon">↩️</span><span class="tbtn-label hidden sm:inline">Deshacer</span>
       </button>
-      <button @click="redo()" :disabled="!canRedo()" class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Rehacer (Ctrl+Y)">
+      <button id="tool-btn-redo" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Rehacer (Ctrl+Y)">
         <span class="tbtn-icon">↪️</span><span class="tbtn-label hidden sm:inline">Rehacer</span>
       </button>
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <!-- Duplicar / Eliminar -->
-      <button @click="duplicateSelected()" :disabled="!selected" class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Duplicar (Ctrl+D)">
+      <button id="tool-btn-duplicar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Duplicar (Ctrl+D)">
         <span class="tbtn-icon">📋</span><span class="tbtn-label">Duplicar</span>
       </button>
-      <button @click="deleteSelected()" :disabled="!selected" class="tbtn shrink-0 text-red-500 hover:bg-red-50 disabled:opacity-40 disabled:text-slate-400 disabled:hover:bg-transparent disabled:cursor-not-allowed" title="Eliminar (Supr)">
+      <button id="tool-btn-eliminar" disabled class="tbtn shrink-0 text-red-500 hover:bg-red-50 disabled:opacity-40 disabled:text-slate-400 disabled:hover:bg-transparent disabled:cursor-not-allowed" title="Eliminar (Supr)">
         <span class="tbtn-icon">🗑️</span><span class="tbtn-label">Eliminar</span>
       </button>
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <!-- Color Fondo -->
       <div class="flex items-center gap-1.5 shrink-0 px-2" title="Color de fondo de la pestaña actual">
         <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Fondo</span>
-        <input type="color" :value="pageColors[activePage] || '#ffffff'" @input="pageColors[activePage] = $event.target.value" class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white" />
+        <input id="input-page-bg" type="color" value="#ffffff" class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white" />
       </div>
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <!-- Cuadricula Toggler -->
-      <button @click="showGrid = !showGrid" class="tbtn shrink-0" title="Alternar Cuadrícula">
-        <span class="tbtn-icon" :class="showGrid ? 'text-violet-600' : 'text-slate-600'">📏</span>
-        <span class="tbtn-label whitespace-nowrap" :class="showGrid ? 'text-violet-600 font-bold' : ''">Cuadrícula</span>
+      <button id="tool-btn-grid" class="tbtn shrink-0" title="Alternar Cuadrícula">
+        <span id="grid-icon" class="tbtn-icon text-slate-600">📏</span>
+        <span id="grid-label" class="tbtn-label whitespace-nowrap">Cuadrícula</span>
       </button>
 
-      <!-- Recortar (solo imagen seleccionada) -->
-      <template x-if="selected && selected.type === 'image'">
-        <div class="flex items-center shrink-0 gap-0.5">
-          <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
-          <template x-if="!(crop.active && crop.id === selected.id)">
-            <button @click="startCropMode()" class="tbtn shrink-0 text-blue-700 bg-blue-50 hover:bg-blue-100">
-              <span class="tbtn-icon">✂️</span><span class="tbtn-label">Recortar</span>
-            </button>
-          </template>
-          <template x-if="crop.active && crop.id === selected.id">
-            <div class="flex items-center gap-1 shrink-0">
-              <button @click="applyCropFromOverlay()" class="tbtn text-emerald-800 bg-emerald-100 hover:bg-emerald-200" title="Aplicar (Enter)">
-                <span class="tbtn-icon">✔️</span><span class="tbtn-label">Aplicar</span>
-              </button>
-              <button @click="cancelCropMode()" class="tbtn text-slate-700 bg-slate-100 hover:bg-slate-200" title="Cancelar (Esc)">
-                <span class="tbtn-icon">❌</span><span class="tbtn-label">Cancelar</span>
-              </button>
-            </div>
-          </template>
+      <div id="crop-buttons" class="hidden flex items-center shrink-0 gap-0.5">
+        <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+        <div id="crop-start-btn-wrap">
+          <button id="tool-btn-crop" class="tbtn shrink-0 text-blue-700 bg-blue-50 hover:bg-blue-100">
+            <span class="tbtn-icon">✂️</span><span class="tbtn-label">Recortar</span>
+          </button>
         </div>
-      </template>
-
-      <!-- Espaciador flexible y Controles de Zoom -->
-      <div class="ml-auto flex items-center shrink-0 pr-1 pl-2 border-l border-slate-200">
-        <button @click="zoomOut()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom out">−</button>
-        <span class="text-xs font-bold text-slate-600 w-9 text-center select-none" x-text="zoomPercent()"></span>
-        <button @click="zoomIn()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom in">+</button>
-        <div class="w-px h-4 bg-slate-200 mx-1"></div>
-        <button @click="fitZoom()" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition" title="Ajustar a pantalla">FIT</button>
+        <div id="crop-actions-wrap" class="hidden flex items-center gap-1 shrink-0">
+          <button id="tool-btn-apply-crop" class="tbtn text-emerald-800 bg-emerald-100 hover:bg-emerald-200" title="Aplicar (Enter)">
+            <span class="tbtn-icon">✔️</span><span class="tbtn-label">Aplicar</span>
+          </button>
+          <button id="tool-btn-cancel-crop" class="tbtn text-slate-700 bg-slate-100 hover:bg-slate-200" title="Cancelar (Esc)">
+            <span class="tbtn-icon">❌</span><span class="tbtn-label">Cancelar</span>
+          </button>
+        </div>
       </div>
 
+      <div class="ml-auto flex items-center shrink-0 pr-1 pl-2 border-l border-slate-200">
+        <button id="tool-btn-zoom-out" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom out">−</button>
+        <span id="zoom-percent" class="text-xs font-bold text-slate-600 w-9 text-center select-none">100%</span>
+        <button id="tool-btn-zoom-in" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom in">+</button>
+        <div class="w-px h-4 bg-slate-200 mx-1"></div>
+        <button id="tool-btn-fit" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition" title="Ajustar a pantalla">FIT</button>
+      </div>
     </div>
 
-    <!-- FILA 2: Propiedades (desktop md+) -->
-    <div class="hidden md:flex w-full bg-slate-50 border-b border-slate-200 px-4 py-1.5 items-center gap-3 overflow-x-auto tb-scroll min-h-[44px] text-sm shrink-0">
-      <template x-if="!selected">
-        <p class="text-slate-400 italic text-xs">Selecciona un elemento para ver sus propiedades…</p>
-      </template>
-      <template x-if="selected">
-        <div class="flex items-center gap-3 whitespace-nowrap">
-
-          <!-- Capas -->
-          <div class="flex items-center gap-1 border-r border-slate-200 pr-3">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>
-            <button @click="bringForward()" class="p-1 hover:bg-slate-200 rounded" title="Al frente">⏫</button>
-            <button @click="sendToBack()" class="p-1 hover:bg-slate-200 rounded" title="Al fondo">⏬</button>
-            <button @click="moveOneUp()" class="px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs">↑</button>
-            <button @click="moveOneDown()" class="px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs">↓</button>
-          </div>
-
-          <!-- Lock -->
-          <div class="flex items-center gap-1 border-r border-slate-200 pr-3">
-            <button @click="selected.locked = !selected.locked; pushHistory()"
-              :class="selected.locked ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'hover:bg-slate-200 text-slate-600'"
-              class="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition"
-              :title="selected.locked ? 'Desbloquear elemento' : 'Bloquear elemento'">
-              <span x-text="selected.locked ? '🔒' : '🔓'"></span>
-              <span x-text="selected.locked ? 'Bloq.' : 'Libre'"></span>
-            </button>
-          </div>
-
-          <!-- Opacidad -->
-          <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Opacidad</span>
-            <input type="range" x-model.number="selected.opacity" min="0.05" max="1" step="0.05"
-              @change="pushHistory()"
-              class="w-20 h-1.5 accent-blue-600 cursor-pointer" />
-            <span class="text-xs text-slate-500 w-7" x-text="Math.round((selected.opacity ?? 1) * 100) + '%'"></span>
-          </div>
-
-          <!-- Imagen: Fit -->
-          <template x-if="selected.type === 'image'">
-            <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ajuste</span>
-              <select x-model="selected.fit" class="px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
-                <option value="fill">Fill</option>
-                <option value="contain">Contain</option>
-                <option value="cover">Cover</option>
-              </select>
-            </div>
-          </template>
-
-          <!-- Forma: colores y tipo -->
-          <template x-if="selected.type === 'shape'">
-            <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Forma</span>
-              <button @click="selected.shapeType='rect'; pushHistory()"
-                :class="selected.shapeType==='rect' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'"
-                class="px-2 py-0.5 rounded text-xs font-medium transition">▭ Rect</button>
-              <button @click="selected.shapeType='circle'; pushHistory()"
-                :class="selected.shapeType==='circle' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'"
-                class="px-2 py-0.5 rounded text-xs font-medium transition">⬤ Círculo</button>
-              <label class="text-[10px] text-slate-500">Relleno</label>
-              <input type="color" x-model="selected.fillColor" class="w-5 h-5 rounded cursor-pointer border border-slate-200 p-0 bg-transparent" />
-              <label class="text-[10px] text-slate-500">Borde</label>
-              <input type="color" x-model="selected.strokeColor" class="w-5 h-5 rounded cursor-pointer border border-slate-200 p-0 bg-transparent" />
-              <input type="number" x-model.number="selected.strokeWidth" min="0" max="40" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none" placeholder="px" title="Grosor borde" />
-            </div>
-          </template>
-
-          <!-- Texto: propiedades -->
-          <template x-if="selected.type === 'text'">
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
-                <input type="text" x-model="selected.text" placeholder="Texto…" class="w-28 px-1.5 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" />
-              </div>
-              <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
-                <select x-model="selected.fontFamily" class="w-24 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
-                  <template x-for="font in fonts" :key="font.value">
-                    <option :value="font.value" x-text="font.label"></option>
-                  </template>
-                </select>
-                <input type="color" x-model="selected.color" class="w-5 h-5 rounded cursor-pointer border border-slate-200 p-0 bg-transparent" />
-                <select x-model="selected.fontWeight" class="w-16 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400">
-                  <option value="400">Norm</option><option value="700">Bold</option><option value="900">Black</option>
-                </select>
-                <div class="flex items-center gap-0.5"><label class="text-[10px] text-slate-500">T</label><input type="number" x-model.number="selected.fontSize" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" /></div>
-              </div>
-              <div class="flex items-center gap-1.5 border-r border-slate-200 pr-3">
-                <label class="flex items-center gap-1 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textOutline" class="w-3 h-3 accent-blue-600" />Borde</label>
-                <template x-if="selected.textOutline">
-                  <div class="flex items-center gap-1">
-                    <input type="color" x-model="selected.outlineColor" class="w-4 h-4 rounded cursor-pointer p-0 border border-slate-200 bg-transparent" />
-                    <input type="number" x-model.number="selected.outlineWidth" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="1" max="20" />
-                  </div>
-                </template>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <label class="flex items-center gap-1 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textShadow" class="w-3 h-3 accent-blue-600" />Sombra</label>
-                <template x-if="selected.textShadow">
-                  <div class="flex items-center gap-1">
-                    <input type="color" x-model="selected.shadowColor" class="w-4 h-4 rounded cursor-pointer p-0 border border-slate-200 bg-transparent" />
-                    <input type="number" x-model.number="selected.shadowOffsetX" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="X" />
-                    <input type="number" x-model.number="selected.shadowOffsetY" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="Y" />
-                    <input type="number" x-model.number="selected.shadowBlur" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="0" placeholder="B" />
-                  </div>
-                </template>
-              </div>
-            </div>
-          </template>
-
-          <!-- Grid Fill (siempre que haya selección) -->
-          <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3 ml-auto shrink-0">
-            <button @click="gridFill()"
-              class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition border border-slate-200 hover:border-violet-300"
-              title="Llenar hoja con este elemento en cuadrícula">
-              ⊞ Llenar hoja
-            </button>
-          </div>
-
-        </div>
-      </template>
+    <!-- FILA 3: Propiedades Desktop -->
+    <div id="props-bar-desktop" class="hidden md:flex w-full bg-slate-50 border-b border-slate-200 px-4 py-1.5 items-center gap-3 overflow-x-auto tb-scroll min-h-[44px] text-sm shrink-0">
+      <p id="props-bar-empty" class="text-slate-400 italic text-xs">Selecciona un elemento para ver sus propiedades…</p>
+      <div id="props-bar-content" class="hidden flex items-center gap-3 whitespace-nowrap"></div>
     </div>
 
     <!-- Mobile props bar -->
-    <div x-show="selected" x-cloak
-      class="md:hidden w-full bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center gap-2 overflow-x-auto tb-scroll text-sm min-h-[42px] shrink-0">
-      <template x-if="selected">
-        <div class="flex items-center gap-2 whitespace-nowrap">
-          <!-- Capas -->
-          <div class="flex items-center gap-0.5 border-r border-slate-200 pr-2">
-            <button @click="bringForward()" class="p-1.5 hover:bg-slate-200 rounded text-base" title="Al frente">⏫</button>
-            <button @click="sendToBack()" class="p-1.5 hover:bg-slate-200 rounded text-base" title="Al fondo">⏬</button>
-            <button @click="moveOneUp()" class="px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm">↑</button>
-            <button @click="moveOneDown()" class="px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm">↓</button>
-          </div>
-          <!-- Lock -->
-          <button @click="selected.locked = !selected.locked; pushHistory()"
-            :class="selected.locked ? 'bg-amber-100 text-amber-700' : 'bg-white border border-slate-200 text-slate-600'"
-            class="px-2 py-1 rounded text-xs font-semibold border-r border-slate-200 pr-2 mr-0 transition">
-            <span x-text="selected.locked ? '🔒' : '🔓'"></span>
-          </button>
-          <!-- Opacidad -->
-          <div class="flex items-center gap-1 border-r border-slate-200 pr-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Op</span>
-            <input type="range" x-model.number="selected.opacity" min="0.05" max="1" step="0.05" @change="pushHistory()" class="w-16 h-1.5 accent-blue-600 cursor-pointer" />
-          </div>
-          <!-- Imagen fit -->
-          <template x-if="selected.type === 'image'">
-            <div class="flex items-center gap-1 border-r border-slate-200 pr-2">
-              <select x-model="selected.fit" class="px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none">
-                <option value="fill">Fill</option><option value="contain">Contain</option><option value="cover">Cover</option>
-              </select>
-            </div>
-          </template>
-          <!-- Shape tipo + colores -->
-          <template x-if="selected.type === 'shape'">
-            <div class="flex items-center gap-1 border-r border-slate-200 pr-2">
-              <button @click="selected.shapeType='rect'" :class="selected.shapeType==='rect'?'bg-slate-700 text-white':'bg-white border border-slate-200'" class="px-2 py-0.5 rounded text-xs">▭</button>
-              <button @click="selected.shapeType='circle'" :class="selected.shapeType==='circle'?'bg-slate-700 text-white':'bg-white border border-slate-200'" class="px-2 py-0.5 rounded text-xs">⬤</button>
-              <input type="color" x-model="selected.fillColor" class="w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5" />
-              <input type="color" x-model="selected.strokeColor" class="w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5" />
-              <input type="number" x-model.number="selected.strokeWidth" min="0" max="40" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none" placeholder="px" />
-            </div>
-          </template>
-          <!-- Texto compacto -->
-          <template x-if="selected.type === 'text'">
-            <div class="flex items-center gap-1.5">
-              <input type="text" x-model="selected.text" placeholder="Texto…" class="w-24 px-1.5 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" />
-              <select x-model="selected.fontFamily" class="w-24 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none">
-                <template x-for="font in fonts" :key="font.value"><option :value="font.value" x-text="font.label"></option></template>
-              </select>
-              <input type="color" x-model="selected.color" class="w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5" />
-              <div class="flex items-center gap-0.5"><label class="text-[10px] text-slate-500">T</label><input type="number" x-model.number="selected.fontSize" class="w-10 px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none" /></div>
-              <label class="flex items-center gap-0.5 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textOutline" class="w-3 h-3 accent-blue-600" />Borde</label>
-              <template x-if="selected.textOutline">
-                <div class="flex items-center gap-0.5">
-                  <input type="color" x-model="selected.outlineColor" class="w-5 h-5 rounded cursor-pointer p-0 border border-slate-200" />
-                  <input type="number" x-model.number="selected.outlineWidth" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="1" max="20" />
-                </div>
-              </template>
-              <label class="flex items-center gap-0.5 text-[10px] cursor-pointer text-slate-600 font-semibold uppercase select-none"><input type="checkbox" x-model="selected.textShadow" class="w-3 h-3 accent-blue-600" />Sombra</label>
-              <template x-if="selected.textShadow">
-                <div class="flex items-center gap-1">
-                  <input type="color" x-model="selected.shadowColor" class="w-5 h-5 rounded cursor-pointer p-0 border border-slate-200" />
-                  <input type="number" x-model.number="selected.shadowOffsetX" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="X" />
-                  <input type="number" x-model.number="selected.shadowOffsetY" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" placeholder="Y" />
-                  <input type="number" x-model.number="selected.shadowBlur" class="w-8 px-1 py-0.5 border border-slate-200 rounded text-[10px] bg-white focus:outline-none" min="0" placeholder="B" />
-                </div>
-              </template>
-            </div>
-          </template>
-          <!-- Grid Fill mobile -->
-          <div class="border-l border-slate-200 pl-2 shrink-0">
-            <button @click="gridFill()" class="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition">
-              ⊞ Llenar
-            </button>
-          </div>
-        </div>
-      </template>
-    </div>
+    <div id="props-bar-mobile" class="hidden md:hidden w-full bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center gap-2 overflow-x-auto tb-scroll text-sm min-h-[42px] shrink-0"></div>
 
   </header>
-  <!-- ══════════════ FIN HEADER ══════════════ -->
 
   <!-- ══════════════ MODAL DE IMPRESIÓN ══════════════ -->
-  <div x-show="isSaveModalOpen" x-cloak class="no-print fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div @click.away="isSaveModalOpen = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+  <div id="save-modal" class="hidden no-print fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
         <h2 class="text-lg font-black text-slate-800 tracking-tight">Imprimir Proyecto</h2>
-        <button @click="isSaveModalOpen = false" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-200 rounded-lg p-1 transition leading-none text-xl">&times;</button>
+        <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-200 rounded-lg p-1 transition leading-none text-xl">&times;</button>
       </div>
       <div class="p-4 sm:p-6 overflow-y-auto tb-scroll space-y-4 bg-white">
-        
-        <!-- Nombre del Proyecto -->
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Nombre del Proyecto <span class="text-red-500">*</span></label>
-          <input type="text" x-model="projectTitle" placeholder="Ej. Bautizo de María..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition text-sm text-slate-700 bg-slate-50" />
+          <input id="input-project-title" type="text" placeholder="Ej. Bautizo de María..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition text-sm text-slate-700 bg-slate-50" />
         </div>
-
         <div class="flex flex-col md:flex-row gap-5 max-w-full">
           <div class="md:w-[60%] shrink-0">
             <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Elige tu material <span class="text-red-500">*</span></label>
-            <div class="space-y-3">
-              <template x-for="prod in products" :key="prod.code">
-                <label :class="materialType === prod.code ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500' : 'border-slate-200 hover:bg-slate-50'"
-                  class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition select-none shadow-sm">
-                  <input type="radio" :value="prod.code" x-model="materialType" class="mt-1 w-4 h-4 accent-violet-600 cursor-pointer shrink-0" />
-                  <div class="flex-1">
-                    <div class="flex items-center justify-between">
-                      <div class="font-bold text-slate-800 text-sm leading-tight" x-text="prod.title"></div>
-                      <div class="text-xs font-black text-violet-700" x-text="'$'+prod.precio"></div>
-                    </div>
-                    <div class="text-[11px] text-slate-500 mt-1 leading-relaxed" x-text="prod.desc"></div>
-                  </div>
-                </label>
-              </template>
-            </div>
+            <div id="material-list" class="space-y-3"></div>
           </div>
           <div class="md:w-[40%] flex flex-col gap-4 shrink-0 min-w-0">
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Copias (Hojas) <span class="text-red-500">*</span></label>
-              <input type="number" x-model.number="printQuantity" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition text-lg font-black text-center text-slate-700 bg-slate-50" />
+              <input id="input-quantity" type="number" min="1" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition text-lg font-black text-center text-slate-700 bg-slate-50" />
             </div>
-            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex-1 flex flex-col justify-center overflow-hidden">
+            <div id="quote-box" class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex-1 flex flex-col justify-center overflow-hidden">
               <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1 text-center">Cotización</div>
-              
-              <template x-if="quote.pct > 0">
-                <div class="text-[11px] text-emerald-600 font-bold bg-emerald-100/50 rounded-md px-2 py-1 mb-2 text-center text-ellipsis overflow-hidden">
-                  ¡<span x-text="quote.pct"></span>% DESCUENTO!
-                </div>
-              </template>
-              
+              <div id="discount-badge" class="hidden text-[11px] text-emerald-600 font-bold bg-emerald-100/50 rounded-md px-2 py-1 mb-2 text-center"></div>
               <div class="flex justify-between items-end mb-2 border-b border-indigo-100 pb-2">
                 <span class="text-xs text-indigo-900/60 font-medium">Pre. p/h</span>
-                <span class="text-sm font-bold text-indigo-900" x-text="'$'+quote.finalUnitPrice.toFixed(2)"></span>
+                <span id="quote-unit-price" class="text-sm font-bold text-indigo-900">$0.00</span>
               </div>
-              
               <div class="flex justify-between items-end mt-1 gap-2">
                 <span class="text-sm text-indigo-900/70 font-bold uppercase tracking-wide">Total</span>
-                <span class="text-xl xl:text-2xl font-black text-indigo-700 leading-none truncate" x-text="'$'+quote.total.toFixed(2)" :title="'$'+quote.total.toFixed(2)"></span>
+                <span id="quote-total" class="text-xl xl:text-2xl font-black text-indigo-700 leading-none truncate">$0.00</span>
               </div>
-              <template x-if="quote.warning">
-                 <div class="mt-3 text-[9px] text-amber-600 bg-amber-50 px-2 py-1 rounded leading-tight font-medium border border-amber-200" x-text="quote.warning"></div>
-              </template>
+              <div id="quote-warning" class="hidden mt-3 text-[9px] text-amber-600 bg-amber-50 px-2 py-1 rounded leading-tight font-medium border border-amber-200"></div>
             </div>
           </div>
         </div>
       </div>
       <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 shrink-0 flex items-center justify-end gap-3 rounded-b-2xl">
-        <button @click="isSaveModalOpen = false" class="px-4 py-2 sm:py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-200 transition text-xs sm:text-sm">Cancelar</button>
-        <button @click="saveProject(); isSaveModalOpen = false" :disabled="isSaving || !projectTitle.trim()" class="px-5 py-2 sm:py-2.5 rounded-xl text-white font-bold bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:bg-slate-400 disabled:shadow-none transition text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center gap-2">
-          <span x-text="isSaving ? '⏳' : '📨'"></span>
-          <span x-text="isSaving ? 'Enviando...' : 'Confirmar Impresión'"></span>
+        <button id="modal-cancel-btn" class="px-4 py-2 sm:py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-200 transition text-xs sm:text-sm">Cancelar</button>
+        <button id="modal-confirm-btn" disabled class="px-5 py-2 sm:py-2.5 rounded-xl text-white font-bold bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:bg-slate-400 disabled:shadow-none transition text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center gap-2">
+          <span>📨</span><span>Confirmar Impresión</span>
         </button>
       </div>
     </div>
   </div>
 
   <!-- ══════════════ CANVAS ══════════════ -->
-  <main x-ref="canvasMain"
+  <main id="canvas-main"
     class="flex-1 overflow-auto bg-slate-200/60 flex flex-col items-center justify-start p-4 sm:p-8 print:p-0 print:bg-white print:overflow-visible print:block relative">
 
     <!-- Pestañas (Tabs) de Hojas -->
-    <div class="no-print w-full flex flex-col sm:flex-row items-center justify-between gap-3 max-w-full mb-3 shrink-0" :style="{ maxWidth: (sheet.w * canvasZoom) + 'px' }">
-      <div class="flex items-center gap-1 overflow-x-auto tb-scroll py-1 w-full sm:w-auto">
-        <template x-for="p in pagesCount" :key="p">
-          <button @click="setPage(p)"
-            :class="activePage === p ? 'bg-white text-violet-700 shadow border border-violet-200 font-bold' : 'bg-slate-300/40 text-slate-500 hover:bg-slate-300 hover:text-slate-700 font-medium'"
-            class="px-4 py-1.5 rounded-t-lg transition text-[11px] uppercase tracking-wide whitespace-nowrap truncate shrink-0 max-w-[120px]">
-            Hoja <span x-text="p"></span>
-          </button>
-        </template>
-        <button @click="addPage()" class="px-3 py-1.5 ml-1 rounded-t-lg bg-slate-300/40 hover:bg-slate-300 text-slate-600 font-bold transition text-sm shrink-0" title="Agregar Hoja">+</button>
-      </div>
-      <template x-if="pagesCount > 1">
-        <button @click="deletePage()" class="px-3 py-1 text-xs font-bold text-red-500 hover:bg-red-100 rounded-lg transition shrink-0 hidden sm:block">🗑️ Eliminar Hoja Actual</button>
-      </template>
-    </div>
+    <div id="page-tabs" class="no-print w-full flex flex-col sm:flex-row items-center justify-between gap-3 max-w-full mb-3 shrink-0"></div>
 
     <!-- Zoom wrapper -->
-    <div class="canvas-zoom-outer print:w-auto print:h-auto"
-      :style="{ width: (sheet.w * canvasZoom) + 'px', height: (sheet.h * canvasZoom) + 'px' }">
-      <div class="canvas-zoom-inner print:transform-none relative"
-        :style="{ transform: 'scale(' + canvasZoom + ')', width: sheet.w + 'px', height: sheet.h + 'px' }">
+    <div id="canvas-zoom-outer" class="canvas-zoom-outer print:w-auto print:h-auto">
+      <div id="canvas-zoom-inner" class="canvas-zoom-inner print:transform-none relative">
 
-        <!-- Regla Externa/Márgenes (SIEMPRE VISIBLE) -->
-        <div class="no-print absolute top-[-20px] left-0 h-[20px] bg-white border-b border-r border-slate-300 z-20 overflow-hidden" :style="{ width: sheet.w + 'px', ...getRulerXStyle() }"></div>
-        <div class="no-print absolute top-0 left-[-20px] w-[20px] bg-white border-r border-b border-slate-300 z-20 overflow-hidden" :style="{ height: sheet.h + 'px', ...getRulerYStyle() }"></div>
+        <!-- Reglas -->
+        <div id="ruler-x" class="no-print absolute top-[-20px] left-0 h-[20px] bg-white border-b border-r border-slate-300 z-20 overflow-hidden"></div>
+        <div id="ruler-y" class="no-print absolute top-0 left-[-20px] w-[20px] bg-white border-r border-b border-slate-300 z-20 overflow-hidden"></div>
         <div class="no-print absolute top-[-20px] left-[-20px] w-[20px] h-[20px] border-b border-r border-slate-300 z-20 bg-slate-50"></div>
 
-        <!-- Iterar para permitir múltiples hojas (impresión) -->
-        <template x-for="p in pagesCount" :key="p">
-        <div class="sheet checker relative"
-          x-show="activePage === p || isPrinting"
-          :class="{ 'print:block page-break-after': true, 'hidden print:block': activePage !== p }"
-          :style="{ background: pageColors[p] || '#ffffff', width: sheet.w + 'px', height: sheet.h + 'px' }"
-          @mousedown.self="activePage === p && clearSelection()"
-          x-ref="sheet">
+        <!-- Sheet -->
+        <div id="sheet-container"></div>
 
-          <!-- Cuadrícula Interna -->
-          <template x-if="showGrid && activePage === p">
-            <div class="no-print absolute inset-0 pointer-events-none z-10" :style="getGridStyle()"></div>
-          </template>
-
-          <!-- Guías de alineación -->
-          <template x-if="activePage === p">
-           <div class="absolute inset-0 pointer-events-none"> <!-- wrapper for x-for safely next to x-if -->
-            <template x-for="guide in guides" :key="guide.type + guide.pos">
-              <div
-                :class="guide.type === 'v' ? 'guide-v' : 'guide-h'"
-                :style="guide.type === 'v'
-                  ? { left: guide.pos + 'px', height: sheet.h + 'px' }
-                  : { top: guide.pos + 'px', width: sheet.w + 'px' }">
-              </div>
-            </template>
-           </div>
-          </template>
-
-          <!-- Items -->
-          <template x-for="item in sortedItems().filter(i => (i.page||1) === p)" :key="item.id">
-            <div class="item"
-              :data-item-id="item.id"
-              :class="{ 'selected': selectedId === item.id, 'locked-item': item.locked }"
-              :style="itemStyle(item)"
-              @pointerdown.stop="onItemPointerDown($event, item.id)"
-              @click.stop="select(item.id)"
-              @dblclick.stop="if (item.type === 'text' && !item.locked) editingTextId = item.id">
-
-              <!-- Imagen -->
-              <template x-if="item.type === 'image'">
-                <div class="w-full h-full relative">
-                  <img :src="item.src" draggable="false" class="w-full h-full pointer-events-none" :style="{ objectFit: item.fit || 'contain' }" alt="" />
-                  <template x-if="crop.active && crop.id === item.id">
-                    <div class="crop-overlay">
-                      <div class="crop-box" :style="cropBoxStyle()" @pointerdown.stop.prevent="startCropMove($event)">
-                        <template x-for="handle in cropHandles" :key="handle">
-                          <div class="crop-handle" :class="'handle-' + handle" @pointerdown.stop.prevent="startCropResize($event, handle)"></div>
-                        </template>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-              </template>
-
-              <!-- Texto -->
-              <template x-if="item.type === 'text'">
-                <div class="w-full h-full relative">
-                  <template x-if="editingTextId !== item.id">
-                    <div class="text-box pointer-events-none"
-                      :style="{ fontFamily: item.fontFamily, color: item.color, fontSize: item.fontSize + 'px', fontWeight: item.fontWeight,
-                        textShadow: item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none',
-                        '-webkit-text-stroke': item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none' }"
-                      x-text="item.text"></div>
-                  </template>
-                  <template x-if="editingTextId === item.id">
-                    <textarea x-model="item.text" @blur="editingTextId = null; pushHistory()" @pointerdown.stop
-                      class="text-box w-full h-full bg-transparent border-2 border-blue-400 outline-none resize-none overflow-hidden"
-                      :style="{ fontFamily: item.fontFamily, color: item.color, fontSize: item.fontSize + 'px', fontWeight: item.fontWeight,
-                        textShadow: item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none',
-                        '-webkit-text-stroke': item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none' }"
-                      x-init="$el.focus(); $el.setSelectionRange($el.value.length, $el.value.length)"></textarea>
-                  </template>
-                </div>
-              </template>
-
-              <!-- Forma -->
-              <template x-if="item.type === 'shape'">
-                <div class="w-full h-full pointer-events-none"
-                  :style="{
-                    background: item.fillColor ?? '#3b82f6',
-                    borderRadius: item.shapeType === 'circle' ? '50%' : '4px',
-                    border: (item.strokeWidth ?? 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none',
-                    boxSizing: 'border-box'
-                  }"></div>
-              </template>
-
-              <!-- Lock indicator -->
-              <template x-if="item.locked && selectedId === item.id">
-                <div class="absolute top-1 right-1 text-xs bg-amber-400 text-white rounded px-1 pointer-events-none select-none z-10">🔒</div>
-              </template>
-
-              <div x-show="selectedId === item.id && !item.locked && !(crop.active && crop.id === item.id)"
-                class="resize-handle no-print" @pointerdown.stop.prevent="onResizeHandlePointerDown($event, item.id)"></div>
-              <div x-show="selectedId === item.id && !item.locked && !(crop.active && crop.id === item.id)"
-                class="rotate-handle no-print" @pointerdown.stop.prevent="onRotateHandlePointerDown($event, item.id)"
-                title="Rotar (Shift = 15°)"></div>
-            </div>
-          </template>
-
-        </div>
-        </template>
       </div>
     </div>
   </main>
 
-  <!-- Estilos de botones de toolbar reutilizables (via Tailwind @apply si fuera posible, usamos clases directas) -->
+  <!-- Estilos de botones de toolbar -->
   <style>
     .tbtn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 8px;border-radius:8px;color:#374151;transition:background .15s;cursor:pointer;border:none;background:transparent}
     .tbtn:hover{background:#f1f5f9}
@@ -620,4 +259,828 @@
 
 </div>
 </body>
+
+<script type="module">
+  import {
+    $items, $selectedId, $canvasZoom, $showGrid, $cropActive, $cropId,
+    $editingTextId, $isSaving, $isPrinting, $isSaveModalOpen,
+    $materialType, $printQuantity, $projectTitle,
+    $pagesCount, $activePage, $pageColors, $guides, $fonts, $products,
+    initCanvas, sync, getSelected, getSheet, sortedItems, itemsOnPage, itemStyle,
+    select, clearSelection, syncZoom, zoomIn, zoomOut, zoomPercent, fitZoom,
+    undo, redo, canUndo, canRedo, pushHistory,
+    printCanvas, setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
+    addText, addShape, handleFiles, duplicateSelected, deleteSelected,
+    bringForward, sendToBack, moveOneUp, moveOneDown,
+    toggleGrid, startCropMode, applyCrop, cancelCropMode, cropBoxStyle, getCropHandles,
+    trimWhiteBorders, restoreOriginalImage,
+    gridFill, resetProject,
+    getRulerXStyle, getRulerYStyle, getGridStyle,
+    onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
+    startCropMove, startCropResize, saveProject, getEditableAsAdmin,
+    computeQuote, currentPageBg, setCurrentPageColor,
+    FONTS, PRODUCTS, PAPER_SIZES,
+  } from './src/canvas/canvasView.js?v=1.7.0';
+
+  import { $authUser, logout } from './src/auth/authStore.js';
+
+  // ── DOM Refs ──
+  const elCanvasMain = document.getElementById('canvas-main');
+  const elSheetContainer = document.getElementById('sheet-container');
+  const elCanvasZoomOuter = document.getElementById('canvas-zoom-outer');
+  const elCanvasZoomInner = document.getElementById('canvas-zoom-inner');
+  const elRulerX = document.getElementById('ruler-x');
+  const elRulerY = document.getElementById('ruler-y');
+  const elPageTabs = document.getElementById('page-tabs');
+  const elZoomPercent = document.getElementById('zoom-percent');
+  const elFileInput = document.getElementById('file-input');
+  const elInputPageBg = document.getElementById('input-page-bg');
+  const elSaveModal = document.getElementById('save-modal');
+  const elSaveAdminBtn = document.getElementById('btn-save-admin');
+  const elImprimirBtn = document.getElementById('btn-imprimir-cliente');
+  const elCropButtons = document.getElementById('crop-buttons');
+  const elCropStartWrap = document.getElementById('crop-start-btn-wrap');
+  const elCropActionsWrap = document.getElementById('crop-actions-wrap');
+  const elGridIcon = document.getElementById('grid-icon');
+  const elGridLabel = document.getElementById('grid-label');
+  const elHeaderUsername = document.getElementById('header-username');
+  const elBtnAdmin = document.getElementById('btn-admin');
+  const elPropsBarDesktop = document.getElementById('props-bar-desktop');
+  const elPropsBarContent = document.getElementById('props-bar-content');
+  const elPropsBarEmpty = document.getElementById('props-bar-empty');
+  const elPropsBarMobile = document.getElementById('props-bar-mobile');
+
+  // ── Init ──
+  await initCanvas(elCanvasMain);
+  injectPrintCss();
+
+  // Setup rulers
+  Object.assign(elRulerX.style, getRulerXStyle());
+  Object.assign(elRulerY.style, getRulerYStyle());
+
+  // Auth UI
+  $authUser.subscribe(user => {
+    elHeaderUsername.textContent = user?.username || user?.phone || 'Usuario';
+    const isAdmin = user?.role === 'admin';
+    elBtnAdmin.classList.toggle('hidden', !isAdmin);
+    elSaveAdminBtn.classList.toggle('hidden', !getEditableAsAdmin());
+    elImprimirBtn.classList.toggle('hidden', !!getEditableAsAdmin());
+  });
+
+  if (getEditableAsAdmin()) {
+    elSaveAdminBtn.classList.remove('hidden');
+    elImprimirBtn.classList.add('hidden');
+  }
+
+  // Update editing-as-admin status
+  $isSaving.subscribe(saving => {
+    const btn = document.getElementById('btn-save-admin-btn');
+    if (!btn) return;
+    btn.querySelector('span:first-child').textContent = saving ? '⏳' : '💾';
+    btn.querySelector('span:last-child').textContent = saving ? 'Guardando...' : 'GUARDAR CAMBIOS';
+    if (saving) btn.setAttribute('disabled', 'true');
+    else btn.removeAttribute('disabled');
+  });
+
+  // ── Toolbar buttons ──
+  document.getElementById('btn-dashboard').addEventListener('click', () => window.location.href = '/dashboard');
+  document.getElementById('btn-logout').addEventListener('click', () => logout());
+  document.getElementById('btn-admin').addEventListener('click', () => window.location.href = '/admin');
+  document.getElementById('btn-mis-proyectos').addEventListener('click', () => window.location.href = '/dashboard');
+  document.getElementById('btn-reset').addEventListener('click', resetProject);
+
+  document.getElementById('tool-btn-imagen').addEventListener('click', () => elFileInput.click());
+  elFileInput.addEventListener('change', e => handleFiles(e));
+  document.getElementById('tool-btn-texto').addEventListener('click', addText);
+  document.getElementById('tool-btn-forma').addEventListener('click', () => addShape('rect'));
+
+  document.getElementById('tool-btn-undo').addEventListener('click', undo);
+  document.getElementById('tool-btn-redo').addEventListener('click', redo);
+  document.getElementById('tool-btn-duplicar').addEventListener('click', duplicateSelected);
+  document.getElementById('tool-btn-eliminar').addEventListener('click', deleteSelected);
+
+  // Save/Print buttons
+  document.getElementById('btn-save-admin-btn').addEventListener('click', () => saveProject());
+  document.getElementById('btn-imprimir-cliente-btn').addEventListener('click', () => $isSaveModalOpen.set(true));
+
+  // Grid toggle
+  document.getElementById('tool-btn-grid').addEventListener('click', () => {
+    toggleGrid(!$showGrid.get());
+  });
+
+  // Crop buttons
+  document.getElementById('tool-btn-crop').addEventListener('click', startCropMode);
+  document.getElementById('tool-btn-apply-crop').addEventListener('click', applyCrop);
+  document.getElementById('tool-btn-cancel-crop').addEventListener('click', cancelCropMode);
+
+  // Zoom
+  document.getElementById('tool-btn-zoom-out').addEventListener('click', zoomOut);
+  document.getElementById('tool-btn-zoom-in').addEventListener('click', zoomIn);
+  document.getElementById('tool-btn-fit').addEventListener('click', () => fitZoom(elCanvasMain));
+
+  // ── Modal ──
+  document.getElementById('modal-close-btn').addEventListener('click', () => $isSaveModalOpen.set(false));
+  document.getElementById('modal-cancel-btn').addEventListener('click', () => $isSaveModalOpen.set(false));
+  document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+    saveProject();
+    $isSaveModalOpen.set(false);
+  });
+
+  document.getElementById('save-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) $isSaveModalOpen.set(false);
+  });
+
+  // Modal quantity
+  const elInputQty = document.getElementById('input-quantity');
+  elInputQty.addEventListener('input', () => $printQuantity.set(parseInt(elInputQty.value) || 1));
+  $printQuantity.subscribe(v => { elInputQty.value = v; });
+
+  const elInputProjectTitle = document.getElementById('input-project-title');
+  elInputProjectTitle.addEventListener('input', () => $projectTitle.set(elInputProjectTitle.value));
+  $projectTitle.subscribe(v => { elInputProjectTitle.value = v || ''; });
+
+  // Material list
+  function renderMaterialList() {
+    const container = document.getElementById('material-list');
+    const current = $materialType.get();
+    container.innerHTML = '';
+    PRODUCTS.forEach(prod => {
+      const label = document.createElement('label');
+      label.className = (current === prod.code
+        ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500'
+        : 'border-slate-200 hover:bg-slate-50')
+        + ' flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition select-none shadow-sm';
+      label.innerHTML = `
+        <input type="radio" value="${prod.code}" ${current === prod.code ? 'checked' : ''} class="mt-1 w-4 h-4 accent-violet-600 cursor-pointer shrink-0" />
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <div class="font-bold text-slate-800 text-sm leading-tight">${prod.title}</div>
+            <div class="text-xs font-black text-violet-700">$${prod.precio}</div>
+          </div>
+          <div class="text-[11px] text-slate-500 mt-1 leading-relaxed">${prod.desc}</div>
+        </div>`;
+      label.querySelector('input').addEventListener('change', () => {
+        $materialType.set(prod.code);
+        renderMaterialList();
+        updateQuoteUI();
+      });
+      container.appendChild(label);
+    });
+  }
+  renderMaterialList();
+
+  function updateQuoteUI() {
+    const quote = computeQuote();
+    document.getElementById('discount-badge').classList.toggle('hidden', !(quote.pct > 0));
+    document.getElementById('discount-badge').textContent = quote.pct > 0 ? `¡${quote.pct}% DESCUENTO!` : '';
+    document.getElementById('quote-unit-price').textContent = '$' + quote.finalUnitPrice.toFixed(2);
+    document.getElementById('quote-total').textContent = '$' + quote.total.toFixed(2);
+    document.getElementById('quote-warning').classList.toggle('hidden', !quote.warning);
+    document.getElementById('quote-warning').textContent = quote.warning || '';
+    const hasTitle = !!($projectTitle.get());
+    const btn = document.getElementById('modal-confirm-btn');
+    if (hasTitle) btn.removeAttribute('disabled');
+    else btn.setAttribute('disabled', 'true');
+  }
+
+  $materialType.subscribe(() => { renderMaterialList(); updateQuoteUI(); });
+  $printQuantity.subscribe(updateQuoteUI);
+  $projectTitle.subscribe(updateQuoteUI);
+  $pagesCount.subscribe(updateQuoteUI);
+
+  // ── Modal visibility ──
+  $isSaveModalOpen.subscribe(open => {
+    elSaveModal.classList.toggle('hidden', !open);
+    if (open) {
+      renderMaterialList();
+      updateQuoteUI();
+    }
+  });
+
+  // ── Zoom ──
+  $canvasZoom.subscribe(zoom => {
+    elZoomPercent.textContent = zoomPercent();
+    elCanvasZoomOuter.style.width = (getSheet().w * zoom) + 'px';
+    elCanvasZoomOuter.style.height = (getSheet().h * zoom) + 'px';
+    elCanvasZoomInner.style.transform = 'scale(' + zoom + ')';
+    elCanvasZoomInner.style.width = getSheet().w + 'px';
+    elCanvasZoomInner.style.height = getSheet().h + 'px';
+    elRulerX.style.width = getSheet().w + 'px';
+    elRulerY.style.height = getSheet().h + 'px';
+  });
+
+  // ── Grid toggle reactivo ──
+  $showGrid.subscribe(show => {
+    elGridIcon.classList.toggle('text-violet-600', show);
+    elGridLabel.classList.toggle('text-violet-600', show);
+    elGridLabel.classList.toggle('font-bold', show);
+    scheduleRenderSheet();
+  });
+
+  // ── Habilitar/deshabilitar botones de toolbar ──
+  $selectedId.subscribe(id => {
+    const selected = !!id;
+    ['tool-btn-duplicar', 'tool-btn-eliminar'].forEach(bid => {
+      const b = document.getElementById(bid);
+      if (b) {
+        if (selected) b.removeAttribute('disabled');
+        else b.setAttribute('disabled', 'true');
+      }
+    });
+    // Undo/redo
+    document.getElementById('tool-btn-undo').toggleAttribute('disabled', !canUndo());
+    document.getElementById('tool-btn-redo').toggleAttribute('disabled', !canRedo());
+    // Crop visibility
+    updateCropButtonVisibility();
+    renderPropertyBars();
+    scheduleRenderSheet();
+  });
+
+  $cropActive.subscribe(() => {
+    updateCropButtonVisibility();
+    scheduleRenderSheet();
+  });
+
+  function updateCropButtonVisibility() {
+    const sel = getSelected();
+    const isImage = sel && sel.type === 'image';
+    const isCropActive = $cropActive.get() && $cropId.get() === ($selectedId.get());
+
+    elCropButtons.classList.toggle('hidden', !isImage);
+    if (isImage) {
+      elCropStartWrap.classList.toggle('hidden', isCropActive);
+      elCropActionsWrap.classList.toggle('hidden', !isCropActive);
+    }
+  }
+
+  // Check for canUndo/canRedo periodically (they change after actions)
+  $items.subscribe(() => {
+    document.getElementById('tool-btn-undo').toggleAttribute('disabled', !canUndo());
+    document.getElementById('tool-btn-redo').toggleAttribute('disabled', !canRedo());
+  });
+
+  // ── Render Sheet ──
+  function renderSheet() {
+    const activePage = $activePage.get();
+    const bg = $pageColors.get()[activePage] || '#ffffff';
+    const sheet = getSheet();
+    const showGrid = $showGrid.get();
+    const items = sortedItems().filter(i => (i.page || 1) === activePage);
+    const selectedId = $selectedId.get();
+    const cropActive = $cropActive.get();
+    const cropId = $cropId.get();
+
+    elSheetContainer.innerHTML = '';
+
+    const sheetEl = document.createElement('div');
+    sheetEl.className = 'sheet checker relative';
+    sheetEl.style.background = bg;
+    sheetEl.style.width = sheet.w + 'px';
+    sheetEl.style.height = sheet.h + 'px';
+    sheetEl.dataset.page = activePage;
+
+    sheetEl.addEventListener('mousedown', e => {
+      if (e.target === sheetEl) clearSelection();
+    });
+
+    // Grid
+    if (showGrid) {
+      const gridEl = document.createElement('div');
+      gridEl.className = 'no-print absolute inset-0 pointer-events-none z-10';
+      Object.assign(gridEl.style, getGridStyle());
+      sheetEl.appendChild(gridEl);
+    }
+
+    // Items
+    items.forEach(item => {
+      const isSelected = item.id === selectedId;
+      const isCropping = cropActive && cropId === item.id;
+      const showHandles = isSelected && !item.locked && !isCropping;
+
+      const itemEl = document.createElement('div');
+      itemEl.className = 'item' + (isSelected ? ' selected' : '') + (item.locked ? ' locked-item' : '');
+      itemEl.dataset.itemId = item.id;
+
+      const style = itemStyle(item);
+      itemEl.style.left = style.left;
+      itemEl.style.top = style.top;
+      itemEl.style.width = style.width;
+      itemEl.style.height = style.height;
+      itemEl.style.zIndex = style.zIndex;
+      itemEl.style.transform = style.transform;
+      itemEl.style.opacity = style.opacity;
+      itemEl.style.cursor = style.cursor;
+
+      itemEl.addEventListener('pointerdown', e => { e.stopPropagation(); onItemPointerDown(e, item.id); });
+      itemEl.addEventListener('click', e => { e.stopPropagation(); select(item.id); });
+      itemEl.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        if (item.type === 'text' && !item.locked) $editingTextId.set(item.id);
+      });
+
+      if (item.type === 'image') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'w-full h-full relative';
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.draggable = false;
+        img.className = 'w-full h-full pointer-events-none';
+        img.style.objectFit = item.fit || 'contain';
+        wrapper.appendChild(img);
+
+        if (isCropping) {
+          const overlay = document.createElement('div');
+          overlay.className = 'crop-overlay';
+          const cropBox = document.createElement('div');
+          cropBox.className = 'crop-box';
+          const boxStyle = cropBoxStyle();
+          cropBox.style.left = boxStyle.left;
+          cropBox.style.top = boxStyle.top;
+          cropBox.style.width = boxStyle.width;
+          cropBox.style.height = boxStyle.height;
+          cropBox.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); startCropMove(e); });
+
+          getCropHandles().forEach(handle => {
+            const h = document.createElement('div');
+            h.className = 'crop-handle handle-' + handle;
+            h.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); startCropResize(e, handle); });
+            cropBox.appendChild(h);
+          });
+
+          overlay.appendChild(cropBox);
+          wrapper.appendChild(overlay);
+        }
+
+        itemEl.appendChild(wrapper);
+      } else if (item.type === 'text') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'w-full h-full relative';
+
+        if ($editingTextId.get() !== item.id) {
+          const div = document.createElement('div');
+          div.className = 'text-box pointer-events-none';
+          div.style.fontFamily = item.fontFamily;
+          div.style.color = item.color;
+          div.style.fontSize = item.fontSize + 'px';
+          div.style.fontWeight = item.fontWeight;
+          div.style.textShadow = item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none';
+          div.style.webkitTextStroke = item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none';
+          div.textContent = item.text;
+          wrapper.appendChild(div);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = item.text;
+          textarea.className = 'text-box w-full h-full bg-transparent border-2 border-blue-400 outline-none resize-none overflow-hidden';
+          textarea.style.fontFamily = item.fontFamily;
+          textarea.style.color = item.color;
+          textarea.style.fontSize = item.fontSize + 'px';
+          textarea.style.fontWeight = item.fontWeight;
+          textarea.style.textShadow = item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none';
+          textarea.style.webkitTextStroke = item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none';
+          textarea.addEventListener('input', () => {
+            item.text = textarea.value;
+          });
+          textarea.addEventListener('blur', () => {
+            $editingTextId.set(null);
+            pushHistory();
+          });
+          textarea.addEventListener('pointerdown', e => e.stopPropagation());
+          wrapper.appendChild(textarea);
+          requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+          });
+        }
+
+        itemEl.appendChild(wrapper);
+      } else if (item.type === 'shape') {
+        const div = document.createElement('div');
+        div.className = 'w-full h-full pointer-events-none';
+        div.style.background = item.fillColor || '#3b82f6';
+        div.style.borderRadius = item.shapeType === 'circle' ? '50%' : '4px';
+        div.style.border = (item.strokeWidth || 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none';
+        div.style.boxSizing = 'border-box';
+        itemEl.appendChild(div);
+      }
+
+      // Lock indicator
+      if (item.locked && isSelected) {
+        const lock = document.createElement('div');
+        lock.className = 'absolute top-1 right-1 text-xs bg-amber-400 text-white rounded px-1 pointer-events-none select-none z-10';
+        lock.textContent = '🔒';
+        itemEl.appendChild(lock);
+      }
+
+      // Resize handle
+      if (showHandles) {
+        const rh = document.createElement('div');
+        rh.className = 'resize-handle no-print';
+        rh.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); onResizeHandlePointerDown(e, item.id); });
+        itemEl.appendChild(rh);
+      }
+
+      // Rotate handle
+      if (showHandles) {
+        const roth = document.createElement('div');
+        roth.className = 'rotate-handle no-print';
+        roth.title = 'Rotar (Shift = 15°)';
+        roth.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); onRotateHandlePointerDown(e, item.id); });
+        itemEl.appendChild(roth);
+      }
+
+      sheetEl.appendChild(itemEl);
+    });
+
+    elSheetContainer.appendChild(sheetEl);
+
+    // Update page tabs
+    renderPageTabs();
+  }
+
+  // ── Page tabs ──
+  function renderPageTabs() {
+    const count = $pagesCount.get();
+    const active = $activePage.get();
+    const sheetW = getSheet().w;
+    const zoom = $canvasZoom.get();
+
+    const maxW = (sheetW * zoom) + 'px';
+    elPageTabs.style.maxWidth = maxW;
+
+    let html = '<div class="flex items-center gap-1 overflow-x-auto tb-scroll py-1 w-full sm:w-auto">';
+    for (let p = 1; p <= count; p++) {
+      const isActive = p === active;
+      html += `<button data-page="${p}" class="${isActive ? 'bg-white text-violet-700 shadow border border-violet-200 font-bold' : 'bg-slate-300/40 text-slate-500 hover:bg-slate-300 hover:text-slate-700 font-medium'} px-4 py-1.5 rounded-t-lg transition text-[11px] uppercase tracking-wide whitespace-nowrap truncate shrink-0 max-w-[120px]">Hoja ${p}</button>`;
+    }
+    html += `<button id="btn-add-page" class="px-3 py-1.5 ml-1 rounded-t-lg bg-slate-300/40 hover:bg-slate-300 text-slate-600 font-bold transition text-sm shrink-0" title="Agregar Hoja">+</button>`;
+    html += '</div>';
+
+    if (count > 1) {
+      html += '<button id="btn-delete-page" class="px-3 py-1 text-xs font-bold text-red-500 hover:bg-red-100 rounded-lg transition shrink-0 hidden sm:block">🗑️ Eliminar Hoja Actual</button>';
+    }
+
+    elPageTabs.innerHTML = html;
+
+    elPageTabs.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => setPage(parseInt(btn.dataset.page)));
+    });
+    const btnAdd = document.getElementById('btn-add-page');
+    if (btnAdd) btnAdd.addEventListener('click', addPage);
+    const btnDel = document.getElementById('btn-delete-page');
+    if (btnDel) btnDel.addEventListener('click', deletePage);
+  }
+
+  // ── Property Bars ──
+  function renderPropertyBars() {
+    const sel = getSelected();
+
+    // Desktop
+    if (sel) {
+      elPropsBarEmpty.classList.add('hidden');
+      elPropsBarContent.classList.remove('hidden');
+      elPropsBarDesktop.classList.remove('hidden');
+    } else {
+      elPropsBarEmpty.classList.remove('hidden');
+      elPropsBarContent.classList.add('hidden');
+    }
+    renderPropContent(elPropsBarContent, sel, false);
+    renderMobileProps(sel);
+  }
+
+  function renderMobileProps(sel) {
+    elPropsBarMobile.innerHTML = '';
+    if (!sel) {
+      elPropsBarMobile.classList.add('hidden');
+      return;
+    }
+    elPropsBarMobile.classList.remove('hidden');
+    renderPropContent(elPropsBarMobile, sel, true);
+  }
+
+  function renderPropContent(container, sel, isMobile) {
+    if (!sel) { container.innerHTML = ''; return; }
+    let h = '';
+
+    const labelClass = 'text-[10px] font-bold text-slate-400 uppercase tracking-wider';
+    const groupClass = `flex items-center gap-1.5 ${isMobile ? 'border-r border-slate-200 pr-2' : 'border-r border-slate-200 pr-3'}`;
+
+    // Capas
+    h += `<div class="flex items-center gap-${isMobile ? '0.5' : '1'} ${isMobile ? 'border-r border-slate-200 pr-2' : 'border-r border-slate-200 pr-3'}">`;
+    if (!isMobile) h += '<span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>';
+    h += `<button class="prop-bring-forward ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al frente">⏫</button>`;
+    h += `<button class="prop-send-back ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al fondo">⏬</button>`;
+    h += `<button class="prop-move-up ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}">↑</button>`;
+    h += `<button class="prop-move-down ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}">↓</button>`;
+    h += '</div>';
+
+    // Lock
+    h += `<button class="prop-toggle-lock ${isMobile ? 'px-2 py-1 rounded text-xs font-semibold border-r border-slate-200 pr-2 mr-0 transition' : 'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition border-r border-slate-200 pr-3'}" style="${sel.locked ? 'bg-amber-100 text-amber-700' : (isMobile ? 'bg-white border border-slate-200 text-slate-600' : 'hover:bg-slate-200 text-slate-600')}">${sel.locked ? '🔒 Bloq.' : '🔓 Libre'}</button>`;
+
+    // Opacidad
+    h += `<div class="${groupClass}">`;
+    if (!isMobile) h += `<span class="${labelClass}">Opacidad</span>`;
+    else h += `<span class="${labelClass}">Op</span>`;
+    h += `<input type="range" value="${(sel.opacity ?? 1) * 100}" min="5" max="100" step="5" class="prop-opacity ${isMobile ? 'w-16' : 'w-20'} h-1.5 accent-blue-600 cursor-pointer" />`;
+    h += `<span class="text-xs text-slate-500 w-7">${Math.round((sel.opacity ?? 1) * 100)}%</span>`;
+    h += '</div>';
+
+    // Imagen: fit
+    if (sel.type === 'image') {
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Ajuste</span>`;
+      h += `<select class="prop-image-fit px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none">`;
+      h += `<option value="fill" ${sel.fit === 'fill' ? 'selected' : ''}>Fill</option>`;
+      h += `<option value="contain" ${sel.fit === 'contain' ? 'selected' : ''}>Contain</option>`;
+      h += `<option value="cover" ${sel.fit === 'cover' ? 'selected' : ''}>Cover</option>`;
+      h += '</select></div>';
+    }
+
+    // Forma: tipo + relleno + borde
+    if (sel.type === 'shape') {
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Forma</span>`;
+      h += `<button class="prop-shape-rect px-2 py-0.5 rounded text-xs font-medium transition ${sel.shapeType === 'rect' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">▭ ${isMobile ? '' : 'Rect'}</button>`;
+      h += `<button class="prop-shape-circle px-2 py-0.5 rounded text-xs font-medium transition ${sel.shapeType === 'circle' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">⬤ ${isMobile ? '' : 'Círculo'}</button>`;
+      h += '</div>';
+
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Relleno</span>`;
+      h += `<input type="color" value="${sel.fillColor || '#3b82f6'}" class="prop-fill-color w-7 h-7 rounded cursor-pointer border border-slate-200 p-0 bg-white" />`;
+      h += '</div>';
+
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Borde</span>`;
+      h += `<input type="color" value="${sel.strokeColor || '#1d4ed8'}" class="prop-stroke-color w-7 h-7 rounded cursor-pointer border border-slate-200 p-0 bg-white" />`;
+      h += `<input type="range" value="${sel.strokeWidth ?? 0}" min="0" max="20" step="1" class="prop-stroke-width w-12 h-1.5 accent-blue-600 cursor-pointer" />`;
+      h += `<span class="text-xs text-slate-500 w-4">${sel.strokeWidth ?? 0}</span>`;
+      h += '</div>';
+    }
+
+    // Texto: fuente, tamaño, color, negrita, sombra, contorno
+    if (sel.type === 'text') {
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Fuente</span>`;
+      h += `<select class="prop-font-family px-1 py-0.5 border border-slate-200 rounded text-xs bg-white focus:outline-none ${isMobile ? 'max-w-[90px]' : 'max-w-[130px]'}">`;
+      FONTS.forEach(f => {
+        h += `<option value="${escapeHtml(f.value)}" ${sel.fontFamily === f.value ? 'selected' : ''}>${escapeHtml(f.label)}</option>`;
+      });
+      h += '</select></div>';
+
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Tamaño</span>`;
+      h += `<input type="number" value="${sel.fontSize}" min="8" max="300" class="prop-font-size w-12 px-1 py-0.5 border border-slate-200 rounded text-xs text-center" />`;
+      h += '</div>';
+
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Color</span>`;
+      h += `<input type="color" value="${sel.color || '#000000'}" class="prop-text-color w-7 h-7 rounded cursor-pointer border border-slate-200 p-0 bg-white" />`;
+      h += '</div>';
+
+      h += `<button class="prop-text-bold px-2 py-0.5 rounded text-xs font-semibold transition border-r border-slate-200 pr-2 mr-0 ${sel.fontWeight === 'bold' || sel.fontWeight >= 700 ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">B</button>`;
+
+      // Sombra
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Sombra</span>`;
+      h += `<input type="checkbox" class="prop-text-shadow-toggle" ${sel.textShadow ? 'checked' : ''} />`;
+      if (sel.textShadow) {
+        h += `<input type="color" value="${sel.shadowColor || '#000000'}" class="prop-shadow-color w-6 h-6 rounded cursor-pointer border border-slate-200 p-0 bg-white" />`;
+        h += `<input type="number" value="${sel.shadowBlur ?? 4}" min="0" max="50" class="prop-shadow-blur w-10 px-1 py-0.5 border border-slate-200 rounded text-xs text-center" title="Blur" />`;
+      }
+      h += '</div>';
+
+      // Contorno
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Contorno</span>`;
+      h += `<input type="checkbox" class="prop-text-outline-toggle" ${sel.textOutline ? 'checked' : ''} />`;
+      if (sel.textOutline) {
+        h += `<input type="color" value="${sel.outlineColor || '#ffffff'}" class="prop-outline-color w-6 h-6 rounded cursor-pointer border border-slate-200 p-0 bg-white" />`;
+        h += `<input type="number" value="${sel.outlineWidth ?? 1}" min="0.5" max="10" step="0.5" class="prop-outline-width w-10 px-1 py-0.5 border border-slate-200 rounded text-xs text-center" title="Ancho" />`;
+      }
+      h += '</div>';
+    }
+
+    // Imagen: trim / restore
+    if (sel.type === 'image') {
+      h += `<div class="${groupClass}">`;
+      h += `<button class="prop-trim-white px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">✂️ Recortar blancos</button>`;
+      if (sel.originalSrc && sel.originalSrc !== sel.src) {
+        h += `<button class="prop-restore-original px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition ml-1">↩️ Original</button>`;
+      }
+      h += '</div>';
+    }
+
+    // Grid fill
+    h += `<div class="border-l border-slate-200 pl-${isMobile ? '2' : '3'} ${isMobile ? '' : 'ml-auto'} shrink-0">`;
+    h += `<button class="prop-grid-fill flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition ${isMobile ? '' : 'border border-slate-200 hover:border-violet-300'}">⊞ ${isMobile ? 'Llenar' : 'Llenar hoja'}</button>`;
+    h += '</div>';
+
+    container.innerHTML = h;
+
+    // Helpers
+    function updateText() { pushHistory(); renderSheet(); renderPropertyBars(); }
+
+    // Event listeners comunes
+    container.querySelector('.prop-bring-forward')?.addEventListener('click', bringForward);
+    container.querySelector('.prop-send-back')?.addEventListener('click', sendToBack);
+    container.querySelector('.prop-move-up')?.addEventListener('click', moveOneUp);
+    container.querySelector('.prop-move-down')?.addEventListener('click', moveOneDown);
+    container.querySelector('.prop-toggle-lock')?.addEventListener('click', () => {
+      sel.locked = !sel.locked;
+      pushHistory();
+      renderPropertyBars();
+      renderSheet();
+    });
+    const opacitySlider = container.querySelector('.prop-opacity');
+    if (opacitySlider) {
+      opacitySlider.addEventListener('input', () => {
+        sel.opacity = parseInt(opacitySlider.value) / 100;
+        renderPropertyBars();
+        sync();
+      });
+    }
+    const fitSelect = container.querySelector('.prop-image-fit');
+    if (fitSelect) {
+      fitSelect.addEventListener('change', () => {
+        sel.fit = fitSelect.value;
+        pushHistory();
+        renderSheet();
+      });
+    }
+    container.querySelector('.prop-shape-rect')?.addEventListener('click', () => {
+      sel.shapeType = 'rect';
+      pushHistory();
+      renderPropertyBars();
+      renderSheet();
+    });
+    container.querySelector('.prop-shape-circle')?.addEventListener('click', () => {
+      sel.shapeType = 'circle';
+      pushHistory();
+      renderPropertyBars();
+      renderSheet();
+    });
+    container.querySelector('.prop-grid-fill')?.addEventListener('click', gridFill);
+
+    // Shape listeners
+    const fillColor = container.querySelector('.prop-fill-color');
+    if (fillColor) {
+      fillColor.addEventListener('input', () => {
+        sel.fillColor = fillColor.value;
+        sync();
+      });
+      fillColor.addEventListener('change', () => { pushHistory(); renderSheet(); });
+    }
+    const strokeColor = container.querySelector('.prop-stroke-color');
+    if (strokeColor) {
+      strokeColor.addEventListener('input', () => {
+        sel.strokeColor = strokeColor.value;
+        sync();
+      });
+      strokeColor.addEventListener('change', () => { pushHistory(); renderSheet(); });
+    }
+    const strokeWidth = container.querySelector('.prop-stroke-width');
+    if (strokeWidth) {
+      strokeWidth.addEventListener('input', () => {
+        sel.strokeWidth = parseInt(strokeWidth.value);
+        renderPropertyBars();
+        sync();
+      });
+      strokeWidth.addEventListener('change', () => { pushHistory(); renderSheet(); });
+    }
+
+    // Text listeners
+    const fontFamily = container.querySelector('.prop-font-family');
+    if (fontFamily) {
+      fontFamily.addEventListener('change', () => {
+        sel.fontFamily = fontFamily.value;
+        updateText();
+      });
+    }
+    const fontSize = container.querySelector('.prop-font-size');
+    if (fontSize) {
+      fontSize.addEventListener('change', () => {
+        sel.fontSize = Math.max(8, Math.min(300, parseInt(fontSize.value) || 24));
+        updateText();
+      });
+    }
+    const textColor = container.querySelector('.prop-text-color');
+    if (textColor) {
+      textColor.addEventListener('input', () => { sel.color = textColor.value; sync(); });
+      textColor.addEventListener('change', () => { pushHistory(); renderSheet(); });
+    }
+    const textBold = container.querySelector('.prop-text-bold');
+    if (textBold) {
+      textBold.addEventListener('click', () => {
+        sel.fontWeight = (sel.fontWeight === 'bold' || sel.fontWeight >= 700) ? 'normal' : 'bold';
+        updateText();
+      });
+    }
+    const shadowToggle = container.querySelector('.prop-text-shadow-toggle');
+    if (shadowToggle) {
+      shadowToggle.addEventListener('change', () => {
+        sel.textShadow = shadowToggle.checked;
+        if (sel.textShadow && !sel.shadowColor) {
+          sel.shadowColor = '#000000';
+          sel.shadowBlur = 4;
+          sel.shadowOffsetX = 2;
+          sel.shadowOffsetY = 2;
+        }
+        updateText();
+      });
+    }
+    const shadowColor = container.querySelector('.prop-shadow-color');
+    if (shadowColor) {
+      shadowColor.addEventListener('input', () => { sel.shadowColor = shadowColor.value; sync(); });
+      shadowColor.addEventListener('change', () => { pushHistory(); renderSheet(); });
+    }
+    const shadowBlur = container.querySelector('.prop-shadow-blur');
+    if (shadowBlur) {
+      shadowBlur.addEventListener('change', () => {
+        sel.shadowBlur = Math.max(0, parseInt(shadowBlur.value) || 0);
+        updateText();
+      });
+    }
+    const outlineToggle = container.querySelector('.prop-text-outline-toggle');
+    if (outlineToggle) {
+      outlineToggle.addEventListener('change', () => {
+        sel.textOutline = outlineToggle.checked;
+        if (sel.textOutline && !sel.outlineColor) {
+          sel.outlineColor = '#ffffff';
+          sel.outlineWidth = 1;
+        }
+        updateText();
+      });
+    }
+    const outlineColor = container.querySelector('.prop-outline-color');
+    if (outlineColor) {
+      outlineColor.addEventListener('input', () => { sel.outlineColor = outlineColor.value; sync(); });
+      outlineColor.addEventListener('change', () => { pushHistory(); renderSheet(); });
+    }
+    const outlineWidth = container.querySelector('.prop-outline-width');
+    if (outlineWidth) {
+      outlineWidth.addEventListener('change', () => {
+        sel.outlineWidth = Math.max(0.5, parseFloat(outlineWidth.value) || 1);
+        updateText();
+      });
+    }
+
+    // Image trim/restore listeners
+    container.querySelector('.prop-trim-white')?.addEventListener('click', async () => {
+      await trimWhiteBorders();
+      renderPropertyBars();
+      renderSheet();
+    });
+    container.querySelector('.prop-restore-original')?.addEventListener('click', () => {
+      restoreOriginalImage();
+      renderPropertyBars();
+      renderSheet();
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ── Debounce de renderSheet ──
+  let renderSheetScheduled = false;
+  function scheduleRenderSheet() {
+    if (renderSheetScheduled) return;
+    renderSheetScheduled = true;
+    requestAnimationFrame(() => {
+      renderSheetScheduled = false;
+      renderSheet();
+    });
+  }
+
+  // ── Reactividad de items ──
+  $items.subscribe(() => scheduleRenderSheet());
+  $selectedId.subscribe(() => scheduleRenderSheet());
+  $cropActive.subscribe(() => scheduleRenderSheet());
+  $cropId.subscribe(() => scheduleRenderSheet());
+  $editingTextId.subscribe(() => scheduleRenderSheet());
+  $activePage.subscribe(() => {
+    elInputPageBg.value = currentPageBg();
+    scheduleRenderSheet();
+  });
+  $pagesCount.subscribe(() => scheduleRenderSheet());
+  $pageColors.subscribe(() => scheduleRenderSheet());
+
+  // Page background input
+  elInputPageBg.addEventListener('input', () => {
+    setCurrentPageColor(elInputPageBg.value);
+  });
+
+  // Initial render
+  renderSheet();
+  updateQuoteUI();
+
+  // Update zoom display on init
+  elZoomPercent.textContent = zoomPercent();
+  elCanvasZoomOuter.style.width = (getSheet().w * $canvasZoom.get()) + 'px';
+  elCanvasZoomOuter.style.height = (getSheet().h * $canvasZoom.get()) + 'px';
+  elCanvasZoomInner.style.transform = 'scale(' + $canvasZoom.get() + ')';
+  elCanvasZoomInner.style.width = getSheet().w + 'px';
+  elCanvasZoomInner.style.height = getSheet().h + 'px';
+</script>
 </html>

@@ -6,65 +6,49 @@
   <title>StickerMaker - Registro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="auth.js"></script>
   <script>
     if (isAuthenticated()) window.location.replace('/dashboard')
   </script>
-  <style> [x-cloak]{display:none!important} </style>
 </head>
 <body>
-  <div x-data="registerView" class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4 text-white">
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4 text-white">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
         <span class="text-5xl">✨</span>
-        <h1 class="text-2xl font-black mt-3 tracking-tight" x-text="'Registro en ' + $store.app.name">Registro</h1>
-        <p class="text-slate-400 text-sm mt-1" x-text="step === 1 ? 'Crea tu cuenta de acceso' : 'Verifica tu información'"></p>
+        <h1 class="text-2xl font-black mt-3 tracking-tight">Registro en StickerMaker</h1>
+        <p id="register-subtitle" class="text-slate-400 text-sm mt-1">Crea tu cuenta de acceso</p>
       </div>
       
       <div class="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-4 backdrop-blur-sm shadow-xl">
-        <div x-show="error" x-cloak class="bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center" x-text="error"></div>
-        <div x-show="successMessage" x-cloak class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center" x-text="successMessage"></div>
+        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
+        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
 
-        <!-- TABS (HIDDEN FOR NOW) -->
-        <!-- <div class="flex bg-white/10 rounded-xl p-1 mb-6">
-          <button @click="method = 'email'; error = ''; successMessage = ''; step = 1" :class="method === 'email' ? 'bg-white/20 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition">Email / Usuario</button>
-          <button @click="method = 'phone'; error = ''; successMessage = ''; step = 1" :class="method === 'phone' ? 'bg-white/20 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition">Teléfono (SMS)</button>
-        </div> -->
-
-        <!-- REGISTRO CON EMAIL (MÉTODO POCKETBASE) -->
-        <template x-if="method === 'email'">
-          <div class="space-y-3">
-            <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre de Usuario</label>
-              <input x-model="username" type="text" placeholder="Ej. juanito123" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-            </div>
-            <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Correo Electrónico</label>
-              <input x-model="email" type="email" placeholder="tu@correo.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-            </div>
-            <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Teléfono Celular</label>
-              <input x-model="phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-            </div>
-            <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
-              <input x-model="password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-            </div>
-            <div>
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Confirmar Contraseña</label>
-              <input x-model="passwordConfirm" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" @keydown.enter="registerEmail()"/>
-            </div>
-            <button @click="registerEmail()" :disabled="loading || !email || !password || !username || !phone" class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
-              <span x-text="loading ? 'Creando cuenta...' : 'Registrarse con Email'"></span>
-            </button>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre de Usuario</label>
+            <input id="input-username" type="text" placeholder="Ej. juanito123" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
           </div>
-        </template>
-
-        <!-- REGISTRO CON TELÉFONO (LEGACY SMS - OCULTO) -->
-        <!-- <template x-if="method === 'phone'">
-          ... código oculto ...
-        </template> -->
+          <div>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Correo Electrónico</label>
+            <input id="input-email" type="email" placeholder="tu@correo.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Teléfono Celular</label>
+            <input id="input-phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
+            <input id="input-password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Confirmar Contraseña</label>
+            <input id="input-password-confirm" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          </div>
+          <button id="btn-register" disabled class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
+            Registrarse con Email
+          </button>
+        </div>
 
         <p class="text-center text-slate-600 text-xs pt-3 mt-4 border-t border-white/10">
           ¿Ya tienes cuenta? <a href="/login" class="text-violet-400 hover:text-violet-300 transition font-bold">Inicia sesión</a>
@@ -73,88 +57,99 @@
     </div>
   </div>
 
-  <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('registerView', () => ({
-        method: 'email', 
-        step: 1, 
-        email: '', 
-        username: '', 
-        password: '', 
-        passwordConfirm: '',
-        phone: '', 
-        otpCode: '', 
-        loading: false, 
-        error: '', 
-        successMessage: '',
-        
-        async registerEmail() {
-          this.error = ''; this.successMessage = '';
-          if (this.password !== this.passwordConfirm) {
-            this.error = 'Las contraseñas no coinciden';
-            return;
-          }
-          this.loading = true;
-          try {
-            const pb = this.$store.auth.pb;
-            
-            // 1. Crear el usuario
-            await pb.collection('users_canva').create({
-              username: this.username,
-              email: this.email,
-              password: this.password,
-              passwordConfirm: this.passwordConfirm,
-              name: this.username,
-              emailVisibility: false,  // FIX N4: email privado por defecto (anti-enumeración)
-              phone: this.phone,
-              role: 'user'
-            });
+  <script type="module">
+    import { atom } from 'https://cdn.jsdelivr.net/npm/nanostores@0.11.3/+esm';
+    import { getAuthPb } from './src/auth/authStore.js';
+    import { bindInput, bindText, bindShow } from './src/ui/render.js';
 
-            // 2. Solicitar verificación de email
-            await pb.collection('users_canva').requestVerification(this.email);
+    // Atoms locales
+    const $username = atom('');
+    const $email = atom('');
+    const $phone = atom('');
+    const $password = atom('');
+    const $passwordConfirm = atom('');
+    const $loading = atom(false);
+    const $error = atom('');
+    const $successMessage = atom('');
 
-            this.successMessage = '¡Cuenta creada! Revisa tu correo para verificar tu cuenta.';
-            this.email = ''; this.username = ''; this.password = ''; this.passwordConfirm = '';
-          } catch(e) {
-            // FIX #9: mensaje genérico para evitar enumeración de usuarios por email
-            this.error = 'No se pudo crear la cuenta. Verifica los datos o intenta con otro correo.';
-          } finally { this.loading = false; }
-        },
+    // Binds
+    const elUsername = document.getElementById('input-username');
+    const elEmail = document.getElementById('input-email');
+    const elPhone = document.getElementById('input-phone');
+    const elPassword = document.getElementById('input-password');
+    const elPasswordConfirm = document.getElementById('input-password-confirm');
+    const elBtnRegister = document.getElementById('btn-register');
+    const elErrorAlert = document.getElementById('error-alert');
+    const elSuccessAlert = document.getElementById('success-alert');
 
-        async requestOTP() {
-          this.error = ''; this.successMessage = ''; this.loading = true;
-          try {
-            await this.$store.auth.pb.send("/api/auth/register-otp", {
-               method: "POST",
-               body: { 
-                 phone: this.phone, 
-                 username: this.username, 
-                 password: this.password
-               }
-            });
-            this.step = 2;
-            this.successMessage = 'Se ha enviado un código a tu celular.';
-          } catch(e) {
-            this.error = e?.data?.message || 'Error al solicitar el código.';
-          } finally { this.loading = false; }
-        },
+    bindInput(elUsername, $username);
+    bindInput(elEmail, $email);
+    bindInput(elPhone, $phone);
+    bindInput(elPassword, $password);
+    bindInput(elPasswordConfirm, $passwordConfirm);
+    bindText(elErrorAlert, $error);
+    bindShow(elErrorAlert, $error);
+    bindText(elSuccessAlert, $successMessage);
+    bindShow(elSuccessAlert, $successMessage);
 
-        async verifyOTP() {
-          this.error = ''; this.loading = true;
-          try {
-            const res = await this.$store.auth.pb.send("/api/auth/verify-otp", {
-              method: "POST",
-              body: { phone: this.phone, code: this.otpCode }
-            });
-            if (res.token) {
-              this.$store.auth.pb.authStore.save(res.token, res.record);
-              window.location.replace('/dashboard');
-            }
-          } catch(e) {
-            this.error = e?.data?.message || 'Código inválido';
-          } finally { this.loading = false; }
-        }
-      }));
+    // Reactivos de deshabilitar botón
+    const fields = [$username, $email, $phone, $password, $passwordConfirm, $loading];
+    fields.forEach(f => f.subscribe(() => {
+      const isInvalid = $loading.get() || !$username.get() || !$email.get() || !$phone.get() || !$password.get() || !$passwordConfirm.get();
+      if (isInvalid) elBtnRegister.setAttribute('disabled', 'true');
+      else elBtnRegister.removeAttribute('disabled');
+    }));
+
+    $loading.subscribe(loading => {
+      elBtnRegister.textContent = loading ? 'Creando cuenta...' : 'Registrarse con Email';
+    });
+
+    async function handleRegister() {
+      if ($loading.get()) return;
+      $error.set('');
+      $successMessage.set('');
+
+      if ($password.get() !== $passwordConfirm.get()) {
+        $error.set('Las contraseñas no coinciden');
+        return;
+      }
+
+      $loading.set(true);
+
+      try {
+        const pb = getAuthPb();
+
+        // 1. Crear el usuario
+        await pb.collection('users_canva').create({
+          username: $username.get(),
+          email: $email.get(),
+          password: $password.get(),
+          passwordConfirm: $passwordConfirm.get(),
+          name: $username.get(),
+          emailVisibility: false,
+          phone: $phone.get(),
+          role: 'user'
+        });
+
+        // 2. Solicitar verificación de email
+        await pb.collection('users_canva').requestVerification($email.get());
+
+        $successMessage.set('¡Cuenta creada! Revisa tu correo para verificar tu cuenta.');
+        $username.set('');
+        $email.set('');
+        $phone.set('');
+        $password.set('');
+        $passwordConfirm.set('');
+      } catch (e) {
+        $error.set('No se pudo crear la cuenta. Verifica los datos o intenta con otro correo.');
+      } finally {
+        $loading.set(false);
+      }
+    }
+
+    elBtnRegister.addEventListener('click', handleRegister);
+    elPasswordConfirm.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') handleRegister();
     });
   </script>
 </body>

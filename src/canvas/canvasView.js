@@ -1,321 +1,454 @@
-// canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
-
-import { CanvasEditor } from './CanvasEditor.js?v=1.6.1';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.6.1';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.6.1';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.6.1';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.6.1';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.6.1';
+// canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
+import { atom } from 'nanostores';
+import { CanvasEditor } from './CanvasEditor.js?v=1.7.0';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.0';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.0';
+import { AuthManager } from '../auth/AuthManager.js?v=1.7.0';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.0';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.0';
 
 const PX_PER_CM = 37.8095;
 
-function registerStickerMaker(Alpine) {
-  Alpine.data('stickerMaker', () => {
-    const editor = new CanvasEditor();
-    let persistence = null;
-    let calculator  = null;
-    let auth        = null;
+const editor = new CanvasEditor();
+let persistence = null;
+let calculator = null;
+let auth = null;
 
-    function sync() {
-      this._items = [...editor.items];
-      this._selectedId = editor.selectedId;
-      this._cropActive = editor.crop.active;
-      this._cropId = editor.crop.id;
+// ── Átomos reactivos ──
+const $items = atom([]);
+const $selectedId = atom(null);
+const $canvasZoom = atom(1.0);
+const $showGrid = atom(false);
+const $cropActive = atom(false);
+const $cropId = atom(null);
+const $editingTextId = atom(null);
+const $isSaving = atom(false);
+const $isPrinting = atom(false);
+const $isSaveModalOpen = atom(false);
+const $materialType = atom('RICE_04');
+const $printQuantity = atom(1);
+const $projectTitle = atom('');
+const $pagesCount = atom(1);
+const $activePage = atom(1);
+const $pageColors = atom({ 1: '#ffffff' });
+const $guides = atom([]);
+const $fonts = atom(FONTS);
+const $products = atom(PRODUCTS);
+
+// ── Helpers ──
+function getSelected() {
+  return $items.get().find(i => i.id === $selectedId.get()) || null;
+}
+
+function getSheet() {
+  return editor.paper.sheet;
+}
+
+function sync() {
+  $items.set([...editor.items]);
+  $selectedId.set(editor.selectedId);
+  $cropActive.set(editor.crop.active);
+  $cropId.set(editor.crop.id);
+  $canvasZoom.set(editor.canvasZoom);
+  $editingTextId.set(editor.editingTextId);
+  $isSaving.set(editor.isSaving);
+  $isPrinting.set(editor.isPrinting);
+  $pagesCount.set(editor.paper.pagesCount);
+  $activePage.set(editor.paper.activePage);
+  $pageColors.set({ ...editor.paper.pageColors });
+}
+
+function sortedItems() {
+  return [...editor.items].sort((a, b) => a.z - b.z);
+}
+
+function itemsOnPage(p) {
+  return sortedItems().filter(i => (i.page || 1) === p);
+}
+
+function itemStyle(item) {
+  return item.toStyle(getSheet().w, getSheet().h);
+}
+
+// ── Inicialización ──
+async function initCanvas(canvasMainRef) {
+  window.addEventListener('paste', e => handlePaste(e));
+
+  auth = new AuthManager();
+  await auth.init();
+  persistence = new CanvasPersistence(editor, auth.pb, auth);
+  calculator = new QuoteCalculator(
+    () => $materialType.get(),
+    () => $printQuantity.get(),
+    () => editor.paper.pagesCount
+  );
+
+  _bindResize(canvasMainRef);
+  await waitNextTick();
+
+  editor.pointer.notify = () => sync();
+  editor.fitZoom(canvasMainRef);
+  syncZoom();
+  editor.history.push();
+  sync();
+
+  canvasMainRef.addEventListener('touchstart', e => onCanvasTouchStart(e), { passive: true });
+  canvasMainRef.addEventListener('touchmove', e => onCanvasTouchMove(e), { passive: false });
+  canvasMainRef.addEventListener('touchend', e => onCanvasTouchEnd(e), { passive: true });
+
+  window.addEventListener('editor:change', () => sync());
+
+  await persistence.loadUserProjects();
+
+  const qs = new URLSearchParams(window.location.search);
+  const id = qs.get('id');
+  if (id) {
+    try {
+      await persistence.loadProject(id);
+      syncZoom();
+    } catch {
+      alert('No se pudo cargar el proyecto.');
+      window.location.replace('/dashboard');
     }
+  }
+}
 
-    return {
-      editor,
-      products: PRODUCTS,
-      materialType: 'RICE_04',
-      printQuantity: 1,
-      projectTitle: '',
-      isSaveModalOpen: false,
-      canvasZoom: 1.0,
+function waitNextTick() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
 
-      // Arrays/ids reactivos sincronizados con el editor raw
-      _items: [],
-      _selectedId: null,
-      _cropActive: false,
-      _cropId: null,
-
-      get items()          { return this._items; },
-      get selectedId()     { return this._selectedId; },
-      get selected()       { return this._items.find(i => i.id === this._selectedId) || null; },
-      get showGrid()       { return editor.showGrid; },
-      get isSaving()       { return editor.isSaving; },
-      get isPrinting()     { return editor.isPrinting; },
-      get editingTextId()  { return editor.editingTextId; },
-      get fonts()          { return editor.fonts; },
-      get crop()           { return { active: this._cropActive, id: this._cropId }; },
-      get guides()         { return editor.guides.guides; },
-      get sheet()          { return editor.paper.sheet; },
-      get pagesCount()     { return editor.paper.pagesCount; },
-      get activePage()     { return editor.paper.activePage; },
-      get pageColors()     { return editor.paper.pageColors; },
-      get paperSize()      { return editor.paper.paperSize; },
-      get _editingAsAdmin(){ return persistence?.editingAsAdmin || false; },
-      get pageBg()         { return editor.paper.getPageColor(editor.paper.activePage); },
-      get currentPageColor(){ return editor.paper.getPageColor(editor.paper.activePage); },
-      set currentPageColor(v) { editor.paper.setPageColor(editor.paper.activePage, v); },
-
-      get quote() {
-        if (!calculator) return { total: 0, finalUnitPrice: 0, pct: 0, warning: null };
-        return calculator.compute();
-      },
-
-      // ── Init ──────────────────────────────────────────
-      async init() {
-        window.addEventListener('paste', e => this.handlePaste(e));
-
-        auth = new AuthManager();
-        await auth.init();
-        persistence = new CanvasPersistence(editor, auth.pb, auth);
-        calculator = new QuoteCalculator(
-          () => this.materialType,
-          () => this.printQuantity,
-          () => editor.paper.pagesCount
-        );
-
-        this._bindResize();
-        await this._waitForRefs();
-
-        editor.pointer.notify = () => sync.call(this);
-
-        editor.fitZoom(this.$refs.canvasMain);
-        this.syncZoom();
-        editor.history.push();
-        sync.call(this);
-
-        const main = this.$refs.canvasMain;
-        main.addEventListener('touchstart', e => this.onCanvasTouchStart(e), { passive: true });
-        main.addEventListener('touchmove',  e => this.onCanvasTouchMove(e),  { passive: false });
-        main.addEventListener('touchend',   e => this.onCanvasTouchEnd(e),   { passive: true });
-
-        window.addEventListener('editor:change', () => sync.call(this));
-
-        await persistence.loadUserProjects();
-
-        const qs = new URLSearchParams(window.location.search);
-        const id = qs.get('id');
-        if (id) {
-          try {
-            await persistence.loadProject(id);
-            this.syncZoom();
-          }
-          catch { alert('No se pudo cargar el proyecto.'); window.location.replace('/dashboard'); }
-        }
-      },
-
-      _waitForRefs() { return this.$nextTick(); },
-      _bindResize() {
-        window.addEventListener('resize', () => {
-          editor.fitZoom(this.$refs.canvasMain);
-          this.syncZoom();
-        });
-      },
-
-      // ── Selection
-      select(id)         { editor.select(id); this._selectedId = id; },
-      clearSelection()   { editor.clearSelection(); this._selectedId = null; },
-
-      // ── Zoom
-      syncZoom() { this.canvasZoom = editor.canvasZoom; },
-      zoomIn()  { editor.zoomIn(); this.syncZoom(); },
-      zoomOut() { editor.zoomOut(); this.syncZoom(); },
-      zoomPercent() { return Math.round(this.canvasZoom * 100) + '%'; },
-      fitZoom()  { editor.fitZoom(this.$refs.canvasMain); this.syncZoom(); },
-
-      // ── Undo/Redo
-      undo()        { editor.history.undo(); sync.call(this); },
-      redo()        { editor.history.redo(); sync.call(this); },
-      canUndo()     { return editor.history.canUndo(); },
-      canRedo()     { return editor.history.canRedo(); },
-      pushHistory() { editor.history.push(); },
-
-      // ── Print
-      async printCanvas() {
-        editor.clearSelection();
-        editor.isPrinting = true;
-        await this.$nextTick();
-        setTimeout(() => { window.print(); editor.isPrinting = false; }, 150);
-      },
-
-      // ── Paper & pages
-      setPage(p)        { editor.paper.setActive(p); editor.clearSelection(); },
-      addPage()         { editor.paper.addPage(); editor.clearSelection(); },
-      deletePage() {
-        const p = this.activePage;
-        if (!confirm(`¿Eliminar la Hoja ${p}?`)) return;
-        editor.items = editor.paper.deletePage(editor.items, p) || editor.items;
-        if (editor.paper.activePage > editor.paper.pagesCount) editor.paper.activePage = editor.paper.pagesCount;
-        editor.clearSelection();
-        editor.history.push();
-        sync.call(this);
-      },
-      updatePaperSize() {
-        editor.paper.setSize(this.paperSize);
-        this.$nextTick(() => editor.fitZoom(this.$refs.canvasMain));
-        this._injectPrintCss();
-      },
-      _injectPrintCss() {
-        let el = document.getElementById('print-page-style');
-        if (!el) { el = document.createElement('style'); el.id = 'print-page-style'; document.head.appendChild(el); }
-        el.innerHTML = editor.paper.printCss();
-      },
-
-      // ── Elementos
-      addText()     { editor.addText(); sync.call(this); },
-      addShape(t)   { editor.addShape(t); sync.call(this); },
-      async handleFiles(event) {
-        const files = [...(event.target.files || [])];
-        for (let i = 0; i < files.length; i++) {
-          await editor.addImageFromFile(files[i], { x: 40 + ((i * 30) % 180), y: 40 + ((i * 30) % 180) });
-        }
-        event.target.value = '';
-        sync.call(this);
-      },
-      async handlePaste(event) {
-        const items = [...(event.clipboardData?.items || [])];
-        const imgItem = items.find(i => i.type.startsWith('image/'));
-        if (!imgItem) return;
-        const file = imgItem.getAsFile();
-        if (file) await editor.addImageFromClipboardFile(file);
-        sync.call(this);
-      },
-      duplicateSelected() { editor.duplicateSelected(); sync.call(this); },
-      deleteSelected()    { editor.deleteSelected(); sync.call(this); },
-      bringForward()      { editor.bringForward(); sync.call(this); },
-      sendToBack()        { editor.sendToBack(); sync.call(this); },
-      moveOneUp()         { editor.moveOneUp(); sync.call(this); },
-      moveOneDown()       { editor.moveOneDown(); sync.call(this); },
-
-      sortedItems()  { return [...this._items].sort((a, b) => a.z - b.z); },
-      itemsOnPage(p) { return this.sortedItems().filter(i => (i.page || 1) === p); },
-      itemStyle(item){ return item.toStyle(editor.paper.sheet.w, editor.paper.sheet.h); },
-
-      get cropHandles() { return ['nw','n','ne','e','se','s','sw','w']; },
-
-      set showGrid(v) { editor.showGrid = v; },
-
-      // ── Crop
-      startCropMode()               { editor.startCrop(); sync.call(this); },
-      async applyCropFromOverlay()  { await editor.applyCrop(); sync.call(this); },
-      cancelCropMode()              { editor.cancelCrop(); sync.call(this); },
-      cropBoxStyle()                { return editor.crop.boxStyle(); },
-
-      // ── Trim
-      async trimWhiteBorders() {
-        await editor.trimWhiteSelected();
-        editor.history.push();
-        sync.call(this);
-      },
-      restoreOriginalImage() { editor.restoreOriginal(); editor.history.push(); sync.call(this); },
-
-      // ── Grid fill
-      gridFill() {
-        const r = editor.gridFill();
-        if (r) alert(`Cuadrícula: ${r.cols}×${r.rows} = ${r.total} stickers`);
-        sync.call(this);
-      },
-
-      // ── Reset
-      resetProject() {
-        if (!confirm('¿Borrar todo el lienzo e iniciar un nuevo proyecto?')) return;
-        editor.resetProject();
-        persistence.reset();
-        window.history.replaceState({}, document.title, window.location.pathname);
-        sync.call(this);
-      },
-
-      // ── Rulers & grid
-      getRulerXStyle() { return rulerXStyle(); },
-      getRulerYStyle() { return rulerYStyle(); },
-      getGridStyle()   { return gridStyle(); },
-
-      // ── Pointer handlers (delegados a PointerController)
-      onItemPointerDown(ev, id) {
-        const item = editor.items.find(i => i.id === id);
-        if (!item) return;
-        if (item.locked) { this.select(id); return; }
-        editor.pointer.startDrag(item, ev);
-        this._selectedId = id;
-        ev.currentTarget?.setPointerCapture?.(ev.pointerId);
-      },
-      onResizeHandlePointerDown(ev, id) {
-        const item = editor.items.find(i => i.id === id);
-        if (!item) return;
-        editor.pointer.startResize(item, ev);
-        this._selectedId = id;
-        ev.currentTarget?.setPointerCapture?.(ev.pointerId);
-      },
-      onRotateHandlePointerDown(ev, id) {
-        const item = editor.items.find(i => i.id === id);
-        if (!item) return;
-        const sheetRect = ev.currentTarget.closest('.sheet').getBoundingClientRect();
-        editor.pointer.startRotate(item, sheetRect, ev);
-        this._selectedId = id;
-        ev.currentTarget?.setPointerCapture?.(ev.pointerId);
-      },
-
-      startCropMove(ev) {
-        editor.pointer.startCropMove(ev);
-        ev.currentTarget?.setPointerCapture?.(ev.pointerId);
-      },
-      startCropResize(ev, handle) {
-        editor.pointer.startCropResize(handle, ev);
-        ev.currentTarget?.setPointerCapture?.(ev.pointerId);
-      },
-
-      // ── Save
-      async saveProject() {
-        const baseProd = PRODUCTS.find(p => p.code === this.materialType);
-        await persistence.saveProject({
-          title: this.projectTitle,
-          materialType: this.materialType,
-          printQuantity: this.printQuantity,
-          quote: { ...this.quote, basePrice: baseProd?.precio },
-          pageBg: this.pageBg
-        });
-        alert(persistence.editingAsAdmin ? 'Cambios guardados' : '¡Pedido enviado!');
-      },
-
-      // ── Touch (pinch zoom)
-      pinch: { active: false, startDist: 0, startZoom: 1 },
-      onCanvasTouchStart(e) {
-        if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          this.pinch = { active: true, startDist: Math.hypot(dx, dy), startZoom: editor.canvasZoom };
-        }
-      },
-      onCanvasTouchMove(e) {
-        if (this.pinch.active && e.touches.length === 2) {
-          e.preventDefault();
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          editor.setZoom(this.pinch.startZoom * (Math.hypot(dx, dy) / this.pinch.startDist));
-          this.syncZoom();
-        }
-      },
-      onCanvasTouchEnd(e) {
-        if (e.touches.length < 2) this.pinch = { active: false, startDist: 0, startZoom: 1 };
-      }
-    };
+function _bindResize(canvasMainRef) {
+  window.addEventListener('resize', () => {
+    editor.fitZoom(canvasMainRef);
+    syncZoom();
   });
 }
 
-// ── Bootstrap: registrar con Alpine garantizando el orden de carga ────────
-// PROMESA: el listener alpine:init SIEMPRE se añade antes de que Alpine dispare el evento.
-// 1. Registramos el listener de alpine:init (sincrono, no espera a imports).
-// 2. Cargamos Alpine dinamicamente desde el CDN.
-// 3. Cuando Alpine arranca dispara alpine:init, nuestro listener registra stickerMaker.
-// 4. Alpine camina el DOM y encuentra el componente ya registrado.
-document.addEventListener('alpine:init', () => registerStickerMaker(window.Alpine));
+// ── Selection ──
+function select(id) {
+  editor.select(id);
+  $selectedId.set(id);
+}
+function clearSelection() {
+  editor.clearSelection();
+  $selectedId.set(null);
+}
 
-(function loadAlpine() {
-  if (window.Alpine) return; // Ya cargado (no deberia, pero por seguridad)
-  const s = document.createElement('script');
-  s.src = ALPINE_CDN_URL;
-  s.defer = true;
-  document.head.appendChild(s);
-})();
+// ── Zoom ──
+function syncZoom() {
+  $canvasZoom.set(editor.canvasZoom);
+}
+function zoomIn() {
+  editor.zoomIn();
+  $canvasZoom.set(editor.canvasZoom);
+}
+function zoomOut() {
+  editor.zoomOut();
+  $canvasZoom.set(editor.canvasZoom);
+}
+function zoomPercent() {
+  return Math.round($canvasZoom.get() * 100) + '%';
+}
+function fitZoom(el) {
+  editor.fitZoom(el);
+  $canvasZoom.set(editor.canvasZoom);
+}
+
+// ── Undo/Redo ──
+function undo() {
+  editor.history.undo();
+  sync();
+}
+function redo() {
+  editor.history.redo();
+  sync();
+}
+function canUndo() {
+  return editor.history.canUndo();
+}
+function canRedo() {
+  return editor.history.canRedo();
+}
+function pushHistory() {
+  editor.history.push();
+}
+
+// ── Print ──
+async function printCanvas() {
+  editor.clearSelection();
+  editor.isPrinting = true;
+  $isPrinting.set(true);
+  await waitNextTick();
+  setTimeout(() => {
+    window.print();
+    editor.isPrinting = false;
+    $isPrinting.set(false);
+  }, 150);
+}
+
+// ── Paper & pages ──
+function setPage(p) {
+  editor.paper.setActive(p);
+  $activePage.set(p);
+  editor.clearSelection();
+  sync();
+}
+function addPage() {
+  editor.paper.addPage();
+  $pagesCount.set(editor.paper.pagesCount);
+  $activePage.set(editor.paper.activePage);
+  editor.clearSelection();
+  sync();
+}
+function deletePage() {
+  const p = $activePage.get();
+  if (!confirm(`¿Eliminar la Hoja ${p}?`)) return;
+  editor.items = editor.paper.deletePage(editor.items, p) || editor.items;
+  if (editor.paper.activePage > editor.paper.pagesCount) editor.paper.activePage = editor.paper.pagesCount;
+  editor.clearSelection();
+  editor.history.push();
+  sync();
+}
+function updatePaperSize() {
+  editor.paper.setSize(editor.paper.paperSize);
+}
+function injectPrintCss() {
+  let el = document.getElementById('print-page-style');
+  if (!el) { el = document.createElement('style'); el.id = 'print-page-style'; document.head.appendChild(el); }
+  el.innerHTML = editor.paper.printCss();
+}
+
+// ── Elementos ──
+function addText() {
+  editor.addText();
+  sync();
+}
+function addShape(t) {
+  editor.addShape(t);
+  sync();
+}
+async function handleFiles(event) {
+  const files = [...(event.target.files || [])];
+  for (let i = 0; i < files.length; i++) {
+    await editor.addImageFromFile(files[i], { x: 40 + ((i * 30) % 180), y: 40 + ((i * 30) % 180) });
+  }
+  event.target.value = '';
+  sync();
+}
+async function handlePaste(event) {
+  const items = [...(event.clipboardData?.items || [])];
+  const imgItem = items.find(i => i.type.startsWith('image/'));
+  if (!imgItem) return;
+  const file = imgItem.getAsFile();
+  if (file) await editor.addImageFromClipboardFile(file);
+  sync();
+}
+function duplicateSelected() {
+  editor.duplicateSelected();
+  sync();
+}
+function deleteSelected() {
+  editor.deleteSelected();
+  sync();
+}
+function bringForward() {
+  editor.bringForward();
+  sync();
+}
+function sendToBack() {
+  editor.sendToBack();
+  sync();
+}
+function moveOneUp() {
+  editor.moveOneUp();
+  sync();
+}
+function moveOneDown() {
+  editor.moveOneDown();
+  sync();
+}
+
+// ── Grid ──
+function toggleGrid(value) {
+  editor.showGrid = value;
+  $showGrid.set(value);
+}
+
+// ── Crop ──
+function startCropMode() {
+  editor.startCrop();
+  sync();
+}
+async function applyCrop() {
+  await editor.applyCrop();
+  sync();
+}
+function cancelCropMode() {
+  editor.cancelCrop();
+  sync();
+}
+function cropBoxStyle() {
+  return editor.crop.boxStyle();
+}
+function getCropHandles() {
+  return ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+}
+
+// ── Trim ──
+async function trimWhiteBorders() {
+  await editor.trimWhiteSelected();
+  editor.history.push();
+  sync();
+}
+function restoreOriginalImage() {
+  editor.restoreOriginal();
+  editor.history.push();
+  sync();
+}
+
+// ── Grid fill ──
+function gridFill() {
+  const r = editor.gridFill();
+  if (r) alert(`Cuadrícula: ${r.cols}×${r.rows} = ${r.total} stickers`);
+  sync();
+}
+
+// ── Reset ──
+function resetProject() {
+  if (!confirm('¿Borrar todo el lienzo e iniciar un nuevo proyecto?')) return;
+  editor.resetProject();
+  persistence.reset();
+  window.history.replaceState({}, document.title, window.location.pathname);
+  sync();
+}
+
+// ── Rulers & grid ──
+function getRulerXStyle() { return rulerXStyle(); }
+function getRulerYStyle() { return rulerYStyle(); }
+function getGridStyle() { return gridStyle(); }
+
+// ── Pointer handlers ──
+function onItemPointerDown(ev, id) {
+  const item = editor.items.find(i => i.id === id);
+  if (!item) return;
+  if (item.locked) { select(id); return; }
+  editor.pointer.startDrag(item, ev);
+  $selectedId.set(id);
+  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+}
+function onResizeHandlePointerDown(ev, id) {
+  const item = editor.items.find(i => i.id === id);
+  if (!item) return;
+  editor.pointer.startResize(item, ev);
+  $selectedId.set(id);
+  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+}
+function onRotateHandlePointerDown(ev, id) {
+  const item = editor.items.find(i => i.id === id);
+  if (!item) return;
+  const sheetRect = ev.currentTarget.closest('.sheet').getBoundingClientRect();
+  editor.pointer.startRotate(item, sheetRect, ev);
+  $selectedId.set(id);
+  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+}
+
+function startCropMove(ev) {
+  editor.pointer.startCropMove(ev);
+  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+}
+function startCropResize(ev, handle) {
+  editor.pointer.startCropResize(handle, ev);
+  ev.currentTarget?.setPointerCapture?.(ev.pointerId);
+}
+
+// ── Save ──
+async function saveProject() {
+  const baseProd = PRODUCTS.find(p => p.code === $materialType.get());
+  const computed = calculator.compute();
+  const quote = {
+    total: computed.total,
+    finalUnitPrice: computed.finalUnitPrice,
+    pct: computed.pct,
+    warning: computed.warning,
+    basePrice: baseProd?.precio
+  };
+  await persistence.saveProject({
+    title: $projectTitle.get(),
+    materialType: $materialType.get(),
+    printQuantity: $printQuantity.get(),
+    quote,
+    pageBg: editor.paper.getPageColor(editor.paper.activePage)
+  });
+  alert(persistence.editingAsAdmin ? 'Cambios guardados' : '¡Pedido enviado!');
+}
+
+function getEditableAsAdmin() {
+  return persistence?.editingAsAdmin || false;
+}
+
+// ── Touch (pinch zoom) ──
+let pinchState = { active: false, startDist: 0, startZoom: 1 };
+
+function onCanvasTouchStart(e) {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    pinchState = { active: true, startDist: Math.hypot(dx, dy), startZoom: editor.canvasZoom };
+  }
+}
+function onCanvasTouchMove(e) {
+  if (pinchState.active && e.touches.length === 2) {
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    editor.setZoom(pinchState.startZoom * (Math.hypot(dx, dy) / pinchState.startDist));
+    $canvasZoom.set(editor.canvasZoom);
+  }
+}
+function onCanvasTouchEnd(e) {
+  if (e.touches.length < 2) pinchState = { active: false, startDist: 0, startZoom: 1 };
+}
+
+// ── Quote ──
+function computeQuote() {
+  if (!calculator) return { total: 0, finalUnitPrice: 0, pct: 0, warning: null };
+  return calculator.compute();
+}
+
+// ── Current Page ──
+function currentPageBg() {
+  return editor.paper.getPageColor(editor.paper.activePage);
+}
+function setCurrentPageColor(v) {
+  editor.paper.setPageColor(editor.paper.activePage, v);
+  $pageColors.set({ ...editor.paper.pageColors });
+}
+
+// ── Exports ──
+export {
+  $items, $selectedId, $canvasZoom, $showGrid, $cropActive, $cropId,
+  $editingTextId, $isSaving, $isPrinting, $isSaveModalOpen,
+  $materialType, $printQuantity, $projectTitle,
+  $pagesCount, $activePage, $pageColors, $guides, $fonts, $products,
+};
+
+export {
+  initCanvas, sync, getSelected, getSheet, sortedItems, itemsOnPage, itemStyle,
+  select, clearSelection,
+  syncZoom, zoomIn, zoomOut, zoomPercent, fitZoom,
+  undo, redo, canUndo, canRedo, pushHistory,
+  printCanvas,
+  setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
+  addText, addShape, handleFiles, duplicateSelected, deleteSelected,
+  bringForward, sendToBack, moveOneUp, moveOneDown,
+  toggleGrid,
+  startCropMode, applyCrop, cancelCropMode, cropBoxStyle, getCropHandles,
+  trimWhiteBorders, restoreOriginalImage,
+  gridFill, resetProject,
+  getRulerXStyle, getRulerYStyle, getGridStyle,
+  onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
+  startCropMove, startCropResize,
+  saveProject, getEditableAsAdmin,
+  computeQuote, currentPageBg, setCurrentPageColor,
+  FONTS, PRODUCTS, PAPER_SIZES,
+};
