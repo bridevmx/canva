@@ -31,6 +31,12 @@ export class CanvasEditor {
     this.crop       = new CropController(this);
     this.pointer    = new PointerController(this);
 
+    // Evita que Alpine recorra en profundidad las referencias circulares.
+    // Los 3 objetos que tienen this (editor) como backreference reciben __v_skip.
+    this.crop.__v_skip    = true;
+    this.pointer.__v_skip = true;
+    this.history.__v_skip = true;
+
     this._bindKeyboard();
   }
 

@@ -1,22 +1,17 @@
 // canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
 
-import { CanvasEditor } from './CanvasEditor.js?v=1.2.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.2.0';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.2.0';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.2.0';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.2.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.2.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.3.0';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.3.0';
+import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.3.0';
+import { AuthManager }       from '../auth/AuthManager.js?v=1.3.0';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.3.0';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.3.0';
 
 const PX_PER_CM = 37.8095;
 
 function registerStickerMaker(Alpine) {
   Alpine.data('stickerMaker', () => {
     const editor = new CanvasEditor();
-    
-    // Evita que Alpine intente hacer reactivo recursivamente el editor y sus dependencias circulares.
-    // Esto previene de raiz el error "Maximum call stack size exceeded" (Stack Overflow).
-    editor.__v_skip = true;
-    
     let persistence = null;
     let calculator  = null;
     let auth        = null;
