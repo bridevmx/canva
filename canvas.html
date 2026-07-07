@@ -697,6 +697,17 @@
     renderPageTabs();
   }
 
+  // ── Debounce de renderSheet ──
+  let renderSheetScheduled = false;
+  function scheduleRenderSheet() {
+    if (renderSheetScheduled) return;
+    renderSheetScheduled = true;
+    requestAnimationFrame(() => {
+      renderSheetScheduled = false;
+      renderSheet();
+    });
+  }
+
   // ── Page tabs ──
   function renderPageTabs() {
     const count = $pagesCount.get();
@@ -1040,17 +1051,6 @@
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
-  }
-
-  // ── Debounce de renderSheet ──
-  let renderSheetScheduled = false;
-  function scheduleRenderSheet() {
-    if (renderSheetScheduled) return;
-    renderSheetScheduled = true;
-    requestAnimationFrame(() => {
-      renderSheetScheduled = false;
-      renderSheet();
-    });
   }
 
   // ── Reactividad de items ──
