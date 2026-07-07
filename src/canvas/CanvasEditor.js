@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId } from './StickerItem.js?v=1.7.5';
-import { ImageItem }      from './ImageItem.js?v=1.7.5';
-import { TextItem }       from './TextItem.js?v=1.7.5';
-import { ShapeItem }     from './ShapeItem.js?v=1.7.5';
-import { CropController } from './CropController.js?v=1.7.5';
-import { trimWhiteBorders } from './TrimService.js?v=1.7.5';
-import { HistoryManager } from './HistoryManager.js?v=1.7.5';
-import { GuidesManager }  from './GuidesManager.js?v=1.7.5';
-import { PointerController } from './PointerController.js?v=1.7.5';
-import { PaperManager }   from './PaperManager.js?v=1.7.5';
-import { FONTS }          from '../pb.config.js?v=1.7.5';
+import { StickerItem, clamp, generateId } from './StickerItem.js?v=1.7.6';
+import { ImageItem }      from './ImageItem.js?v=1.7.6';
+import { TextItem }       from './TextItem.js?v=1.7.6';
+import { ShapeItem }     from './ShapeItem.js?v=1.7.6';
+import { CropController } from './CropController.js?v=1.7.6';
+import { trimWhiteBorders } from './TrimService.js?v=1.7.6';
+import { HistoryManager } from './HistoryManager.js?v=1.7.6';
+import { GuidesManager }  from './GuidesManager.js?v=1.7.6';
+import { PointerController } from './PointerController.js?v=1.7.6';
+import { PaperManager }   from './PaperManager.js?v=1.7.6';
+import { FONTS }          from '../pb.config.js?v=1.7.6';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };

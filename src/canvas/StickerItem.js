@@ -26,8 +26,9 @@ export function getRotatedBounds(w, h, rotation) {
   return {
     w: aabbW,
     h: aabbH,
-    offsetX: (aabbW - w) / 2,
-    offsetY: (aabbH - h) / 2
+    // AABB top-left = original top-left + offset
+    offsetX: (w - aabbW) / 2,
+    offsetY: (h - aabbH) / 2
   };
 }
 
