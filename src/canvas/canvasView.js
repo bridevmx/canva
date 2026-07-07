@@ -1,11 +1,11 @@
 // canvasView.js — Adapter entre CanvasEditor (POO) y Alpine (UI)
 
-import { CanvasEditor } from './CanvasEditor.js?v=1.6.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.6.0';
-import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.6.0';
-import { AuthManager }       from '../auth/AuthManager.js?v=1.6.0';
-import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.6.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.6.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.6.1';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.6.1';
+import { QuoteCalculator }   from '../ui/QuoteCalculator.js?v=1.6.1';
+import { AuthManager }       from '../auth/AuthManager.js?v=1.6.1';
+import { PRODUCTS, PAPER_SIZES, ALPINE_CDN_URL } from '../pb.config.js?v=1.6.1';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.6.1';
 
 const PX_PER_CM = 37.8095;
 
@@ -17,9 +17,7 @@ function registerStickerMaker(Alpine) {
     let auth        = null;
 
     function sync() {
-      // Copia superficial: mismos objetos, nuevo array reactivo
       this._items = [...editor.items];
-      this._selectedId = editor.selectedId;
     }
 
     return {
@@ -112,8 +110,8 @@ function registerStickerMaker(Alpine) {
       },
 
       // ── Selection
-      select(id)         { editor.select(id); sync.call(this); },
-      clearSelection()   { editor.clearSelection(); sync.call(this); },
+      select(id)         { editor.select(id); this._selectedId = id; },
+      clearSelection()   { editor.clearSelection(); this._selectedId = null; },
 
       // ── Zoom
       syncZoom() { this.canvasZoom = editor.canvasZoom; },
@@ -233,14 +231,16 @@ function registerStickerMaker(Alpine) {
       onItemPointerDown(ev, id) {
         const item = editor.items.find(i => i.id === id);
         if (!item) return;
-        if (item.locked) { editor.select(id); return; }
+        if (item.locked) { this.select(id); return; }
         editor.pointer.startDrag(item, ev);
+        this._selectedId = id;
         ev.currentTarget?.setPointerCapture?.(ev.pointerId);
       },
       onResizeHandlePointerDown(ev, id) {
         const item = editor.items.find(i => i.id === id);
         if (!item) return;
         editor.pointer.startResize(item, ev);
+        this._selectedId = id;
         ev.currentTarget?.setPointerCapture?.(ev.pointerId);
       },
       onRotateHandlePointerDown(ev, id) {
@@ -248,6 +248,7 @@ function registerStickerMaker(Alpine) {
         if (!item) return;
         const sheetRect = this.$refs.sheet.getBoundingClientRect();
         editor.pointer.startRotate(item, sheetRect, ev);
+        this._selectedId = id;
         ev.currentTarget?.setPointerCapture?.(ev.pointerId);
       },
 
