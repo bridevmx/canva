@@ -11,9 +11,7 @@ const PX_PER_CM = 37.8095;
 
 function registerStickerMaker(Alpine) {
   Alpine.data('stickerMaker', () => {
-    // Alpine.reactive hace que los cambios en las propiedades del editor
-    // disparen re-renderizado automático en el template.
-    const editor = Alpine.reactive(new CanvasEditor());
+    const editor = new CanvasEditor();
     let persistence = null;
     let calculator  = null;
     let auth        = null;
@@ -25,12 +23,12 @@ function registerStickerMaker(Alpine) {
       printQuantity: 1,
       projectTitle: '',
       isSaveModalOpen: false,
+      canvasZoom: 1.0, // <-- Reactividad en Alpine
 
-      // ── getters delegados al editor (reactivo gracias a Alpine.reactive)
+      // ── getters delegados al editor
       get items()        { return editor.items; },
       get selected()     { return editor.selected; },
       get selectedId()   { return editor.selectedId; },
-      get canvasZoom()   { return editor.canvasZoom; },
       get showGrid()     { return editor.showGrid; },
       get isSaving()     { return editor.isSaving; },
       get isPrinting()   { return editor.isPrinting; },
@@ -73,6 +71,7 @@ function registerStickerMaker(Alpine) {
         await this._waitForRefs();
 
         editor.fitZoom(this.$refs.canvasMain);
+        this.syncZoom();
         editor.history.push();
 
         // Touch listeners
@@ -88,14 +87,20 @@ function registerStickerMaker(Alpine) {
         const qs = new URLSearchParams(window.location.search);
         const id = qs.get('id');
         if (id) {
-          try { await persistence.loadProject(id); }
+          try {
+            await persistence.loadProject(id);
+            this.syncZoom();
+          }
           catch { alert('No se pudo cargar el proyecto.'); window.location.replace('/dashboard'); }
         }
       },
 
       _waitForRefs() { return this.$nextTick(); },
       _bindResize() {
-        window.addEventListener('resize', () => editor.fitZoom(this.$refs.canvasMain));
+        window.addEventListener('resize', () => {
+          editor.fitZoom(this.$refs.canvasMain);
+          this.syncZoom();
+        });
       },
 
       // ── Selection
@@ -103,10 +108,11 @@ function registerStickerMaker(Alpine) {
       clearSelection()   { editor.clearSelection(); },
 
       // ── Zoom
-      zoomIn()  { editor.zoomIn(); },
-      zoomOut() { editor.zoomOut(); },
-      zoomPercent() { return editor.zoomPercent(); },
-      fitZoom()  { editor.fitZoom(this.$refs.canvasMain); },
+      syncZoom() { this.canvasZoom = editor.canvasZoom; },
+      zoomIn()  { editor.zoomIn(); this.syncZoom(); },
+      zoomOut() { editor.zoomOut(); this.syncZoom(); },
+      zoomPercent() { return Math.round(this.canvasZoom * 100) + '%'; },
+      fitZoom()  { editor.fitZoom(this.$refs.canvasMain); this.syncZoom(); },
 
       // ── Print
       async printCanvas() {
@@ -262,6 +268,7 @@ function registerStickerMaker(Alpine) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           editor.setZoom(this.pinch.startZoom * (Math.hypot(dx, dy) / this.pinch.startDist));
+          this.syncZoom();
         }
       },
       onCanvasTouchEnd(e) {
