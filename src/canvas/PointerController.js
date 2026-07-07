@@ -8,9 +8,11 @@ export class PointerController {
   constructor(editor) {
     Object.defineProperty(this, 'editor', { value: editor, enumerable: false, writable: true, configurable: true });
     this.action = null;
-    this.notify = null; // callback que la componente Alpine setea para sync
+    this.notify = null;
     this._bindGlobal();
   }
+
+  _itemEl(id) { return document.querySelector(`[data-item-id="${id}"]`); }
 
   startDrag(item, ev) {
     if (this.editor.crop.active || item.locked) { this.editor.select(item.id); return; }
@@ -58,6 +60,16 @@ export class PointerController {
     document.body.classList.add('drag-locked');
   }
 
+  _applyStyle(item) {
+    const el = this._itemEl(item.id);
+    if (!el) return;
+    el.style.left    = item.x + 'px';
+    el.style.top     = item.y + 'px';
+    el.style.width   = item.w + 'px';
+    el.style.height  = item.h + 'px';
+    el.style.transform = item.rotation ? `rotate(${item.rotation}deg)` : 'none';
+  }
+
   onMove(ev) {
     if (!this.action) return;
     const action = this.action;
@@ -72,7 +84,7 @@ export class PointerController {
       item.x = clamp(action.itemX + dx, 0, sheet.w - item.w);
       item.y = clamp(action.itemY + dy, 0, sheet.h - item.h);
       editor.guides.compute(item, editor.items, item.x, item.y);
-      if (this.notify) this.notify();
+      this._applyStyle(item);
     }
 
     else if (action.mode === ACTION.RESIZE && item) {
@@ -81,7 +93,7 @@ export class PointerController {
       const sheet = editor.paper.sheet;
       item.w = clamp(action.itemW + dx, 20, sheet.w - item.x);
       item.h = clamp(action.itemH + dy, 20, sheet.h - item.y);
-      if (this.notify) this.notify();
+      this._applyStyle(item);
     }
 
     else if (action.mode === ACTION.ROTATE && item) {
@@ -91,7 +103,7 @@ export class PointerController {
       if (ev.shiftKey) newRot = Math.round(newRot / 15) * 15;
       item.rotation = Math.round(newRot) % 360;
       if (item.rotation < 0) item.rotation += 360;
-      if (this.notify) this.notify();
+      this._applyStyle(item);
     }
 
     else if (action.mode === ACTION.CROP_MOVE) {
