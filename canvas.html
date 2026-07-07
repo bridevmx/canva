@@ -310,6 +310,18 @@
   const elPropsBarEmpty = document.getElementById('props-bar-empty');
   const elPropsBarMobile = document.getElementById('props-bar-mobile');
 
+  // ── Debounce de renderSheet ──
+  // Se define antes que cualquier suscripción para evitar TDZ.
+  let renderSheetScheduled = false;
+  function scheduleRenderSheet() {
+    if (renderSheetScheduled) return;
+    renderSheetScheduled = true;
+    requestAnimationFrame(() => {
+      renderSheetScheduled = false;
+      renderSheet();
+    });
+  }
+
   // ── Init ──
   await initCanvas(elCanvasMain);
   injectPrintCss();
@@ -697,17 +709,6 @@
     renderPageTabs();
   }
 
-  // ── Debounce de renderSheet ──
-  let renderSheetScheduled = false;
-  function scheduleRenderSheet() {
-    if (renderSheetScheduled) return;
-    renderSheetScheduled = true;
-    requestAnimationFrame(() => {
-      renderSheetScheduled = false;
-      renderSheet();
-    });
-  }
-
   // ── Page tabs ──
   function renderPageTabs() {
     const count = $pagesCount.get();
@@ -1054,9 +1055,8 @@
   }
 
   // ── Reactividad de items ──
+  // $selectedId y $cropActive ya llaman scheduleRenderSheet() en sus suscripciones de toolbar.
   $items.subscribe(() => scheduleRenderSheet());
-  $selectedId.subscribe(() => scheduleRenderSheet());
-  $cropActive.subscribe(() => scheduleRenderSheet());
   $cropId.subscribe(() => scheduleRenderSheet());
   $editingTextId.subscribe(() => scheduleRenderSheet());
   $activePage.subscribe(() => {
