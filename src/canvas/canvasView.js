@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.7.6';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.6';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.6';
-import { AuthManager } from '../auth/AuthManager.js?v=1.7.6';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.6';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.6';
+import { CanvasEditor } from './CanvasEditor.js?v=1.7.7';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.7.7';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.7.7';
+import { AuthManager } from '../auth/AuthManager.js?v=1.7.7';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.7.7';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.7.7';
 
 const PX_PER_CM = 37.8095;
 
@@ -344,10 +344,10 @@ function onItemPointerDown(ev, id) {
   $selectedId.set(id);
   capturePointer(ev);
 }
-function onResizeHandlePointerDown(ev, id) {
+function onResizeHandlePointerDown(ev, id, handle) {
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
-  editor.pointer.startResize(item, ev);
+  editor.pointer.startResize(item, ev, handle);
   $selectedId.set(id);
   capturePointer(ev);
 }

@@ -22,7 +22,11 @@
     .item{position:absolute;cursor:move;touch-action:none}
     .item.selected{outline:2px dashed #2563eb;outline-offset:1px}
     .item.locked-item{cursor:default}
-    .resize-handle{position:absolute;right:-8px;bottom:-8px;width:22px;height:22px;border-radius:9999px;background:#2563eb;border:2px solid white;cursor:nwse-resize;box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none}
+    .resize-handle{position:absolute;width:22px;height:22px;border-radius:9999px;background:#2563eb;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none}
+    .resize-handle.handle-nw{top:-8px;left:-8px;cursor:nwse-resize}
+    .resize-handle.handle-ne{top:-8px;right:-8px;cursor:nesw-resize}
+    .resize-handle.handle-se{bottom:-8px;right:-8px;cursor:nwse-resize}
+    .resize-handle.handle-sw{bottom:-8px;left:-8px;cursor:nesw-resize}
     .rotate-handle{position:absolute;top:-32px;left:calc(50% - 9px);width:22px;height:22px;border-radius:9999px;background:white;border:2px solid #10b981;cursor:crosshair;box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none}
     .rotate-handle::after{content:'';position:absolute;width:2px;height:12px;background:#10b981;left:7px;top:18px}
     .text-box{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;word-break:break-word;line-height:1.05;padding:6px}
@@ -39,7 +43,15 @@
     .tb-scroll::-webkit-scrollbar{height:3px}.tb-scroll::-webkit-scrollbar-track{background:transparent}.tb-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:9999px}
     .drag-locked{overflow:hidden!important;touch-action:none!important}
     .canvas-zoom-outer{position:relative}.canvas-zoom-inner{transform-origin:top left}
-    @media(pointer:coarse){.resize-handle{width:28px!important;height:28px!important;right:-14px!important;bottom:-14px!important}.rotate-handle{width:28px!important;height:28px!important;top:-40px!important;left:calc(50% - 14px)!important}.rotate-handle::after{left:10px!important;top:26px!important}}
+    @media(pointer:coarse){
+      .resize-handle{width:28px!important;height:28px!important}
+      .resize-handle.handle-nw{top:-14px!important;left:-14px!important}
+      .resize-handle.handle-ne{top:-14px!important;right:-14px!important}
+      .resize-handle.handle-se{bottom:-14px!important;right:-14px!important}
+      .resize-handle.handle-sw{bottom:-14px!important;left:-14px!important}
+      .rotate-handle{width:28px!important;height:28px!important;top:-40px!important;left:calc(50% - 14px)!important}
+      .rotate-handle::after{left:10px!important;top:26px!important}
+    }
     @media print{
       html,body{background:white!important;margin:0!important;padding:0!important}
       .no-print{display:none!important}
@@ -280,7 +292,7 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.7.6';
+  } from './src/canvas/canvasView.js?v=1.7.7';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -685,12 +697,15 @@
         itemEl.appendChild(lock);
       }
 
-      // Resize handle
+      // Resize handles (4 esquinas)
       if (showHandles) {
-        const rh = document.createElement('div');
-        rh.className = 'resize-handle no-print';
-        rh.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); onResizeHandlePointerDown(e, item.id); });
-        itemEl.appendChild(rh);
+        ['nw', 'ne', 'se', 'sw'].forEach(handle => {
+          const rh = document.createElement('div');
+          rh.className = 'resize-handle no-print handle-' + handle;
+          rh.title = 'Redimensionar (Shift = proporción)';
+          rh.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); onResizeHandlePointerDown(e, item.id, handle); });
+          itemEl.appendChild(rh);
+        });
       }
 
       // Rotate handle

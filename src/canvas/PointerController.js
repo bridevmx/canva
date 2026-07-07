@@ -1,8 +1,18 @@
 // PointerController.js — Drag/resize/rotate. FIX BUG B: swap w/h en rotación 90°/270°.
 
-import { clamp, getRotatedBounds } from './StickerItem.js?v=1.7.6';
+import { clamp, getRotatedBounds } from './StickerItem.js?v=1.7.7';
 
 const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize' };
+
+// Configuración de resize por esquina:
+// dw/dh: signo del cambio de tamaño respecto al delta local.
+// fx/fy: esquina fija (0=inicio, 1=final) para calcular x/y preservándola.
+const RESIZE_HANDLES = {
+  se: { dw:  1, dh:  1, fx: 0, fy: 0 },
+  ne: { dw:  1, dh: -1, fx: 0, fy: 1 },
+  sw: { dw: -1, dh:  1, fx: 1, fy: 0 },
+  nw: { dw: -1, dh: -1, fx: 1, fy: 1 }
+};
 
 export class PointerController {
   constructor(editor) {
@@ -21,10 +31,14 @@ export class PointerController {
     document.body.classList.add('drag-locked');
   }
 
-  startResize(item, ev) {
+  startResize(item, ev, handle = 'se') {
     if (this.editor.crop.active || item.locked) return;
     this.editor.select(item.id);
-    this.action = { mode: ACTION.RESIZE, id: item.id, startX: ev.clientX, startY: ev.clientY, itemW: item.w, itemH: item.h };
+    this.action = {
+      mode: ACTION.RESIZE, id: item.id, handle,
+      startX: ev.clientX, startY: ev.clientY,
+      itemX: item.x, itemY: item.y, itemW: item.w, itemH: item.h
+    };
     document.body.classList.add('drag-locked');
   }
 
@@ -167,8 +181,35 @@ export class PointerController {
         dy = localDy;
       }
 
-      item.w = clamp(action.itemW + dx, 20, sheet.w - item.x);
-      item.h = clamp(action.itemH + dy, 20, sheet.h - item.y);
+      const cfg = RESIZE_HANDLES[action.handle] || RESIZE_HANDLES.se;
+      const startX = action.itemX, startY = action.itemY;
+      const startW = action.itemW, startH = action.itemH;
+
+      // Límites de tamaño preservando la esquina opuesta dentro del lienzo.
+      const maxW = cfg.fx === 0 ? sheet.w - startX : startX + startW;
+      const maxH = cfg.fy === 0 ? sheet.h - startY : startY + startH;
+
+      let newW = clamp(startW + cfg.dw * dx, 20, maxW);
+      let newH = clamp(startH + cfg.dh * dy, 20, maxH);
+
+      // Shift: mantener proporción de aspecto.
+      if (ev.shiftKey && startW > 0 && startH > 0) {
+        const ratio = startW / startH;
+        const s = Math.max(newW / startW, newH / startH);
+        let propW = startW * s;
+        let propH = startH * s;
+        if (propW > maxW) { propW = maxW; propH = propW / ratio; }
+        if (propH > maxH) { propH = maxH; propW = propH * ratio; }
+        if (propW < 20) { propW = 20; propH = propW / ratio; }
+        if (propH < 20) { propH = 20; propW = propH * ratio; }
+        newW = propW;
+        newH = propH;
+      }
+
+      item.w = newW;
+      item.h = newH;
+      item.x = startX + cfg.fx * (startW - newW);
+      item.y = startY + cfg.fy * (startH - newH);
       this._applyStyle(item);
     }
 

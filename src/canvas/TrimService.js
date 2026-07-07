@@ -1,7 +1,7 @@
 // TrimService.js — Trim de bordes blancos. FIX BUG B: ahora actualiza item.w/h.
 
-import { clamp } from './StickerItem.js?v=1.7.6';
-import { imageDimensions } from './ImageItem.js?v=1.7.6';
+import { clamp } from './StickerItem.js?v=1.7.7';
+import { imageDimensions } from './ImageItem.js?v=1.7.7';
 
 export async function trimWhiteBorders(item) {
   if (!item || item.type !== 'image') return;
