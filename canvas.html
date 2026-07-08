@@ -15,6 +15,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Righteous&family=Russo+One&family=Sacramento&family=Satisfy&family=Inter:wght@400;700;900&family=Anton&family=Pacifico&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Bebas+Neue&family=Lobster&family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Chewy&family=Permanent+Marker&family=Nunito:wght@400;700;900&family=Raleway:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Archivo+Black&family=Passion+One:wght@400;700;900&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     html,body{margin:0;padding:0;background:#e5e7eb;font-family:Inter,sans-serif}
@@ -70,146 +71,217 @@
       .resize-handle,.rotate-handle{display:none!important}
     }
     .hidden{display:none!important}
+    /* ── Material Icons ── */
+    .mi{font-family:'Material Icons Round';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle}
+    /* ── Topbar ── */
+    .top-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;transition:background .15s,color .15s;cursor:pointer;border:none;background:transparent;color:#475569;white-space:nowrap}
+    .top-btn:hover{background:#f1f5f9}
+    .top-btn .mi{font-size:18px}
+    .top-btn-danger:hover{background:#fef2f2;color:#dc2626}
+    /* ── Toolbar principal ── */
+    .tbtn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 8px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:#475569;transition:background .15s,color .15s;min-width:44px;min-height:44px}
+    .tbtn:hover{background:#f1f5f9}
+    .tbtn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+    .tbtn .mi{font-size:20px}
+    .tbtn-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;line-height:1}
+    .tbtn-active{background:#ede9fe;color:#7c3aed}
+    .tbtn-active:hover{background:#ddd6fe}
+    .tbtn-danger{color:#ef4444}
+    .tbtn-danger:hover{background:#fef2f2;color:#dc2626}
+    /* ── Separador ── */
+    .tb-sep{width:1px;height:28px;background:#e2e8f0;flex-shrink:0;margin:0 4px}
+    /* ── Prop-bar botones icono ── */
+    .pb-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:#64748b;transition:background .15s,color .15s}
+    .pb-btn:hover{background:#f1f5f9;color:#1e293b}
+    .pb-btn .mi{font-size:18px}
+    .pb-btn-active{background:#ede9fe;color:#7c3aed}
+    .pb-btn-active:hover{background:#ddd6fe}
+    @media(min-width:640px){
+      .tbtn{flex-direction:row;gap:5px;padding:6px 12px}
+      .tbtn .mi{font-size:18px}
+      .tbtn-label{font-size:11px}
+    }
+    @media(pointer:coarse){
+      .tbtn{min-width:48px;min-height:48px}
+      .pb-btn{width:40px;height:40px}
+      .pb-btn .mi{font-size:22px}
+    }
   </style>
 </head>
 <body>
 <div class="h-screen flex flex-col bg-slate-100 print:min-h-0 print:bg-white print:block">
 
   <!-- ══════════════ HEADER ══════════════ -->
-  <header class="no-print w-full bg-white shadow z-50 shrink-0">
+  <header class="no-print w-full bg-white z-50 shrink-0" style="box-shadow:0 1px 3px rgba(0,0,0,.08)">
 
-    <!-- FILA 1: Menú Principal Fijo -->
-    <div class="flex items-center justify-between h-14 border-b border-slate-200 px-3 sm:px-4">
-      
-      <div id="btn-dashboard" class="flex items-center shrink-0 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard">
-        <span class="text-xl sm:text-2xl mr-1 sm:mr-2">🏠</span>
-        <span class="hidden sm:inline text-base font-black tracking-tight text-slate-700">StickerMaker</span>
+    <!-- FILA 1: Topbar principal -->
+    <div class="flex items-center h-12 border-b border-slate-100 px-2 sm:px-3 gap-1">
+
+      <!-- Logo -->
+      <button id="btn-dashboard" class="top-btn shrink-0 gap-2 mr-1" title="Ir al Dashboard">
+        <span class="mi text-violet-600" style="font-size:22px">home</span>
+        <span class="hidden sm:inline text-xs font-black tracking-tight text-slate-700">StickerMaker</span>
+      </button>
+
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+
+      <!-- Acciones principales -->
+      <button id="btn-reset" class="top-btn shrink-0" title="Nuevo proyecto">
+        <span class="mi" style="font-size:20px">note_add</span>
+        <span class="hidden sm:inline">Nuevo</span>
+      </button>
+      <button id="btn-mis-proyectos" class="top-btn shrink-0" title="Mis proyectos">
+        <span class="mi" style="font-size:20px">folder_open</span>
+        <span class="hidden sm:inline">Proyectos</span>
+      </button>
+
+      <!-- Spacer -->
+      <div class="flex-1"></div>
+
+      <!-- Zoom (movido a topbar) -->
+      <div class="flex items-center gap-0.5 border border-slate-200 rounded-lg px-1 bg-slate-50 shrink-0">
+        <button id="tool-btn-zoom-out" class="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold transition" title="Zoom −">
+          <span class="mi" style="font-size:18px">remove</span>
+        </button>
+        <span id="zoom-percent" class="text-xs font-bold text-slate-600 w-10 text-center select-none">100%</span>
+        <button id="tool-btn-zoom-in" class="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold transition" title="Zoom +">
+          <span class="mi" style="font-size:18px">add</span>
+        </button>
+        <div class="w-px h-4 bg-slate-200 mx-0.5"></div>
+        <button id="tool-btn-fit" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition" title="Ajustar a pantalla">FIT</button>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-        <div class="flex items-center gap-1.5 border-r border-slate-200 pr-2 sm:pr-3">
-          <span id="header-username" class="text-xs font-semibold text-slate-600 max-w-[80px] sm:max-w-[120px] truncate">Usuario</span>
-          <button id="btn-admin" class="hidden px-2 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 text-[10px] font-bold transition">⚙️</button>
-          <button id="btn-logout" title="Cerrar sesión" class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 font-bold transition flex items-center gap-1"><span class="text-[14px]">🚪</span> <span class="text-[10px] text-slate-600 uppercase">Salir</span></button>
-        </div>
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-        <button id="btn-reset" title="Limpiar lienzo e iniciar un Nuevo Proyecto" class="py-1 px-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"><span class="text-[14px]">📄</span> <span class="hidden sm:inline text-[11px] font-black text-slate-600 uppercase tracking-widest">Nuevo</span></button>
-        <button id="btn-mis-proyectos" class="py-1 px-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-white text-slate-700 font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm" title="Ir a mis proyectos"><span class="text-[14px]">📁</span><span class="hidden sm:inline text-[11px] font-black uppercase tracking-widest">Mis Proyectos</span></button>
+      <!-- Acciones secundarias -->
+      <button id="tool-btn-grid" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Cuadrícula (Ctrl+Alt+G)">
+        <span id="grid-icon" class="mi" style="font-size:20px">grid_on</span>
+      </button>
+      <button id="tool-btn-ayuda" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Atajos de teclado (?)">
+        <span class="mi" style="font-size:20px">help_outline</span>
+      </button>
+      <button id="tool-btn-capas" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Panel de capas (Ctrl+L)">
+        <span class="mi" style="font-size:20px">layers</span>
+      </button>
 
-        <div id="btn-save-admin" class="hidden">
-          <button id="btn-save-admin-btn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-violet-400/30">
-            <span class="text-base sm:text-sm">💾</span><span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide">GUARDAR CAMBIOS</span>
-          </button>
-        </div>
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-        <div id="btn-imprimir-cliente">
-          <button id="btn-imprimir-cliente-btn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white disabled:opacity-50 transition shadow-lg shrink-0 border border-emerald-400/30">
-            <span class="text-base sm:text-sm">🖨️</span><span class="text-[10px] sm:text-sm font-bold uppercase tracking-wide">IMPRIMIR</span>
-          </button>
-        </div>
+      <!-- Usuario + Salir -->
+      <div class="flex items-center gap-1 shrink-0">
+        <span id="header-username" class="hidden sm:block text-xs font-semibold text-slate-500 max-w-[100px] truncate"></span>
+        <button id="btn-admin" class="hidden w-8 h-8 flex items-center justify-center rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 transition" title="Admin">
+          <span class="mi" style="font-size:18px">admin_panel_settings</span>
+        </button>
+        <button id="btn-logout" class="top-btn top-btn-danger shrink-0" title="Cerrar sesión">
+          <span class="mi" style="font-size:18px">logout</span>
+          <span class="hidden sm:inline">Salir</span>
+        </button>
+      </div>
+
+      <!-- Admin save -->
+      <div id="btn-save-admin" class="hidden shrink-0">
+        <button id="btn-save-admin-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold uppercase tracking-wide transition shadow-md">
+          <span class="mi" style="font-size:18px">save</span>
+          <span class="hidden sm:inline">Guardar</span>
+        </button>
+      </div>
+
+      <!-- Cliente print -->
+      <div id="btn-imprimir-cliente" class="shrink-0">
+        <button id="btn-imprimir-cliente-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-wide transition shadow-md">
+          <span class="mi" style="font-size:18px">print</span>
+          <span class="hidden sm:inline">Imprimir</span>
+        </button>
       </div>
     </div>
 
-    <!-- FILA 2: Herramientas -->
-    <div class="flex items-center overflow-x-auto tb-scroll px-2 border-b border-slate-200 min-h-[48px] gap-0.5">
-      
+    <!-- FILA 2: Toolbar de herramientas -->
+    <div class="flex items-center overflow-x-auto tb-scroll px-1 border-b border-slate-100 bg-white min-h-[52px] gap-0.5">
+
+      <!-- Añadir elementos -->
       <button id="tool-btn-imagen" class="tbtn shrink-0" title="Agregar imagen">
-        <span class="tbtn-icon">🖼️</span><span class="tbtn-label hidden sm:inline">Imagen</span>
+        <span class="mi">image</span><span class="tbtn-label">Imagen</span>
       </button>
       <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
 
       <button id="tool-btn-texto" class="tbtn shrink-0" title="Agregar texto">
-        <span class="tbtn-icon">📝</span><span class="tbtn-label hidden sm:inline">Texto</span>
+        <span class="mi">text_fields</span><span class="tbtn-label">Texto</span>
       </button>
 
       <button id="tool-btn-forma" class="tbtn shrink-0" title="Agregar forma">
-        <span class="tbtn-icon">▭</span><span class="tbtn-label hidden sm:inline">Forma</span>
+        <span class="mi">category</span><span class="tbtn-label">Forma</span>
       </button>
 
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+      <div class="tb-sep"></div>
 
-      <button id="tool-btn-undo" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
-        <span class="tbtn-icon">↩️</span><span class="tbtn-label hidden sm:inline">Deshacer</span>
+      <!-- Deshacer / Rehacer -->
+      <button id="tool-btn-undo" disabled class="tbtn shrink-0" title="Deshacer (Ctrl+Z)">
+        <span class="mi">undo</span><span class="tbtn-label">Deshacer</span>
       </button>
-      <button id="tool-btn-redo" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Rehacer (Ctrl+Y)">
-        <span class="tbtn-icon">↪️</span><span class="tbtn-label hidden sm:inline">Rehacer</span>
+      <button id="tool-btn-redo" disabled class="tbtn shrink-0" title="Rehacer (Ctrl+Y)">
+        <span class="mi">redo</span><span class="tbtn-label">Rehacer</span>
       </button>
 
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+      <div class="tb-sep"></div>
 
-      <button id="tool-btn-copiar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Copiar (Ctrl+C)">
-        <span class="tbtn-icon">📄</span><span class="tbtn-label hidden sm:inline">Copiar</span>
+      <!-- Copiar / Pegar / Duplicar / Eliminar -->
+      <button id="tool-btn-copiar" disabled class="tbtn shrink-0" title="Copiar (Ctrl+C)">
+        <span class="mi">content_copy</span><span class="tbtn-label">Copiar</span>
       </button>
       <button id="tool-btn-pegar" class="tbtn shrink-0" title="Pegar (Ctrl+V)">
-        <span class="tbtn-icon">📋</span><span class="tbtn-label hidden sm:inline">Pegar</span>
+        <span class="mi">content_paste</span><span class="tbtn-label">Pegar</span>
       </button>
-      <button id="tool-btn-duplicar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Duplicar (Ctrl+D)">
-        <span class="tbtn-icon">🔄</span><span class="tbtn-label hidden sm:inline">Duplicar</span>
+      <button id="tool-btn-duplicar" disabled class="tbtn shrink-0" title="Duplicar (Ctrl+D)">
+        <span class="mi">copy_all</span><span class="tbtn-label">Duplicar</span>
       </button>
-      <button id="tool-btn-eliminar" disabled class="tbtn shrink-0 text-red-500 hover:bg-red-50 disabled:opacity-40 disabled:text-slate-400 disabled:hover:bg-transparent disabled:cursor-not-allowed" title="Eliminar (Supr)">
-        <span class="tbtn-icon">🗑️</span><span class="tbtn-label hidden sm:inline">Eliminar</span>
-      </button>
-
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
-
-      <button id="tool-btn-grupo" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Agrupar (Ctrl+G)">
-        <span class="tbtn-icon">🔗</span><span class="tbtn-label hidden sm:inline">Agrupar</span>
-      </button>
-      <button id="tool-btn-desagrupar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Desagrupar (Ctrl+Shift+G)">
-        <span class="tbtn-icon">✂️</span><span class="tbtn-label hidden sm:inline">Desagrupar</span>
+      <button id="tool-btn-eliminar" disabled class="tbtn tbtn-danger shrink-0" title="Eliminar (Supr)">
+        <span class="mi">delete</span><span class="tbtn-label">Eliminar</span>
       </button>
 
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+      <div class="tb-sep"></div>
 
-      <div class="flex items-center gap-1.5 shrink-0 px-2" title="Color de fondo de la pestaña actual">
-        <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Fondo</span>
-        <input id="input-page-bg" type="color" value="#ffffff" class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white" />
+      <!-- Agrupar / Desagrupar -->
+      <button id="tool-btn-grupo" disabled class="tbtn shrink-0" title="Agrupar (Ctrl+G)">
+        <span class="mi">group_work</span><span class="tbtn-label">Agrupar</span>
+      </button>
+      <button id="tool-btn-desagrupar" disabled class="tbtn shrink-0" title="Desagrupar (Ctrl+Shift+G)">
+        <span class="mi">ungroup</span><span class="tbtn-label hidden sm:inline">Desagrupar</span>
+      </button>
+
+      <!-- Fondo de hoja (compacto) -->
+      <div class="tb-sep"></div>
+      <div class="flex items-center gap-1.5 shrink-0 px-1" title="Color de fondo de la hoja">
+        <span class="mi text-slate-400" style="font-size:18px">palette</span>
+        <input id="input-page-bg" type="color" value="#ffffff" class="w-7 h-7 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white" />
       </div>
 
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
-
-      <button id="tool-btn-grid" class="tbtn shrink-0" title="Alternar Cuadrícula (Ctrl+Alt+G)">
-        <span id="grid-icon" class="tbtn-icon text-slate-600">📏</span>
-        <span id="grid-label" class="tbtn-label whitespace-nowrap">Cuadrícula</span>
-      </button>
-
-      <div id="crop-buttons" class="hidden flex items-center shrink-0 gap-0.5">
-        <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+      <!-- Recortar (aparece solo con imagen) -->
+      <div id="crop-buttons" class="hidden items-center shrink-0 gap-0.5">
+        <div class="tb-sep"></div>
         <div id="crop-start-btn-wrap">
-          <button id="tool-btn-crop" class="tbtn shrink-0 text-blue-700 bg-blue-50 hover:bg-blue-100">
-            <span class="tbtn-icon">✂️</span><span class="tbtn-label">Recortar</span>
+          <button id="tool-btn-crop" class="tbtn shrink-0 text-blue-700" style="background:#eff6ff">
+            <span class="mi">crop</span><span class="tbtn-label">Recortar</span>
           </button>
         </div>
-        <div id="crop-actions-wrap" class="hidden flex items-center gap-1 shrink-0">
-          <button id="tool-btn-apply-crop" class="tbtn text-emerald-800 bg-emerald-100 hover:bg-emerald-200" title="Aplicar (Enter)">
-            <span class="tbtn-icon">✔️</span><span class="tbtn-label">Aplicar</span>
+        <div id="crop-actions-wrap" class="hidden items-center gap-1 shrink-0">
+          <button id="tool-btn-apply-crop" class="tbtn text-emerald-700" style="background:#ecfdf5" title="Aplicar (Enter)">
+            <span class="mi">check_circle</span><span class="tbtn-label">Aplicar</span>
           </button>
-          <button id="tool-btn-cancel-crop" class="tbtn text-slate-700 bg-slate-100 hover:bg-slate-200" title="Cancelar (Esc)">
-            <span class="tbtn-icon">❌</span><span class="tbtn-label">Cancelar</span>
+          <button id="tool-btn-cancel-crop" class="tbtn text-slate-600" style="background:#f8fafc" title="Cancelar (Esc)">
+            <span class="mi">cancel</span><span class="tbtn-label">Cancelar</span>
           </button>
         </div>
       </div>
-
-      <div class="ml-auto flex items-center shrink-0 pr-1 pl-2 border-l border-slate-200">
-        <button id="tool-btn-zoom-out" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom out">−</button>
-        <span id="zoom-percent" class="text-xs font-bold text-slate-600 w-9 text-center select-none">100%</span>
-        <button id="tool-btn-zoom-in" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom in">+</button>
-        <div class="w-px h-4 bg-slate-200 mx-1"></div>
-        <button id="tool-btn-fit" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition" title="Ajustar a pantalla">FIT</button>
-        <div class="w-px h-4 bg-slate-200 mx-1"></div>
-        <button id="tool-btn-ayuda" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-sm transition" title="Atajos de teclado (?)">?</button>
-        <button id="tool-btn-capas" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-sm transition" title="Panel de capas">☰</button>
-      </div>
     </div>
 
-    <!-- FILA 3: Propiedades Desktop -->
-    <div id="props-bar-desktop" class="hidden md:flex w-full bg-slate-50 border-b border-slate-200 px-4 py-1.5 items-center gap-3 overflow-x-auto tb-scroll min-h-[44px] text-sm shrink-0">
-      <p id="props-bar-empty" class="text-slate-400 italic text-xs">Selecciona un elemento para ver sus propiedades…</p>
-      <div id="props-bar-content" class="hidden flex items-center gap-3 whitespace-nowrap"></div>
+    <!-- FILA 3: Propiedades Desktop (≥md) -->
+    <div id="props-bar-desktop" class="hidden md:flex w-full bg-slate-50 border-b border-slate-100 px-3 py-1 items-center gap-2 overflow-x-auto tb-scroll min-h-[46px] shrink-0">
+      <p id="props-bar-empty" class="text-slate-400 italic text-xs">Selecciona un elemento…</p>
+      <div id="props-bar-content" class="hidden flex items-center gap-2 whitespace-nowrap"></div>
     </div>
 
-    <!-- Mobile props bar -->
-    <div id="props-bar-mobile" class="hidden md:hidden w-full bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center gap-2 overflow-x-auto tb-scroll text-sm min-h-[42px] shrink-0"></div>
+    <!-- FILA 3b: Propiedades Mobile (<md) -->
+    <div id="props-bar-mobile" class="md:hidden w-full bg-slate-50 border-b border-slate-100 px-2 py-1 flex items-center gap-1.5 overflow-x-auto tb-scroll min-h-[46px] shrink-0"></div>
 
   </header>
 
@@ -341,15 +413,6 @@
     <div id="layers-overlay" class="no-print hidden fixed inset-0 bg-slate-900/20 z-40 sm:hidden"></div>
   </div>
 
-  <!-- Estilos de botones de toolbar -->
-  <style>
-    .tbtn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 6px;border-radius:8px;color:#374151;transition:background .15s;cursor:pointer;border:none;background:transparent}
-    .tbtn:hover{background:#f1f5f9}
-    @media(min-width:640px){.tbtn{flex-direction:row;gap:6px;padding:6px 10px}}
-    .tbtn-icon{font-size:1.125rem;line-height:1}
-    .tbtn-label{font-size:9px;font-weight:500;line-height:1}
-    @media(min-width:640px){.tbtn-icon{font-size:.875rem}.tbtn-label{font-size:.875rem}}
-  </style>
 
 </div>
 </body>
@@ -378,9 +441,9 @@
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     hasAutoSave, restoreAutoSave, clearAutoSave,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.9.9';
+  } from './src/canvas/canvasView.js?v=2.0.0';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.9';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=2.0.0';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 

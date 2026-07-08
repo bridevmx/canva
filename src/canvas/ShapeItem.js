@@ -1,4 +1,4 @@
-import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.9';
+import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=2.0.0';
 
 const SHAPE_STYLES = {
   rect:     { label: 'Rectángulo', clipPath: '' },

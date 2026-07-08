@@ -1,6 +1,6 @@
 // PaperManager.js — Gestión de tamaño de papel y páginas múltiples
 
-import { PAPER_SIZES } from '../pb.config.js?v=1.9.9';
+import { PAPER_SIZES } from '../pb.config.js?v=2.0.0';
 
 export class PaperManager {
   constructor(paperSize = 'a4') {

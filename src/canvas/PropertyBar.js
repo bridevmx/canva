@@ -1,5 +1,11 @@
-// PropertyBar.js — Renderizado de la barra de propiedades del canvas.
-import { SingleItemControls } from './SingleItemControls.js?v=1.9.9';
+// PropertyBar.js — Barra de propiedades con Material Icons Round.
+import { SingleItemControls } from './SingleItemControls.js?v=2.0.0';
+
+const mi = (name, cls = '') =>
+  `<span class="mi${cls ? ' ' + cls : ''}" style="font-size:18px">${name}</span>`;
+
+const pbBtn = (cls, icon, title, extra = '') =>
+  `<button class="pb-btn ${cls}" title="${title}" ${extra}>${mi(icon)}</button>`;
 
 export class PropertyBar {
   constructor({ FONTS, actions, lifecycle }) {
@@ -24,78 +30,78 @@ export class PropertyBar {
 
   _buildHtml(sel, multi, isMobile) {
     let h = '';
-    const labelClass = 'text-[10px] font-bold text-slate-400 uppercase tracking-wider';
-    const groupClass = `flex items-center gap-1.5 ${isMobile ? 'border-r border-slate-200 pr-2' : 'border-r border-slate-200 pr-3'}`;
 
-    // Capas
-    h += `<div class="flex items-center gap-${isMobile ? '0.5' : '1'} ${isMobile ? 'border-r border-slate-200 pr-2' : 'border-r border-slate-200 pr-3'}">`;
-    if (!isMobile) h += '<span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>';
-    h += `<button class="prop-bring-forward ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al frente (Ctrl+Shift+]">⏫</button>`;
-    h += `<button class="prop-send-back ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al fondo (Ctrl+Shift+[)">⏬</button>`;
-    h += `<button class="prop-move-up ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}" title="Subir capa (Ctrl+])">↑</button>`;
-    h += `<button class="prop-move-down ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}" title="Bajar capa (Ctrl+[)">↓</button>`;
-    h += '</div>';
+    // ── Capas ──────────────────────────────────────────────────────────────
+    h += `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
+    if (!isMobile) h += `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>`;
+    h += pbBtn('prop-bring-forward', 'flip_to_front', 'Traer al frente (Ctrl+Shift+])');
+    h += pbBtn('prop-send-back',    'flip_to_back',  'Enviar al fondo (Ctrl+Shift+[)');
+    h += pbBtn('prop-move-up',      'arrow_upward',  'Subir capa (Ctrl+])');
+    h += pbBtn('prop-move-down',    'arrow_downward','Bajar capa (Ctrl+[)');
+    h += `</div>`;
 
     if (multi) {
-      h += this._alignHtml(groupClass, labelClass, isMobile);
-      h += this._distributeHtml(groupClass, labelClass, isMobile);
+      h += this._alignHtml(isMobile);
+      h += this._distributeHtml(isMobile);
     } else {
       h += this._lockHtml(sel, isMobile);
-      h += this._flipHtml(sel, groupClass, labelClass, isMobile);
-      h += this._opacityHtml(sel, groupClass, labelClass, isMobile);
-      h += this.singleControls.renderHtml(sel, groupClass, labelClass, isMobile);
+      h += this._flipHtml(sel, isMobile);
+      h += this._opacityHtml(sel, isMobile);
+      h += this.singleControls.renderHtml(sel, isMobile);
     }
 
-    // Grid fill
-    h += `<div class="border-l border-slate-200 pl-${isMobile ? '2' : '3'} ${isMobile ? '' : 'ml-auto'} shrink-0">`;
-    h += `<button class="prop-grid-fill flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition ${isMobile ? '' : 'border border-slate-200 hover:border-violet-300'}">⊞ ${isMobile ? 'Llenar' : 'Llenar hoja'}</button>`;
-    h += '</div>';
+    // ── Llenar hoja ────────────────────────────────────────────────────────
+    h += `<div class="border-l border-slate-200 pl-2 ml-auto shrink-0">`;
+    h += `<button class="prop-grid-fill flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition border border-slate-200 hover:border-violet-300">`;
+    h += `${mi('grid_view')} <span class="${isMobile ? '' : ''}">${isMobile ? 'Llenar' : 'Llenar hoja'}</span>`;
+    h += `</button></div>`;
 
     return h;
   }
 
-  _alignHtml(groupClass, labelClass, isMobile) {
-    let h = `<div class="${groupClass}">`;
-    if (!isMobile) h += `<span class="${labelClass}">Alinear</span>`;
-    h += `<button class="prop-align-left px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Izquierda">⬅</button>`;
-    h += `<button class="prop-align-center-h px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Centro horizontal">↔</button>`;
-    h += `<button class="prop-align-right px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Derecha">➡</button>`;
-    h += `<button class="prop-align-top px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Arriba">⬆</button>`;
-    h += `<button class="prop-align-center-v px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Centro vertical">↕</button>`;
-    h += `<button class="prop-align-bottom px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Abajo">⬇</button>`;
-    h += '</div>';
+  _alignHtml(isMobile) {
+    let h = `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
+    if (!isMobile) h += `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1">Alinear</span>`;
+    h += pbBtn('prop-align-left',     'align_horizontal_left',   'Alinear izquierda');
+    h += pbBtn('prop-align-center-h', 'align_horizontal_center', 'Centrar horizontal');
+    h += pbBtn('prop-align-right',    'align_horizontal_right',  'Alinear derecha');
+    h += pbBtn('prop-align-top',      'align_vertical_top',      'Alinear arriba');
+    h += pbBtn('prop-align-center-v', 'align_vertical_center',   'Centrar vertical');
+    h += pbBtn('prop-align-bottom',   'align_vertical_bottom',   'Alinear abajo');
+    h += `</div>`;
     return h;
   }
 
-  _distributeHtml(groupClass, labelClass, isMobile) {
-    let h = `<div class="${groupClass}">`;
-    if (!isMobile) h += `<span class="${labelClass}">Distribuir</span>`;
-    h += `<button class="prop-distribute-h px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Distribuir horizontal">↔⇄</button>`;
-    h += `<button class="prop-distribute-v px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Distribuir vertical">↕⇅</button>`;
-    h += '</div>';
+  _distributeHtml(isMobile) {
+    let h = `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
+    if (!isMobile) h += `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1">Distribuir</span>`;
+    h += pbBtn('prop-distribute-h', 'horizontal_distribute', 'Distribuir horizontal');
+    h += pbBtn('prop-distribute-v', 'vertical_distribute',   'Distribuir vertical');
+    h += `</div>`;
     return h;
   }
 
   _lockHtml(sel, isMobile) {
-    return `<button class="prop-toggle-lock ${isMobile ? 'px-2 py-1 rounded text-xs font-semibold border-r border-slate-200 pr-2 mr-0 transition' : 'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition border-r border-slate-200 pr-3'}" style="${sel.locked ? 'bg-amber-100 text-amber-700' : (isMobile ? 'bg-white border border-slate-200 text-slate-600' : 'hover:bg-slate-200 text-slate-600')}">${sel.locked ? '🔒 Bloq.' : '🔓 Libre'}</button>`;
+    const locked = sel.locked;
+    return `<button class="pb-btn prop-toggle-lock border-r border-slate-200 pr-2 mr-1 rounded-none ${locked ? 'pb-btn-active' : ''}" title="${locked ? 'Desbloquear' : 'Bloquear'}">${mi(locked ? 'lock' : 'lock_open')}</button>`;
   }
 
-  _flipHtml(sel, groupClass, labelClass, isMobile) {
-    let h = `<div class="${groupClass}">`;
-    if (!isMobile) h += `<span class="${labelClass}">Voltear</span>`;
-    h += `<button class="prop-flip-x px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs ${sel.flipX ? 'bg-blue-100 text-blue-700' : 'text-slate-700'}" title="Horizontal">↔</button>`;
-    h += `<button class="prop-flip-y px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs ${sel.flipY ? 'bg-blue-100 text-blue-700' : 'text-slate-700'}" title="Vertical">↕</button>`;
-    h += '</div>';
+  _flipHtml(sel, isMobile) {
+    let h = `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
+    if (!isMobile) h += `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1">Voltear</span>`;
+    h += `<button class="pb-btn prop-flip-x ${sel.flipX ? 'pb-btn-active' : ''}" title="Voltear horizontal">${mi('flip')}</button>`;
+    h += `<button class="pb-btn prop-flip-y ${sel.flipY ? 'pb-btn-active' : ''}" title="Voltear vertical" style="transform:rotate(90deg)">${mi('flip')}</button>`;
+    h += `</div>`;
     return h;
   }
 
-  _opacityHtml(sel, groupClass, labelClass, isMobile) {
-    let h = `<div class="${groupClass}">`;
-    if (!isMobile) h += `<span class="${labelClass}">Opacidad</span>`;
-    else h += `<span class="${labelClass}">Op</span>`;
-    h += `<input type="range" value="${(sel.opacity ?? 1) * 100}" min="5" max="100" step="5" class="prop-opacity ${isMobile ? 'w-16' : 'w-20'} h-1.5 accent-blue-600 cursor-pointer" />`;
-    h += `<span class="text-xs text-slate-500 w-7">${Math.round((sel.opacity ?? 1) * 100)}%</span>`;
-    h += '</div>';
+  _opacityHtml(sel, isMobile) {
+    const val = Math.round((sel.opacity ?? 1) * 100);
+    let h = `<div class="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">`;
+    h += `${mi('opacity', 'text-slate-400')}`;
+    h += `<input type="range" value="${val}" min="5" max="100" step="5" class="prop-opacity ${isMobile ? 'w-16' : 'w-20'} h-1.5 accent-violet-600 cursor-pointer" />`;
+    h += `<span class="text-[10px] text-slate-500 w-7 tabular-nums">${val}%</span>`;
+    h += `</div>`;
     return h;
   }
 
