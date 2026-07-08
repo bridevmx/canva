@@ -206,8 +206,8 @@
       <!-- Spacer -->
       <div class="flex-1"></div>
 
-      <!-- Zoom (movido a topbar) -->
-      <div class="flex items-center gap-0.5 border border-slate-200 rounded-lg px-1 bg-slate-50 shrink-0">
+      <!-- Zoom (movido a topbar, oculto en móvil) -->
+      <div class="hidden sm:flex items-center gap-0.5 border border-slate-200 rounded-lg px-1 bg-slate-50 shrink-0">
         <button id="tool-btn-zoom-out" class="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold transition" title="Zoom −">
           <span class="mi" style="font-size:18px">remove</span>
         </button>
@@ -219,20 +219,20 @@
         <button id="tool-btn-fit" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition" title="Ajustar a pantalla">FIT</button>
       </div>
 
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+      <div class="hidden sm:block w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <!-- Acciones secundarias -->
-      <button id="tool-btn-grid" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Cuadrícula (Ctrl+Alt+G)">
+      <!-- Acciones secundarias (ocultas en móvil, ya están en el menú inferior) -->
+      <button id="tool-btn-grid" class="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Cuadrícula (Ctrl+Alt+G)">
         <span id="grid-icon" class="mi" style="font-size:20px">grid_on</span>
       </button>
-      <button id="tool-btn-ayuda" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Atajos de teclado (?)">
+      <button id="tool-btn-ayuda" class="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Atajos de teclado (?)">
         <span class="mi" style="font-size:20px">help_outline</span>
       </button>
-      <button id="tool-btn-capas" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Panel de capas (Ctrl+L)">
+      <button id="tool-btn-capas" class="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition shrink-0" title="Panel de capas (Ctrl+L)">
         <span class="mi" style="font-size:20px">layers</span>
       </button>
 
-      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+      <div class="hidden sm:block w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
       <!-- Usuario + Salir -->
       <div class="flex items-center gap-1 shrink-0">
