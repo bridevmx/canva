@@ -139,7 +139,7 @@
           const prefix = item.src.replace('FILE:', '').split('.')[0].replace(/-/g, '_');
           const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : [rec.upload_assets];
           const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
-          if (fn) item.src = pb.files.getUrl(rec, fn);
+          if (fn) item.src = pb.files.getURL(rec, fn);
         }
       });
       pagesCount = maxPage;

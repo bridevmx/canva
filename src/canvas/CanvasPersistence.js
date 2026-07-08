@@ -62,7 +62,7 @@ export class CanvasPersistence {
         else if (typeof record.upload_assets === 'string' && record.upload_assets.trim()) assets = [record.upload_assets];
         const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
         if (fn) {
-          const url = this.pb.files.getUrl(record, fn);
+          const url = this.pb.files.getURL(record, fn);
           item.src = url;
           if (item.originalSrc) item.originalSrc = url;
         }
