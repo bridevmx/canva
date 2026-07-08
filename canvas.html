@@ -130,6 +130,9 @@
         height: auto!important;
         max-height: calc(70vh - 56px)!important;
       }
+      #layers-list{
+        padding-bottom: 32px!important;
+      }
     }
     #props-sheet-handle{width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px}
     #props-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;shrink-0}
@@ -138,6 +141,13 @@
     #props-sheet-body{overflow-x:auto;overflow-y:hidden;padding:0 12px 12px;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
     #props-sheet-body::-webkit-scrollbar{display:none}
     @media(max-width:639px){
+      #props-sheet-body{
+        flex-wrap: wrap!important;
+        overflow-x: visible!important;
+        overflow-y: auto!important;
+        gap: 8px 6px!important;
+        padding-bottom: 20px!important;
+      }
       #props-sheet-body select{
         min-height: 40px!important;
         padding: 6px 12px!important;
