@@ -1,6 +1,6 @@
 // TextItem.js — Item tipo texto con tipografía, sombra y contorno
 
-import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.5';
+import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.6';
 
 export class TextItem extends StickerItem {
   constructor(cfg = {}) {

@@ -194,6 +194,7 @@
         <button id="tool-btn-fit" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition" title="Ajustar a pantalla">FIT</button>
         <div class="w-px h-4 bg-slate-200 mx-1"></div>
         <button id="tool-btn-ayuda" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-sm transition" title="Atajos de teclado (?)">?</button>
+        <button id="tool-btn-capas" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-sm transition" title="Panel de capas">☰</button>
       </div>
     </div>
 
@@ -278,6 +279,7 @@
           <span class="font-bold text-slate-700">Ctrl + Shift + [</span><span class="text-slate-600">Enviar al fondo</span>
           <span class="font-bold text-slate-700">Ctrl + Alt + G</span><span class="text-slate-600">Alternar cuadrícula</span>
           <span class="font-bold text-slate-700">Flechas</span><span class="text-slate-600">Mover 1px (Shift = 10px)</span>
+          <span class="font-bold text-slate-700">Ctrl + L</span><span class="text-slate-600">Panel de capas</span>
           <span class="font-bold text-slate-700">?</span><span class="text-slate-600">Mostrar atajos</span>
         </div>
       </div>
@@ -287,28 +289,46 @@
     </div>
   </div>
 
-  <!-- ══════════════ CANVAS ══════════════ -->
-  <main id="canvas-main"
-    class="flex-1 overflow-auto bg-slate-200/60 flex flex-col items-center justify-start p-4 sm:p-8 print:p-0 print:bg-white print:overflow-visible print:block relative">
+  <!-- ══════════════ CANVAS + PANEL DE CAPAS ══════════════ -->
+  <div id="workspace" class="flex-1 flex overflow-hidden print:block relative">
+    <main id="canvas-main"
+      class="flex-1 overflow-auto bg-slate-200/60 flex flex-col items-center justify-start p-4 sm:p-8 print:p-0 print:bg-white print:overflow-visible print:block relative">
 
-    <!-- Pestañas (Tabs) de Hojas -->
-    <div id="page-tabs" class="no-print w-full flex flex-col sm:flex-row items-center justify-between gap-3 max-w-full mb-3 shrink-0"></div>
+      <!-- Pestañas (Tabs) de Hojas -->
+      <div id="page-tabs" class="no-print w-full flex flex-col sm:flex-row items-center justify-between gap-3 max-w-full mb-3 shrink-0"></div>
 
-    <!-- Zoom wrapper -->
-    <div id="canvas-zoom-outer" class="canvas-zoom-outer print:w-auto print:h-auto">
-      <div id="canvas-zoom-inner" class="canvas-zoom-inner print:transform-none relative">
+      <!-- Zoom wrapper -->
+      <div id="canvas-zoom-outer" class="canvas-zoom-outer print:w-auto print:h-auto">
+        <div id="canvas-zoom-inner" class="canvas-zoom-inner print:transform-none relative">
 
-        <!-- Reglas -->
-        <div id="ruler-x" class="no-print absolute top-[-20px] left-0 h-[20px] bg-white border-b border-r border-slate-300 z-20 overflow-hidden"></div>
-        <div id="ruler-y" class="no-print absolute top-0 left-[-20px] w-[20px] bg-white border-r border-b border-slate-300 z-20 overflow-hidden"></div>
-        <div class="no-print absolute top-[-20px] left-[-20px] w-[20px] h-[20px] border-b border-r border-slate-300 z-20 bg-slate-50"></div>
+          <!-- Reglas -->
+          <div id="ruler-x" class="no-print absolute top-[-20px] left-0 h-[20px] bg-white border-b border-r border-slate-300 z-20 overflow-hidden"></div>
+          <div id="ruler-y" class="no-print absolute top-0 left-[-20px] w-[20px] bg-white border-r border-b border-slate-300 z-20 overflow-hidden"></div>
+          <div class="no-print absolute top-[-20px] left-[-20px] w-[20px] h-[20px] border-b border-r border-slate-300 z-20 bg-slate-50"></div>
 
-        <!-- Sheet -->
-        <div id="sheet-container"></div>
+          <!-- Sheet -->
+          <div id="sheet-container"></div>
 
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+
+    <!-- ══════════════ PANEL DE CAPAS ══════════════ -->
+    <aside id="layers-panel"
+      class="no-print hidden fixed sm:relative inset-y-0 right-0 w-64 sm:w-56 lg:w-64 bg-white border-l border-slate-200 flex-col shrink-0 z-50 shadow-2xl sm:shadow-none">
+      <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+        <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">Capas</h3>
+        <div class="flex items-center gap-1">
+          <button id="layers-toggle-visible" class="text-[10px] font-bold text-slate-500 hover:text-slate-700 px-1.5 py-0.5 rounded hover:bg-slate-200" title="Mostrar/ocultar todo">👁</button>
+          <button id="layers-close-btn" class="sm:hidden text-slate-400 hover:text-slate-600 p-1 leading-none text-xl">&times;</button>
+        </div>
+      </div>
+      <div id="layers-list" class="flex-1 overflow-y-auto tb-scroll p-2 space-y-1"></div>
+    </aside>
+
+    <!-- Overlay móvil para cerrar panel -->
+    <div id="layers-overlay" class="no-print hidden fixed inset-0 bg-slate-900/20 z-40 sm:hidden"></div>
+  </div>
 
   <!-- Estilos de botones de toolbar -->
   <style>
@@ -335,6 +355,7 @@
     printCanvas, setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
     addText, addShape, handleFiles, duplicateSelected, copySelected, paste, deleteSelected,
     bringForward, sendToBack, moveOneUp, moveOneDown, groupSelected, ungroupSelected,
+    toggleLayerVisibility, setLayerName, reorderLayer,
     alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
     distributeHorizontal, distributeVertical,
     flipHorizontal, flipVertical,
@@ -345,9 +366,9 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.9.5';
+  } from './src/canvas/canvasView.js?v=1.9.6';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.5';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.6';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -364,6 +385,9 @@
   const elInputPageBg = document.getElementById('input-page-bg');
   const elSaveModal = document.getElementById('save-modal');
   const elShortcutsModal = document.getElementById('shortcuts-modal');
+  const elLayersPanel = document.getElementById('layers-panel');
+  const elLayersList = document.getElementById('layers-list');
+  const elLayersOverlay = document.getElementById('layers-overlay');
   const elSaveAdminBtn = document.getElementById('btn-save-admin');
   const elImprimirBtn = document.getElementById('btn-imprimir-cliente');
   const elCropButtons = document.getElementById('crop-buttons');
@@ -484,6 +508,18 @@
   document.getElementById('shortcuts-done-btn').addEventListener('click', closeShortcutsModal);
   elShortcutsModal.addEventListener('click', e => { if (e.target === e.currentTarget) closeShortcutsModal(); });
   window.addEventListener('editor:show-shortcuts', openShortcutsModal);
+  window.addEventListener('editor:toggle-layers', toggleLayersPanel);
+
+  // Layers panel
+  document.getElementById('tool-btn-capas').addEventListener('click', toggleLayersPanel);
+  document.getElementById('layers-close-btn').addEventListener('click', closeLayersPanel);
+  elLayersOverlay.addEventListener('click', closeLayersPanel);
+  document.getElementById('layers-toggle-visible').addEventListener('click', () => {
+    const activePage = $activePage.get();
+    const pageItems = sortedItems().filter(i => (i.page || 1) === activePage);
+    const allVisible = pageItems.every(i => i.visible !== false);
+    toggleLayerVisibility(pageItems.map(i => i.id), !allVisible);
+  });
 
   // Modal quantity
   const elInputQty = document.getElementById('input-quantity');
@@ -602,6 +638,7 @@
     updateCropButtonVisibility();
     renderPropertyBars();
     scheduleRenderSheet();
+    renderLayersPanel();
   });
 
   $cropActive.subscribe(() => {
@@ -634,7 +671,7 @@
     const bg = $pageColors.get()[activePage] || '#ffffff';
     const sheet = getSheet();
     const showGrid = $showGrid.get();
-    const items = sortedItems().filter(i => (i.page || 1) === activePage);
+    const items = sortedItems().filter(i => (i.page || 1) === activePage && i.visible !== false);
     const selectedIds = new Set($selectedIds.get());
     const cropActive = $cropActive.get();
     const cropId = $cropId.get();
@@ -880,14 +917,133 @@
     propertyBar.render(elPropsBarMobile, sel, selectedAll, true);
   }
 
+  // ── Panel de capas ──
+  let layersOpen = false;
+  function openLayersPanel() {
+    layersOpen = true;
+    elLayersPanel.classList.remove('hidden');
+    elLayersPanel.classList.add('flex');
+    elLayersOverlay.classList.remove('hidden');
+    renderLayersPanel();
+  }
+  function closeLayersPanel() {
+    layersOpen = false;
+    elLayersPanel.classList.add('hidden');
+    elLayersPanel.classList.remove('flex');
+    elLayersOverlay.classList.add('hidden');
+  }
+  function toggleLayersPanel() {
+    if (layersOpen) closeLayersPanel();
+    else openLayersPanel();
+  }
+
+  function renderLayersPanel() {
+    if (!layersOpen) return;
+    const activePage = $activePage.get();
+    const selectedIds = new Set($selectedIds.get());
+    const items = sortedItems().filter(i => (i.page || 1) === activePage);
+    const reversed = [...items].reverse(); // capas de arriba hacia abajo
+
+    let html = '';
+    for (const item of reversed) {
+      const isSelected = selectedIds.has(item.id);
+      const icon = item.layerIcon();
+      const name = escapeHtml(item.displayName());
+      const visible = item.visible !== false;
+      const locked = item.locked;
+      const groupClass = item.groupId ? 'pl-6' : '';
+      html += `
+        <div class="layer-item flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs cursor-pointer select-none transition ${isSelected ? 'bg-violet-100 text-violet-800' : 'hover:bg-slate-100 text-slate-700'} ${groupClass}"
+             data-id="${item.id}" draggable="true">
+          <span class="layer-drag cursor-grab text-slate-300 hover:text-slate-500">⋮⋮</span>
+          <button class="layer-visible w-5 h-5 flex items-center justify-center rounded hover:bg-slate-200 ${visible ? 'text-slate-600' : 'text-slate-300'}" title="${visible ? 'Ocultar' : 'Mostrar'}">${visible ? '👁' : '🚫'}</button>
+          <button class="layer-lock w-5 h-5 flex items-center justify-center rounded hover:bg-slate-200 ${locked ? 'text-amber-600' : 'text-slate-400'}" title="${locked ? 'Desbloquear' : 'Bloquear'}">${locked ? '🔒' : '🔓'}</button>
+          <span class="layer-icon">${icon}</span>
+          <span class="layer-name flex-1 truncate ${item.name ? 'font-semibold' : 'text-slate-500'}" title="Doble click para renombrar">${name}</span>
+        </div>`;
+    }
+    elLayersList.innerHTML = html || '<p class="text-slate-400 text-xs text-center py-4">No hay elementos en esta hoja</p>';
+
+    elLayersList.querySelectorAll('.layer-item').forEach(row => {
+      const id = row.dataset.id;
+
+      row.addEventListener('click', e => {
+        if (e.target.closest('.layer-visible, .layer-lock, .layer-drag')) return;
+        select(id, e.ctrlKey || e.metaKey);
+      });
+
+      row.addEventListener('dblclick', e => {
+        if (e.target.closest('.layer-visible, .layer-lock')) return;
+        const nameSpan = row.querySelector('.layer-name');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = $items.get().find(i => i.id === id)?.name || '';
+        input.className = 'w-full px-1 py-0.5 text-xs border border-violet-300 rounded outline-none';
+        nameSpan.replaceWith(input);
+        input.focus();
+        input.select();
+        const save = () => {
+          const newName = input.value.trim();
+          setLayerName(id, newName || null);
+          input.replaceWith(nameSpan);
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); save(); } if (ev.key === 'Escape') { input.replaceWith(nameSpan); } });
+      });
+
+      row.querySelector('.layer-visible').addEventListener('click', e => {
+        e.stopPropagation();
+        toggleLayerVisibility([id]);
+      });
+      row.querySelector('.layer-lock').addEventListener('click', e => {
+        e.stopPropagation();
+        const item = $items.get().find(i => i.id === id);
+        if (item) { item.locked = !item.locked; pushHistory(); sync(); }
+      });
+
+      row.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/layer-id', id);
+        e.dataTransfer.effectAllowed = 'move';
+        row.classList.add('opacity-50');
+      });
+      row.addEventListener('dragend', () => row.classList.remove('opacity-50'));
+    });
+
+    elLayersList.querySelectorAll('.layer-item').forEach(row => {
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        row.classList.add('bg-violet-50');
+      });
+      row.addEventListener('dragleave', () => row.classList.remove('bg-violet-50'));
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        row.classList.remove('bg-violet-50');
+        const dragId = e.dataTransfer.getData('text/layer-id');
+        const targetId = row.dataset.id;
+        if (!dragId || dragId === targetId) return;
+        const rect = row.getBoundingClientRect();
+        const position = (e.clientY - rect.top) > rect.height / 2 ? 'after' : 'before';
+        reorderLayer(dragId, targetId, position);
+      });
+    });
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // ── Reactividad de items ──
   // $selectedIds y $cropActive ya llaman scheduleRenderSheet() en suscripciones de toolbar.
-  $items.subscribe(() => scheduleRenderSheet());
+  $items.subscribe(() => { scheduleRenderSheet(); renderLayersPanel(); });
   $cropId.subscribe(() => scheduleRenderSheet());
   $editingTextId.subscribe(() => scheduleRenderSheet());
   $activePage.subscribe(() => {
     elInputPageBg.value = currentPageBg();
     scheduleRenderSheet();
+    renderLayersPanel();
   });
   $pagesCount.subscribe(() => scheduleRenderSheet());
   $pageColors.subscribe(() => scheduleRenderSheet());

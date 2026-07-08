@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.9.5';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.9.5';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.9.5';
-import { AuthManager } from '../auth/AuthManager.js?v=1.9.5';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.9.5';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.9.5';
+import { CanvasEditor } from './CanvasEditor.js?v=1.9.6';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.9.6';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.9.6';
+import { AuthManager } from '../auth/AuthManager.js?v=1.9.6';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.9.6';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.9.6';
 
 
 const PX_PER_CM = 37.8095;
@@ -272,6 +272,18 @@ function ungroupSelected() {
   editor.ungroupSelected();
   sync();
 }
+function toggleLayerVisibility(ids, target) {
+  editor.toggleVisibility(ids, target);
+  sync();
+}
+function setLayerName(id, name) {
+  editor.setItemName(id, name);
+  sync();
+}
+function reorderLayer(dragId, targetId, position) {
+  editor.reorderLayer(dragId, targetId, position);
+  sync();
+}
 function bringForward() {
   editor.bringForward();
   sync();
@@ -475,6 +487,7 @@ export {
   setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
   addText, addShape, handleFiles, duplicateSelected, copySelected, paste, deleteSelected,
   bringForward, sendToBack, moveOneUp, moveOneDown, groupSelected, ungroupSelected,
+  toggleLayerVisibility, setLayerName, reorderLayer,
   alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
   distributeHorizontal, distributeVertical,
   flipHorizontal, flipVertical,

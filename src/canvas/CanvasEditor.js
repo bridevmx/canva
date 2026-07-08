@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.5';
-import { ImageItem }      from './ImageItem.js?v=1.9.5';
-import { TextItem }       from './TextItem.js?v=1.9.5';
-import { ShapeItem }     from './ShapeItem.js?v=1.9.5';
-import { CropController } from './CropController.js?v=1.9.5';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.6';
+import { ImageItem }      from './ImageItem.js?v=1.9.6';
+import { TextItem }       from './TextItem.js?v=1.9.6';
+import { ShapeItem }     from './ShapeItem.js?v=1.9.6';
+import { CropController } from './CropController.js?v=1.9.6';
 
-import { HistoryManager } from './HistoryManager.js?v=1.9.5';
-import { GuidesManager }  from './GuidesManager.js?v=1.9.5';
-import { PointerController } from './PointerController.js?v=1.9.5';
-import { PaperManager }   from './PaperManager.js?v=1.9.5';
-import { FONTS }          from '../pb.config.js?v=1.9.5';
+import { HistoryManager } from './HistoryManager.js?v=1.9.6';
+import { GuidesManager }  from './GuidesManager.js?v=1.9.6';
+import { PointerController } from './PointerController.js?v=1.9.6';
+import { PaperManager }   from './PaperManager.js?v=1.9.6';
+import { FONTS }          from '../pb.config.js?v=1.9.6';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -180,6 +180,37 @@ export class CanvasEditor {
     for (const item of this.items) {
       if (this.selectedIds.has(item.id)) item.groupId = null;
     }
+    this.history.push();
+  }
+
+  toggleVisibility(ids, target) {
+    const set = new Set(ids);
+    let changed = false;
+    for (const item of this.items) {
+      if (set.has(item.id)) {
+        const next = target !== undefined ? target : !item.visible;
+        if (item.visible !== next) { item.visible = next; changed = true; }
+      }
+    }
+    if (changed) this.history.push();
+  }
+
+  setItemName(id, name) {
+    const item = this.items.find(i => i.id === id);
+    if (item) { item.name = name; this.history.push(); }
+  }
+
+  reorderLayer(dragId, targetId, position = 'before') {
+    const dragItem = this.items.find(i => i.id === dragId);
+    const targetItem = this.items.find(i => i.id === targetId);
+    if (!dragItem || !targetItem || dragItem === targetItem) return;
+    const sorted = this.sortedItems();
+    const filtered = sorted.filter(i => i.id !== dragId);
+    const targetIdx = filtered.findIndex(i => i.id === targetId);
+    const insertIdx = position === 'after' ? targetIdx + 1 : targetIdx;
+    filtered.splice(insertIdx, 0, dragItem);
+    filtered.forEach((item, i) => item.z = i + 1);
+    this.normalizeZ();
     this.history.push();
   }
 
@@ -455,6 +486,10 @@ export class CanvasEditor {
     if (ev.key === '?' && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
       ev.preventDefault();
       window.dispatchEvent(new CustomEvent('editor:show-shortcuts'));
+    }
+    if (ev.key.toLowerCase() === 'l' && (ev.ctrlKey || ev.metaKey)) {
+      ev.preventDefault();
+      window.dispatchEvent(new CustomEvent('editor:toggle-layers'));
     }
     if (ev.key.toLowerCase() === 'g' && (ev.ctrlKey || ev.metaKey) && ev.altKey) {
       ev.preventDefault(); this.toggleGrid();

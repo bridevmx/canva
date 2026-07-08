@@ -36,6 +36,7 @@ export class StickerItem {
   constructor(cfg = {}) {
     this.id       = cfg.id ?? generateId();
     this.type     = cfg.type ?? 'shape';
+    this.name     = cfg.name ?? null;
     this.x        = cfg.x ?? 80;
     this.y        = cfg.y ?? 80;
     this.w        = cfg.w ?? 200;
@@ -45,9 +46,28 @@ export class StickerItem {
     this.flipY    = cfg.flipY ?? false;
     this.opacity  = cfg.opacity ?? 1.0;
     this.locked   = cfg.locked ?? false;
+    this.visible  = cfg.visible !== false;
     this.page     = cfg.page ?? 1;
     this.z        = cfg.z ?? 1;
     this.groupId  = cfg.groupId ?? null;
+  }
+
+  displayName() {
+    if (this.name) return this.name;
+    if (this.type === 'text') {
+      const t = (this.text || '').trim();
+      return t ? (t.length > 20 ? t.slice(0, 20) + '…' : t) : 'Texto';
+    }
+    if (this.type === 'image') return 'Imagen';
+    if (this.type === 'shape') return this.shapeType ? `Forma ${this.shapeType}` : 'Forma';
+    return 'Elemento';
+  }
+
+  layerIcon() {
+    if (this.type === 'image') return '🖼️';
+    if (this.type === 'text') return '📝';
+    if (this.type === 'shape') return '▭';
+    return '📦';
   }
 
   static fromJSON(data) {
