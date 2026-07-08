@@ -72,7 +72,12 @@ export class CanvasPersistence {
         console.log('[loadProject] FILE: prefix=', prefix, 'assets=', assets);
         const fn = assets.find(f => {
           const norm = f.replace(/-/g, '_');
-          return norm.startsWith(prefix) || norm.includes(prefix) || f === prefix + '.png' || f.startsWith(prefix + '.');
+          const base = norm.split('.')[0];
+          return base === prefix
+            || base.startsWith(prefix + '_')
+            || base.startsWith(prefix + '-')
+            || norm.startsWith(prefix)
+            || norm.includes(prefix);
         });
         if (fn) {
           const url = fileToken
