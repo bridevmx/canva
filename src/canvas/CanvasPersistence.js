@@ -70,14 +70,14 @@ export class CanvasPersistence {
         if (Array.isArray(record.upload_assets)) assets = record.upload_assets;
         else if (typeof record.upload_assets === 'string' && record.upload_assets.trim()) assets = [record.upload_assets];
         console.log('[loadProject] FILE: prefix=', prefix, 'assets=', assets);
+        const normPrefix = prefix.replace(/-/g, '_');
         const fn = assets.find(f => {
           const norm = f.replace(/-/g, '_');
           const base = norm.split('.')[0];
-          return base === prefix
-            || base.startsWith(prefix + '_')
-            || base.startsWith(prefix + '-')
-            || norm.startsWith(prefix)
-            || norm.includes(prefix);
+          return base === normPrefix
+            || base.startsWith(normPrefix + '_')
+            || norm.startsWith(normPrefix)
+            || norm.includes(normPrefix);
         });
         if (fn) {
           const url = fileToken
