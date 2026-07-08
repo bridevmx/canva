@@ -1,6 +1,6 @@
 // HistoryManager.js — Snapshots JSON para undo/redo
 
-import { StickerItem } from './StickerItem.js?v=1.8.2';
+import { StickerItem } from './StickerItem.js?v=1.8.3';
 
 const MAX_HISTORY = 60;
 

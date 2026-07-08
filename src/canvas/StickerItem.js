@@ -103,5 +103,4 @@ export class StickerItem {
     if (this.rotation) t += ` rotate(${this.rotation}deg)`;
     return t.trim() || 'none';
   }
-  }
 }
