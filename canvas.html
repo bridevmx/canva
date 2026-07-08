@@ -173,7 +173,10 @@
     @media(max-width:639px){#props-sheet-overlay.open{display:block}}
     /* padding inferior del canvas en móvil para no quedar bajo bottom-nav y permitir auto-scroll */
     @media(max-width:639px){
-      #canvas-main{padding-bottom:60vh!important}
+      #canvas-main{padding-bottom:16px!important; transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1);}
+      #canvas-main.sheet-active {
+        height: calc(100vh - 48px - 56px - 260px) !important;
+      }
       #header-toolbar{display:none!important}
       #props-bar-desktop{display:none!important}
     }
@@ -1219,6 +1222,7 @@
     function openSheet(sheetEl, overlayEl) {
       sheetEl.classList.remove('hidden');
       sheetEl.classList.add('flex');
+      elCanvasMain.classList.add('sheet-active'); // Recortar la altura del canvas
       requestAnimationFrame(() => {
         sheetEl.classList.add('sheet-open');
       });
@@ -1229,6 +1233,7 @@
     function closeSheet(sheetEl, overlayEl) {
       sheetEl.classList.remove('sheet-open');
       overlayEl.style.opacity = '0';
+      elCanvasMain.classList.remove('sheet-active'); // Volver a pantalla completa
       setTimeout(() => {
         overlayEl.style.display = 'none';
         sheetEl.classList.add('hidden');
@@ -1465,6 +1470,7 @@
     elLayersPanel.classList.add('flex');
     elLayersOverlay.classList.remove('hidden');
     document.getElementById('bnav-layers')?.classList.add('active');
+    elCanvasMain.classList.add('sheet-active'); // Recortar la altura del canvas
     
     // Animación en móvil
     requestAnimationFrame(() => {
@@ -1476,6 +1482,7 @@
   function closeLayersPanel() {
     layersOpen = false;
     document.getElementById('bnav-layers')?.classList.remove('active');
+    elCanvasMain.classList.remove('sheet-active'); // Volver a pantalla completa
     
     // Animación en móvil
     elLayersPanel.classList.remove('sheet-open');
