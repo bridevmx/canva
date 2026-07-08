@@ -1,5 +1,5 @@
 // PropertyBar.js — Renderizado de la barra de propiedades del canvas.
-import { SingleItemControls } from './SingleItemControls.js?v=1.8.8';
+import { SingleItemControls } from './SingleItemControls.js?v=1.9.0';
 
 export class PropertyBar {
   constructor({ FONTS, actions, lifecycle }) {

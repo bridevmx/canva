@@ -1,6 +1,6 @@
 // ImageItem.js — Item tipo imagen con crop y trim de bordes blancos
 
-import { StickerItem, registerItemFactory, ITEM_TYPES, clamp } from './StickerItem.js?v=1.8.8';
+import { StickerItem, registerItemFactory, ITEM_TYPES, clamp } from './StickerItem.js?v=1.9.0';
 
 export class ImageItem extends StickerItem {
   constructor(cfg = {}) {

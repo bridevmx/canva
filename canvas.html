@@ -294,9 +294,9 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.8.9';
+  } from './src/canvas/canvasView.js?v=1.9.0';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.8.9';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.0';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -778,7 +778,6 @@
   });
 
   function renderPropertyBars() {
-    console.trace('[canvas] renderPropertyBars called');
     const sel = getSelected();
     const selectedAll = getSelectedAll();
     const hasSelection = selectedAll.length > 0;
