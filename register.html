@@ -6,54 +6,116 @@
   <title>StickerMaker - Registro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="auth.js"></script>
-  <script>
-    if (isAuthenticated()) window.location.replace('/dashboard')
-  </script>
+  <script>if (isAuthenticated()) window.location.replace('/dashboard')</script>
+  <style>
+    body{font-family:Inter,sans-serif}
+    .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;text-transform:none!important}
+    .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .35s ease forwards}
+    input:-webkit-autofill{-webkit-box-shadow:0 0 0 30px rgba(15,23,42,.95) inset!important;-webkit-text-fill-color:#fff!important}
+  </style>
 </head>
-<body>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4 text-white">
-    <div class="w-full max-w-sm">
-      <div class="text-center mb-8">
-        <span class="text-5xl">✨</span>
-        <h1 class="text-2xl font-black mt-3 tracking-tight">Registro en StickerMaker</h1>
-        <p id="register-subtitle" class="text-slate-400 text-sm mt-1">Crea tu cuenta de acceso</p>
-      </div>
-      
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-4 backdrop-blur-sm shadow-xl">
-        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
-        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
+<body class="bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 overflow-y-auto selection:bg-violet-500/30">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md fade-up">
 
-        <div class="space-y-3">
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nombre de Usuario</label>
-            <input id="input-username" type="text" placeholder="Ej. juanito123" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-600/15 border border-violet-500/20 mb-5">
+          <span class="mi mi-lg text-violet-400" style="font-size:32px">person_add</span>
+        </div>
+        <h1 class="text-2xl font-black text-white tracking-tight">Crear cuenta</h1>
+        <p class="text-slate-400 text-sm mt-1">Registrate para empezar a crear</p>
+      </div>
+
+      <!-- Card -->
+      <div class="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 backdrop-blur-xl shadow-2xl shadow-black/20">
+        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
+        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
+
+        <form class="space-y-3.5" onsubmit="return false">
+          <!-- Username -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">badge</span>
+              Nombre de Usuario
+            </label>
+            <input id="input-username" type="text" placeholder="Ej. juanito123" autocomplete="username"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
           </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Correo Electrónico</label>
-            <input id="input-email" type="email" placeholder="tu@correo.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+
+          <!-- Email -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">email</span>
+              Correo Electrónico
+            </label>
+            <input id="input-email" type="email" placeholder="tu@correo.com" autocomplete="email"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
           </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Teléfono Celular</label>
-            <input id="input-phone" type="tel" placeholder="1234567890" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+
+          <!-- Phone -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">phone</span>
+              Teléfono Celular
+            </label>
+            <input id="input-phone" type="tel" placeholder="1234567890" autocomplete="tel"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
           </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
-            <input id="input-password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+
+          <!-- Password -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">lock</span>
+              Contraseña
+            </label>
+            <input id="input-password" type="password" placeholder="Min. 8 caracteres" autocomplete="new-password"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
           </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Confirmar Contraseña</label>
-            <input id="input-password-confirm" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+
+          <!-- Password Confirm -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">lock_outline</span>
+              Confirmar Contraseña
+            </label>
+            <input id="input-password-confirm" type="password" placeholder="Repite tu contraseña" autocomplete="new-password"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
           </div>
-          <button id="btn-register" disabled class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-5 shadow-lg">
-            Registrarse con Email
+
+          <!-- Submit Button -->
+          <button id="btn-register" disabled type="submit"
+            class="w-full flex items-center justify-center gap-2.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-900/30 hover:shadow-violet-600/30 hover:-translate-y-0.5 active:translate-y-0 mt-2">
+            <span class="mi mi-sm">how_to_reg</span>
+            <span id="btn-text">Crear cuenta</span>
           </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 my-6">
+          <div class="flex-1 h-px bg-white/[0.06]"></div>
+          <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">o</span>
+          <div class="flex-1 h-px bg-white/[0.06]"></div>
         </div>
 
-        <p class="text-center text-slate-600 text-xs pt-3 mt-4 border-t border-white/10">
-          ¿Ya tienes cuenta? <a href="/login" class="text-violet-400 hover:text-violet-300 transition font-bold">Inicia sesión</a>
-        </p>
+        <!-- Login link -->
+        <a href="/login" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200">
+          <span class="mi mi-sm">login</span>
+          ¿Ya tienes cuenta? Inicia sesion
+        </a>
+
+        <!-- Back link -->
+        <a href="/" class="flex items-center justify-center gap-2 w-full py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-600 hover:text-slate-400 transition-all duration-200">
+          <span class="mi mi-sm">arrow_back</span>
+          Volver al inicio
+        </a>
       </div>
+
     </div>
   </div>
 
@@ -62,7 +124,6 @@
     import { getAuthPb } from './src/auth/authStore.js';
     import { bindInput, bindText, bindShow } from './src/ui/render.js';
 
-    // Atoms locales
     const $username = atom('');
     const $email = atom('');
     const $phone = atom('');
@@ -72,13 +133,13 @@
     const $error = atom('');
     const $successMessage = atom('');
 
-    // Binds
     const elUsername = document.getElementById('input-username');
     const elEmail = document.getElementById('input-email');
     const elPhone = document.getElementById('input-phone');
     const elPassword = document.getElementById('input-password');
     const elPasswordConfirm = document.getElementById('input-password-confirm');
     const elBtnRegister = document.getElementById('btn-register');
+    const elBtnText = document.getElementById('btn-text');
     const elErrorAlert = document.getElementById('error-alert');
     const elSuccessAlert = document.getElementById('success-alert');
 
@@ -92,25 +153,28 @@
     bindText(elSuccessAlert, $successMessage);
     bindShow(elSuccessAlert, $successMessage);
 
-    // Reactivos de deshabilitar botón
     const fields = [$username, $email, $phone, $password, $passwordConfirm, $loading];
     fields.forEach(f => f.subscribe(() => {
       const isInvalid = $loading.get() || !$username.get() || !$email.get() || !$phone.get() || !$password.get() || !$passwordConfirm.get();
-      if (isInvalid) elBtnRegister.setAttribute('disabled', 'true');
-      else elBtnRegister.removeAttribute('disabled');
+      elBtnRegister.disabled = isInvalid;
     }));
 
     $loading.subscribe(loading => {
-      elBtnRegister.textContent = loading ? 'Creando cuenta...' : 'Registrarse con Email';
+      elBtnText.textContent = loading ? 'Creando cuenta...' : 'Crear cuenta';
     });
 
-    async function handleRegister() {
+    async function handleRegister(e) {
+      e.preventDefault();
       if ($loading.get()) return;
       $error.set('');
       $successMessage.set('');
 
       if ($password.get() !== $passwordConfirm.get()) {
-        $error.set('Las contraseñas no coinciden');
+        $error.set('Las contrasenas no coinciden');
+        return;
+      }
+      if ($password.get().length < 8) {
+        $error.set('La contrasena debe tener al menos 8 caracteres');
         return;
       }
 
@@ -118,8 +182,6 @@
 
       try {
         const pb = getAuthPb();
-
-        // 1. Crear el usuario
         await pb.collection('users_canva').create({
           username: $username.get(),
           email: $email.get(),
@@ -130,10 +192,7 @@
           phone: $phone.get(),
           role: 'user'
         });
-
-        // 2. Solicitar verificación de email
         await pb.collection('users_canva').requestVerification($email.get());
-
         $successMessage.set('¡Cuenta creada! Revisa tu correo para verificar tu cuenta.');
         $username.set('');
         $email.set('');
@@ -148,9 +207,7 @@
     }
 
     elBtnRegister.addEventListener('click', handleRegister);
-    elPasswordConfirm.addEventListener('keydown', ev => {
-      if (ev.key === 'Enter') handleRegister();
-    });
+    elPasswordConfirm.addEventListener('keydown', ev => { if (ev.key === 'Enter') handleRegister(ev); });
   </script>
 </body>
 </html>

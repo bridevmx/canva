@@ -21,44 +21,84 @@
     body{font-family:Inter,sans-serif}
     .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;text-transform:none!important}
     .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .35s ease forwards}
+    input:-webkit-autofill{-webkit-box-shadow:0 0 0 30px rgba(15,23,42,.95) inset!important;-webkit-text-fill-color:#fff!important}
   </style>
 </head>
-<body>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4">
-    <div class="w-full max-w-sm">
+<body class="bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 overflow-y-auto selection:bg-violet-500/30">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md fade-up">
+
+      <!-- Header -->
       <div class="text-center mb-8">
-        <span class="text-5xl">🔑</span>
-        <h1 class="text-2xl font-black text-white mt-3 tracking-tight">StickerMaker</h1>
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-600/15 border border-violet-500/20 mb-5">
+          <span class="mi mi-lg text-violet-400" style="font-size:32px">vpn_key</span>
+        </div>
+        <h1 class="text-2xl font-black text-white tracking-tight">StickerMaker</h1>
         <p class="text-slate-400 text-sm mt-1">Accede a tu cuenta</p>
       </div>
-      
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4 backdrop-blur-sm shadow-xl">
-        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
-        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
 
-        <div class="space-y-4">
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Email, Usuario o Teléfono</label>
-            <input id="input-identity" type="text" placeholder="Correo, usuario o celular" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+      <!-- Card -->
+      <div class="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 backdrop-blur-xl shadow-2xl shadow-black/20">
+        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
+        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
+
+        <form class="space-y-4" onsubmit="return false">
+          <!-- Identity Field -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">person</span>
+              Email, Usuario o Teléfono
+            </label>
+            <input id="input-identity" type="text" placeholder="Correo, usuario o celular" autocomplete="username"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
           </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Contraseña</label>
-            <input id="input-password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
-            <div class="flex justify-end mt-1.5">
-              <a href="/forgot-password" class="inline-flex items-center gap-1 text-violet-400 hover:text-violet-300 text-[11px] font-bold uppercase tracking-wider transition">
+
+          <!-- Password Field -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-500">lock</span>
+              Contraseña
+            </label>
+            <input id="input-password" type="password" placeholder="••••••••" autocomplete="current-password"
+              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
+            <div class="flex justify-end mt-1">
+              <a href="/forgot-password" class="inline-flex items-center gap-1.5 text-violet-400 hover:text-violet-300 text-[11px] font-bold uppercase tracking-wider transition">
                 <span class="mi" style="font-size:14px">lock_reset</span>
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
           </div>
-          <button id="btn-submit" disabled class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-50 rounded-xl py-3 text-sm font-bold text-white transition mt-2 shadow-lg">Ingresar</button>
+
+          <!-- Submit Button -->
+          <button id="btn-submit" disabled type="submit"
+            class="w-full flex items-center justify-center gap-2.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-900/30 hover:shadow-violet-600/30 hover:-translate-y-0.5 active:translate-y-0 mt-2">
+            <span class="mi mi-sm">login</span>
+            <span id="btn-text">Ingresar</span>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 my-6">
+          <div class="flex-1 h-px bg-white/[0.06]"></div>
+          <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">o</span>
+          <div class="flex-1 h-px bg-white/[0.06]"></div>
         </div>
 
-        <p class="text-center text-slate-500 text-xs pt-3 mt-4 border-t border-white/10 leading-relaxed">
-          ¿No tienes cuenta? <a href="/register" class="text-violet-400 hover:text-violet-300 font-bold transition">Regístrate gratis</a><br><br>
-          <a href="/" class="text-slate-600 hover:text-slate-400 transition">← Volver al inicio</a>
-        </p>
+        <!-- Register link -->
+        <a href="/register" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200">
+          <span class="mi mi-sm">person_add</span>
+          ¿No tienes cuenta? Regístrate gratis
+        </a>
+
+        <!-- Back link -->
+        <a href="/" class="flex items-center justify-center gap-2 w-full py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-600 hover:text-slate-400 transition-all duration-200">
+          <span class="mi mi-sm">arrow_back</span>
+          Volver al inicio
+        </a>
       </div>
+
     </div>
   </div>
 
@@ -67,20 +107,18 @@
     import { initAuth, loginWithPassword, getAuthPb } from './src/auth/authStore.js';
     import { bindInput, bindText, bindShow, bindAttr } from './src/ui/render.js';
 
-    // Inicializar Auth de Nanostores
     await initAuth();
 
-    // Atoms locales
     const $identity = atom('');
     const $password = atom('');
     const $loading = atom(false);
     const $error = atom('');
     const $successMsg = atom('');
 
-    // Bindings de UI
     const elIdentity = document.getElementById('input-identity');
     const elPassword = document.getElementById('input-password');
     const elBtnSubmit = document.getElementById('btn-submit');
+    const elBtnText = document.getElementById('btn-text');
     const elErrorAlert = document.getElementById('error-alert');
     const elSuccessAlert = document.getElementById('success-alert');
 
@@ -91,9 +129,8 @@
     bindText(elSuccessAlert, $successMsg);
     bindShow(elSuccessAlert, $successMsg);
 
-    // Estado del botón Submit
     $loading.subscribe(loading => {
-      elBtnSubmit.textContent = loading ? 'Iniciando sesión…' : 'Ingresar';
+      elBtnText.textContent = loading ? 'Iniciando sesion...' : 'Ingresar';
       updateButtonState();
     });
 
@@ -102,20 +139,17 @@
 
     function updateButtonState() {
       const isDisabled = $loading.get() || !$identity.get() || !$password.get();
-      if (isDisabled) elBtnSubmit.setAttribute('disabled', 'true');
-      else elBtnSubmit.removeAttribute('disabled');
+      elBtnSubmit.disabled = isDisabled;
     }
 
-    // Manejador de Login
-    async function handleLogin() {
+    async function handleLogin(e) {
+      e.preventDefault();
       if ($loading.get() || !$identity.get() || !$password.get()) return;
       $error.set('');
       $loading.set(true);
 
       try {
         await loginWithPassword($identity.get(), $password.get());
-        
-        // Redirigir según el tipo de usuario o parámetro
         const ALLOWED_REDIRECTS = ['/canvas', '/dashboard'];
         const qs = new URLSearchParams(window.location.search);
         const redirect = qs.get('redirectTo');
@@ -128,9 +162,7 @@
     }
 
     elBtnSubmit.addEventListener('click', handleLogin);
-    elPassword.addEventListener('keydown', ev => {
-      if (ev.key === 'Enter') handleLogin();
-    });
+    elPassword.addEventListener('keydown', ev => { if (ev.key === 'Enter') handleLogin(ev); });
   </script>
 </body>
 </html>
