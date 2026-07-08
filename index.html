@@ -19,8 +19,6 @@
     .fade-up-2{animation-delay:.2s;opacity:0}
     .fade-up-3{animation-delay:.3s;opacity:0}
     .fade-up-4{animation-delay:.4s;opacity:0}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-    .float{animation:float 3s ease-in-out infinite}
     .product-card{transition:all .3s cubic-bezier(.4,0,.2,1)}.product-card:hover{transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(0,0,0,.15)}
     .gradient-text{background:linear-gradient(135deg,#7c3aed,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
     @keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:.7}}
@@ -34,20 +32,19 @@
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center">
-          <span class="mi mi-md text-violet-600" id="nav-brand-icon">local_florist</span>
+          <span class="mi mi-md text-violet-600" id="nav-brand-icon"></span>
         </div>
-        <span class="font-black text-xl tracking-tight text-slate-800" id="nav-brand-name">StickerMaker</span>
+        <span class="font-black text-xl tracking-tight text-slate-800" id="nav-brand-name"></span>
       </a>
       <button onclick="goToLogin()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-sm font-bold text-white transition-all shadow-lg shadow-violet-200 hover:shadow-xl hover:-translate-y-0.5">
         <span class="mi mi-sm">login</span>
-        <span id="nav-cta-text">Iniciar sesión</span>
+        <span id="nav-cta-text"></span>
       </button>
     </nav>
   </header>
 
   <!-- ═══════════ HERO ═══════════ -->
   <section class="relative overflow-hidden">
-    <!-- Background decoration -->
     <div class="absolute inset-0 -z-10">
       <div class="absolute top-20 left-10 w-72 h-72 bg-violet-300/20 rounded-full blur-3xl"></div>
       <div class="absolute top-40 right-10 w-96 h-96 bg-rose-300/15 rounded-full blur-3xl"></div>
@@ -55,39 +52,31 @@
     </div>
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-24 sm:pt-28 sm:pb-32 text-center">
-      <!-- Badge -->
       <div class="fade-up fade-up-1 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-50 border border-violet-200/60 text-violet-700 text-xs sm:text-sm font-bold uppercase tracking-widest mb-8 shadow-sm">
-        <span class="mi mi-sm text-violet-500" id="hero-badge-icon">local_printshop</span>
-        <span id="hero-badge-text">Impresión Comestible de Alta Gama</span>
+        <span class="mi mi-sm text-violet-500" id="hero-badge-icon"></span>
+        <span id="hero-badge-text"></span>
       </div>
 
-      <!-- Headline -->
       <h1 class="fade-up fade-up-2 text-4xl sm:text-5xl md:text-6xl font-black leading-[1.08] tracking-tight mb-6">
-        Eleva la repostería a
-        <span class="gradient-text">nivel obra de arte.</span>
+        <span id="hero-title"></span>
+        <br class="hidden sm:block">
+        <span class="gradient-text" id="hero-highlight"></span>
       </h1>
 
-      <!-- Subtitle -->
-      <p class="fade-up fade-up-3 text-lg sm:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed font-medium">
-        Herramientas de expertos, para los repósteros más exigentes.<br class="hidden sm:block">
-        Configura tus tamaños, elige tu lienzo y haz magia.
-      </p>
+      <p class="fade-up fade-up-3 text-lg sm:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed font-medium" id="hero-subtitle"></p>
 
-      <!-- CTA -->
       <div class="fade-up fade-up-4">
         <button onclick="goToCanvas()" class="inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 font-black text-lg text-white transition-all shadow-xl shadow-violet-200/50 hover:shadow-2xl hover:shadow-violet-300/50 hover:scale-[1.02] active:scale-[0.98]">
-          <span>Abrir Editor de Impresión</span>
-          <span class="mi mi-md">arrow_forward</span>
+          <span id="hero-cta-text"></span>
+          <span class="mi mi-md" id="hero-cta-icon"></span>
         </button>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════ PRODUCTS / FEATURES ═══════════ -->
+  <!-- ═══════════ PRODUCTS ═══════════ -->
   <section class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 sm:pb-28">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6" id="products-grid">
-      <!-- Products injected by JS -->
-    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6" id="products-grid"></div>
   </section>
 
   <!-- ═══════════ FOOTER ═══════════ -->
@@ -95,45 +84,61 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
       <div class="flex items-center justify-center gap-2 mb-3">
         <span class="mi mi-sm text-slate-400">print</span>
-        <span class="font-bold text-slate-600 text-sm">StickerMaker</span>
+        <span class="font-bold text-slate-600 text-sm" id="footer-brand"></span>
       </div>
-      <div class="flex items-center justify-center gap-3 text-xs font-semibold text-slate-400 uppercase tracking-widest">
-        <span>#ImpresionComestible</span>
-        <span class="text-slate-300">·</span>
-        <span>#ReposteriaCreativa</span>
-        <span class="text-slate-300">·</span>
-        <span>#EdiblesPrint</span>
-      </div>
+      <div class="flex items-center justify-center gap-3 text-xs font-semibold text-slate-400 uppercase tracking-widest" id="footer-tags"></div>
     </div>
   </footer>
 
-  <script>
-    function goToLogin() { window.location.href = '/login'; }
-    function goToCanvas() { window.location.href = isAuthenticated() ? '/canvas' : '/login'; }
+  <script type="module">
+    import { getVal, getProducts, getFooterTags } from './src/config/configLoader.js';
 
-    const PRODUCTS = [
-      { icon: 'local_florist',  label: 'Oblea de Arroz 0.3 mm',  tag: 'La delicada',      desc: 'Logra texturas realistas y movimientos naturales. Su flexibilidad única es ideal para encajes, mariposas y arte floral.', badge: null },
-      { icon: 'print',         label: 'Oblea de Arroz 0.4 mm',  tag: 'La todoterreno',    desc: 'El equilibrio exacto entre resistencia y flexibilidad para fotos, logotipos y aplicaciones sobre crema o fondant.', badge: null },
-      { icon: 'shield',        label: 'Oblea de Arroz 0.6 mm',  tag: 'La de alto soporte', desc: 'Rigidez extrema para tus Cake Toppers. Perfecta para figuras en pie sin soportes extra.', badge: 'Best Seller' },
-      { icon: 'cake',          label: 'Hoja de Azúcar',         tag: 'La de lujo',        desc: 'Lámina de alta resolución con acabado blanco ultra liso para colores vibrantes y acabados premium.', badge: null },
-      { icon: 'palette',       label: 'Transfer para Gelatina', tag: 'La técnica',        desc: 'Magia y precisión en tus creaciones. Diseñada para migrar la tinta de forma limpia y rápida.', badge: null },
-    ];
+    function goToLogin() { window.location.href = getVal('site', 'cta_url', '/login'); }
+    function goToCanvas() { window.location.href = isAuthenticated() ? '/canvas' : getVal('site', 'cta_url', '/login'); }
+    window.goToLogin = goToLogin;
+    window.goToCanvas = goToCanvas;
 
+    // ── Navbar ──
+    document.getElementById('nav-brand-icon').textContent = getVal('site', 'brand_icon', 'local_florist');
+    document.getElementById('nav-brand-name').textContent = getVal('site', 'brand_name', 'StickerMaker');
+    document.getElementById('nav-cta-text').textContent = getVal('site', 'cta_text', 'Iniciar sesión');
+
+    // ── Hero ──
+    document.getElementById('hero-badge-icon').textContent = getVal('landing', 'hero_badge_icon', 'local_printshop');
+    document.getElementById('hero-badge-text').textContent = getVal('landing', 'hero_badge_text', 'Impresión Comestible');
+    document.getElementById('hero-title').textContent = getVal('landing', 'hero_title', 'Eleva la repostería');
+    document.getElementById('hero-highlight').textContent = getVal('landing', 'hero_highlight', 'nivel obra de arte.');
+    document.getElementById('hero-subtitle').textContent = getVal('landing', 'hero_subtitle', '');
+    document.getElementById('hero-cta-text').textContent = getVal('landing', 'hero_cta_text', 'Abrir Editor');
+    document.getElementById('hero-cta-icon').textContent = getVal('landing', 'hero_cta_icon', 'arrow_forward');
+
+    // ── Products ──
+    const products = getProducts();
     const grid = document.getElementById('products-grid');
-    PRODUCTS.forEach((p, i) => {
+    products.forEach((p, i) => {
       const badgeHtml = p.badge
         ? `<div class="absolute top-3 right-3 bg-violet-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full pulse-badge">${p.badge}</div>`
         : '';
+      const animClass = `fade-up-${(i % 4) + 1}`;
       grid.innerHTML += `
-        <div class="product-card bg-white rounded-3xl p-7 sm:p-8 border border-slate-200/80 shadow-sm relative overflow-hidden fade-up fade-up-${(i % 4) + 1}">
+        <div class="product-card bg-white rounded-3xl p-7 sm:p-8 border border-slate-200/80 shadow-sm relative overflow-hidden fade-up ${animClass}">
           ${badgeHtml}
           <div class="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center mb-5">
             <span class="mi mi-lg text-violet-500">${p.icon}</span>
           </div>
-          <h3 class="font-black text-lg text-slate-800 mb-0.5">${p.label}</h3>
-          <span class="text-violet-500 text-[11px] font-bold uppercase tracking-wider mb-3 block">${p.tag}</span>
+          <h3 class="font-black text-lg text-slate-800 mb-0.5">${p.title}</h3>
+          <span class="text-violet-500 text-[11px] font-bold uppercase tracking-wider mb-3 block">${p.tagline}</span>
           <p class="text-slate-500 text-sm leading-relaxed">${p.desc}</p>
         </div>`;
+    });
+
+    // ── Footer ──
+    document.getElementById('footer-brand').textContent = getVal('site', 'brand_name', 'StickerMaker');
+    const tags = getFooterTags();
+    const tagsEl = document.getElementById('footer-tags');
+    tags.forEach((t, i) => {
+      if (i > 0) tagsEl.innerHTML += '<span class="text-slate-300">·</span>';
+      tagsEl.innerHTML += `<span>${t}</span>`;
     });
   </script>
 </body>
