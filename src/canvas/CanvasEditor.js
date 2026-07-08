@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.4';
-import { ImageItem }      from './ImageItem.js?v=1.9.4';
-import { TextItem }       from './TextItem.js?v=1.9.4';
-import { ShapeItem }     from './ShapeItem.js?v=1.9.4';
-import { CropController } from './CropController.js?v=1.9.4';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.5';
+import { ImageItem }      from './ImageItem.js?v=1.9.5';
+import { TextItem }       from './TextItem.js?v=1.9.5';
+import { ShapeItem }     from './ShapeItem.js?v=1.9.5';
+import { CropController } from './CropController.js?v=1.9.5';
 
-import { HistoryManager } from './HistoryManager.js?v=1.9.4';
-import { GuidesManager }  from './GuidesManager.js?v=1.9.4';
-import { PointerController } from './PointerController.js?v=1.9.4';
-import { PaperManager }   from './PaperManager.js?v=1.9.4';
-import { FONTS }          from '../pb.config.js?v=1.9.4';
+import { HistoryManager } from './HistoryManager.js?v=1.9.5';
+import { GuidesManager }  from './GuidesManager.js?v=1.9.5';
+import { PointerController } from './PointerController.js?v=1.9.5';
+import { PaperManager }   from './PaperManager.js?v=1.9.5';
+import { FONTS }          from '../pb.config.js?v=1.9.5';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -46,6 +46,19 @@ export class CanvasEditor {
       if (this.selectedIds.size === 0) this.selectedIds.add(id);
     } else {
       this.selectedIds = new Set([id]);
+    }
+    this._expandSelectionToGroups();
+  }
+
+  _expandSelectionToGroups() {
+    const groupIds = new Set();
+    for (const id of this.selectedIds) {
+      const item = this.items.find(i => i.id === id);
+      if (item?.groupId) groupIds.add(item.groupId);
+    }
+    if (groupIds.size === 0) return;
+    for (const item of this.items) {
+      if (item.groupId && groupIds.has(item.groupId)) this.selectedIds.add(item.id);
     }
   }
   clearSelection() { this.selectedIds.clear(); }
@@ -101,6 +114,7 @@ export class CanvasEditor {
     if (this.selectedIds.size === 0) return;
     const sheet = this.paper.sheet;
     const newIds = [];
+    const groupMap = new Map();
     for (const s of this.items.filter(i => this.selectedIds.has(i.id))) {
       const c = s.clone();
       c.id = this.uid();
@@ -108,10 +122,64 @@ export class CanvasEditor {
       c.y = Math.min(s.y + 25, sheet.h - s.h);
       c.z = this.nextZ();
       c.page = this.paper.activePage;
+      if (c.groupId) {
+        if (!groupMap.has(c.groupId)) groupMap.set(c.groupId, this.uid());
+        c.groupId = groupMap.get(c.groupId);
+      }
       this.items.push(c);
       newIds.push(c.id);
     }
     this.selectedIds = new Set(newIds);
+    this.history.push();
+  }
+
+  copySelected() {
+    if (this.selectedIds.size === 0) return;
+    this.clipboard = this.items
+      .filter(i => this.selectedIds.has(i.id))
+      .map(i => i.clone());
+    this.pasteOffset = 0;
+  }
+
+  paste() {
+    if (!this.clipboard || this.clipboard.length === 0) return;
+    this.pasteOffset = (this.pasteOffset || 0) + 30;
+    const sheet = this.paper.sheet;
+    const newIds = [];
+    const groupMap = new Map();
+    for (const src of this.clipboard) {
+      const c = src.clone();
+      c.id = this.uid();
+      c.x = Math.min(src.x + this.pasteOffset, sheet.w - c.w);
+      c.y = Math.min(src.y + this.pasteOffset, sheet.h - c.h);
+      c.z = this.nextZ();
+      c.page = this.paper.activePage;
+      c.locked = false;
+      if (c.groupId) {
+        if (!groupMap.has(c.groupId)) groupMap.set(c.groupId, this.uid());
+        c.groupId = groupMap.get(c.groupId);
+      }
+      this.items.push(c);
+      newIds.push(c.id);
+    }
+    this.selectedIds = new Set(newIds);
+    this.history.push();
+  }
+
+  groupSelected() {
+    if (this.selectedIds.size < 2) return;
+    const groupId = this.uid();
+    for (const item of this.items) {
+      if (this.selectedIds.has(item.id)) item.groupId = groupId;
+    }
+    this.history.push();
+  }
+
+  ungroupSelected() {
+    if (this.selectedIds.size === 0) return;
+    for (const item of this.items) {
+      if (this.selectedIds.has(item.id)) item.groupId = null;
+    }
     this.history.push();
   }
 
@@ -359,6 +427,23 @@ export class CanvasEditor {
       ev.preventDefault(); this.duplicateSelected();
       window.dispatchEvent(new CustomEvent('editor:change'));
     }
+    if (ev.key.toLowerCase() === 'c' && (ev.ctrlKey || ev.metaKey) && this.selectedIds.size > 0) {
+      ev.preventDefault(); this.copySelected();
+    }
+    if (ev.key.toLowerCase() === 'v' && (ev.ctrlKey || ev.metaKey)) {
+      if (this.clipboard && this.clipboard.length > 0) {
+        ev.preventDefault(); this.paste();
+        window.dispatchEvent(new CustomEvent('editor:change'));
+      }
+    }
+    if (ev.key.toLowerCase() === 'g' && (ev.ctrlKey || ev.metaKey) && !ev.shiftKey && this.selectedIds.size > 1) {
+      ev.preventDefault(); this.groupSelected();
+      window.dispatchEvent(new CustomEvent('editor:change'));
+    }
+    if (ev.key.toLowerCase() === 'g' && (ev.ctrlKey || ev.metaKey) && ev.shiftKey && this.selectedIds.size > 0) {
+      ev.preventDefault(); this.ungroupSelected();
+      window.dispatchEvent(new CustomEvent('editor:change'));
+    }
     if (ev.key.toLowerCase() === 'z' && (ev.ctrlKey || ev.metaKey)) {
       ev.preventDefault(); ev.shiftKey ? this.history.redo() : this.history.undo();
       window.dispatchEvent(new CustomEvent('editor:change'));
@@ -367,7 +452,11 @@ export class CanvasEditor {
       ev.preventDefault(); this.history.redo();
       window.dispatchEvent(new CustomEvent('editor:change'));
     }
-    if (ev.key.toLowerCase() === 'g' && (ev.ctrlKey || ev.metaKey)) {
+    if (ev.key === '?' && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+      ev.preventDefault();
+      window.dispatchEvent(new CustomEvent('editor:show-shortcuts'));
+    }
+    if (ev.key.toLowerCase() === 'g' && (ev.ctrlKey || ev.metaKey) && ev.altKey) {
       ev.preventDefault(); this.toggleGrid();
       window.dispatchEvent(new CustomEvent('editor:change'));
     }

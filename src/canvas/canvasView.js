@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.9.4';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.9.4';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.9.4';
-import { AuthManager } from '../auth/AuthManager.js?v=1.9.4';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.9.4';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.9.4';
+import { CanvasEditor } from './CanvasEditor.js?v=1.9.5';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.9.5';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.9.5';
+import { AuthManager } from '../auth/AuthManager.js?v=1.9.5';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.9.5';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.9.5';
 
 
 const PX_PER_CM = 37.8095;
@@ -253,8 +253,23 @@ function duplicateSelected() {
   editor.duplicateSelected();
   sync();
 }
+function copySelected() {
+  editor.copySelected();
+}
+function paste() {
+  editor.paste();
+  sync();
+}
 function deleteSelected() {
   editor.deleteSelected();
+  sync();
+}
+function groupSelected() {
+  editor.groupSelected();
+  sync();
+}
+function ungroupSelected() {
+  editor.ungroupSelected();
   sync();
 }
 function bringForward() {
@@ -458,8 +473,8 @@ export {
   undo, redo, canUndo, canRedo, pushHistory,
   printCanvas,
   setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
-  addText, addShape, handleFiles, duplicateSelected, deleteSelected,
-  bringForward, sendToBack, moveOneUp, moveOneDown,
+  addText, addShape, handleFiles, duplicateSelected, copySelected, paste, deleteSelected,
+  bringForward, sendToBack, moveOneUp, moveOneDown, groupSelected, ungroupSelected,
   alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
   distributeHorizontal, distributeVertical,
   flipHorizontal, flipVertical,

@@ -109,17 +109,17 @@
     <!-- FILA 2: Herramientas -->
     <div class="flex items-center overflow-x-auto tb-scroll px-2 border-b border-slate-200 min-h-[48px] gap-0.5">
       
-      <button id="tool-btn-imagen" class="tbtn shrink-0" title="Agregar imagen (Ctrl+V para pegar)">
-        <span class="tbtn-icon">🖼️</span><span class="tbtn-label">Imagen</span>
+      <button id="tool-btn-imagen" class="tbtn shrink-0" title="Agregar imagen">
+        <span class="tbtn-icon">🖼️</span><span class="tbtn-label hidden sm:inline">Imagen</span>
       </button>
       <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
 
       <button id="tool-btn-texto" class="tbtn shrink-0" title="Agregar texto">
-        <span class="tbtn-icon">📝</span><span class="tbtn-label">Texto</span>
+        <span class="tbtn-icon">📝</span><span class="tbtn-label hidden sm:inline">Texto</span>
       </button>
 
       <button id="tool-btn-forma" class="tbtn shrink-0" title="Agregar forma">
-        <span class="tbtn-icon">▭</span><span class="tbtn-label">Forma</span>
+        <span class="tbtn-icon">▭</span><span class="tbtn-label hidden sm:inline">Forma</span>
       </button>
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
@@ -133,11 +133,26 @@
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
+      <button id="tool-btn-copiar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Copiar (Ctrl+C)">
+        <span class="tbtn-icon">📄</span><span class="tbtn-label hidden sm:inline">Copiar</span>
+      </button>
+      <button id="tool-btn-pegar" class="tbtn shrink-0" title="Pegar (Ctrl+V)">
+        <span class="tbtn-icon">📋</span><span class="tbtn-label hidden sm:inline">Pegar</span>
+      </button>
       <button id="tool-btn-duplicar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Duplicar (Ctrl+D)">
-        <span class="tbtn-icon">📋</span><span class="tbtn-label">Duplicar</span>
+        <span class="tbtn-icon">🔄</span><span class="tbtn-label hidden sm:inline">Duplicar</span>
       </button>
       <button id="tool-btn-eliminar" disabled class="tbtn shrink-0 text-red-500 hover:bg-red-50 disabled:opacity-40 disabled:text-slate-400 disabled:hover:bg-transparent disabled:cursor-not-allowed" title="Eliminar (Supr)">
-        <span class="tbtn-icon">🗑️</span><span class="tbtn-label">Eliminar</span>
+        <span class="tbtn-icon">🗑️</span><span class="tbtn-label hidden sm:inline">Eliminar</span>
+      </button>
+
+      <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+
+      <button id="tool-btn-grupo" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Agrupar (Ctrl+G)">
+        <span class="tbtn-icon">🔗</span><span class="tbtn-label hidden sm:inline">Agrupar</span>
+      </button>
+      <button id="tool-btn-desagrupar" disabled class="tbtn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Desagrupar (Ctrl+Shift+G)">
+        <span class="tbtn-icon">✂️</span><span class="tbtn-label hidden sm:inline">Desagrupar</span>
       </button>
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
@@ -149,7 +164,7 @@
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <button id="tool-btn-grid" class="tbtn shrink-0" title="Alternar Cuadrícula (Ctrl+G)">
+      <button id="tool-btn-grid" class="tbtn shrink-0" title="Alternar Cuadrícula (Ctrl+Alt+G)">
         <span id="grid-icon" class="tbtn-icon text-slate-600">📏</span>
         <span id="grid-label" class="tbtn-label whitespace-nowrap">Cuadrícula</span>
       </button>
@@ -177,6 +192,8 @@
         <button id="tool-btn-zoom-in" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-base transition" title="Zoom in">+</button>
         <div class="w-px h-4 bg-slate-200 mx-1"></div>
         <button id="tool-btn-fit" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition" title="Ajustar a pantalla">FIT</button>
+        <div class="w-px h-4 bg-slate-200 mx-1"></div>
+        <button id="tool-btn-ayuda" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-700 font-bold text-sm transition" title="Atajos de teclado (?)">?</button>
       </div>
     </div>
 
@@ -238,6 +255,38 @@
     </div>
   </div>
 
+  <!-- ══════════════ MODAL DE ATAJOS ══════════════ -->
+  <div id="shortcuts-modal" class="hidden no-print fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <h2 class="text-base font-black text-slate-800 tracking-tight">Atajos de teclado</h2>
+        <button id="shortcuts-close-btn" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-200 rounded-lg p-1 transition leading-none text-xl">&times;</button>
+      </div>
+      <div class="p-4 overflow-y-auto tb-scroll text-sm">
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+          <span class="font-bold text-slate-700">Ctrl + Z</span><span class="text-slate-600">Deshacer</span>
+          <span class="font-bold text-slate-700">Ctrl + Y / Ctrl + Shift + Z</span><span class="text-slate-600">Rehacer</span>
+          <span class="font-bold text-slate-700">Ctrl + C</span><span class="text-slate-600">Copiar</span>
+          <span class="font-bold text-slate-700">Ctrl + V</span><span class="text-slate-600">Pegar</span>
+          <span class="font-bold text-slate-700">Ctrl + D</span><span class="text-slate-600">Duplicar</span>
+          <span class="font-bold text-slate-700">Supr / Backspace</span><span class="text-slate-600">Eliminar</span>
+          <span class="font-bold text-slate-700">Ctrl + G</span><span class="text-slate-600">Agrupar</span>
+          <span class="font-bold text-slate-700">Ctrl + Shift + G</span><span class="text-slate-600">Desagrupar</span>
+          <span class="font-bold text-slate-700">Ctrl + ]</span><span class="text-slate-600">Subir capa</span>
+          <span class="font-bold text-slate-700">Ctrl + [</span><span class="text-slate-600">Bajar capa</span>
+          <span class="font-bold text-slate-700">Ctrl + Shift + ]</span><span class="text-slate-600">Traer al frente</span>
+          <span class="font-bold text-slate-700">Ctrl + Shift + [</span><span class="text-slate-600">Enviar al fondo</span>
+          <span class="font-bold text-slate-700">Ctrl + Alt + G</span><span class="text-slate-600">Alternar cuadrícula</span>
+          <span class="font-bold text-slate-700">Flechas</span><span class="text-slate-600">Mover 1px (Shift = 10px)</span>
+          <span class="font-bold text-slate-700">?</span><span class="text-slate-600">Mostrar atajos</span>
+        </div>
+      </div>
+      <div class="p-3 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-end">
+        <button id="shortcuts-done-btn" class="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-200 transition text-xs">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════════ CANVAS ══════════════ -->
   <main id="canvas-main"
     class="flex-1 overflow-auto bg-slate-200/60 flex flex-col items-center justify-start p-4 sm:p-8 print:p-0 print:bg-white print:overflow-visible print:block relative">
@@ -263,11 +312,11 @@
 
   <!-- Estilos de botones de toolbar -->
   <style>
-    .tbtn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 8px;border-radius:8px;color:#374151;transition:background .15s;cursor:pointer;border:none;background:transparent}
+    .tbtn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 6px;border-radius:8px;color:#374151;transition:background .15s;cursor:pointer;border:none;background:transparent}
     .tbtn:hover{background:#f1f5f9}
     @media(min-width:640px){.tbtn{flex-direction:row;gap:6px;padding:6px 10px}}
     .tbtn-icon{font-size:1.125rem;line-height:1}
-    .tbtn-label{font-size:10px;font-weight:500;line-height:1}
+    .tbtn-label{font-size:9px;font-weight:500;line-height:1}
     @media(min-width:640px){.tbtn-icon{font-size:.875rem}.tbtn-label{font-size:.875rem}}
   </style>
 
@@ -284,8 +333,8 @@
     select, clearSelection, syncZoom, zoomIn, zoomOut, zoomPercent, fitZoom,
     undo, redo, canUndo, canRedo, pushHistory,
     printCanvas, setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
-    addText, addShape, handleFiles, duplicateSelected, deleteSelected,
-    bringForward, sendToBack, moveOneUp, moveOneDown,
+    addText, addShape, handleFiles, duplicateSelected, copySelected, paste, deleteSelected,
+    bringForward, sendToBack, moveOneUp, moveOneDown, groupSelected, ungroupSelected,
     alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
     distributeHorizontal, distributeVertical,
     flipHorizontal, flipVertical,
@@ -296,9 +345,9 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.9.4';
+  } from './src/canvas/canvasView.js?v=1.9.5';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.4';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.5';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -314,6 +363,7 @@
   const elFileInput = document.getElementById('file-input');
   const elInputPageBg = document.getElementById('input-page-bg');
   const elSaveModal = document.getElementById('save-modal');
+  const elShortcutsModal = document.getElementById('shortcuts-modal');
   const elSaveAdminBtn = document.getElementById('btn-save-admin');
   const elImprimirBtn = document.getElementById('btn-imprimir-cliente');
   const elCropButtons = document.getElementById('crop-buttons');
@@ -388,8 +438,12 @@
 
   document.getElementById('tool-btn-undo').addEventListener('click', undo);
   document.getElementById('tool-btn-redo').addEventListener('click', redo);
+  document.getElementById('tool-btn-copiar').addEventListener('click', copySelected);
+  document.getElementById('tool-btn-pegar').addEventListener('click', paste);
   document.getElementById('tool-btn-duplicar').addEventListener('click', duplicateSelected);
   document.getElementById('tool-btn-eliminar').addEventListener('click', deleteSelected);
+  document.getElementById('tool-btn-grupo').addEventListener('click', groupSelected);
+  document.getElementById('tool-btn-desagrupar').addEventListener('click', ungroupSelected);
 
   // Save/Print buttons
   document.getElementById('btn-save-admin-btn').addEventListener('click', () => saveProject());
@@ -421,6 +475,15 @@
   document.getElementById('save-modal').addEventListener('click', e => {
     if (e.target === e.currentTarget) $isSaveModalOpen.set(false);
   });
+
+  // Shortcuts modal
+  function openShortcutsModal() { elShortcutsModal.classList.remove('hidden'); }
+  function closeShortcutsModal() { elShortcutsModal.classList.add('hidden'); }
+  document.getElementById('tool-btn-ayuda').addEventListener('click', openShortcutsModal);
+  document.getElementById('shortcuts-close-btn').addEventListener('click', closeShortcutsModal);
+  document.getElementById('shortcuts-done-btn').addEventListener('click', closeShortcutsModal);
+  elShortcutsModal.addEventListener('click', e => { if (e.target === e.currentTarget) closeShortcutsModal(); });
+  window.addEventListener('editor:show-shortcuts', openShortcutsModal);
 
   // Modal quantity
   const elInputQty = document.getElementById('input-quantity');
@@ -512,13 +575,26 @@
   // ── Habilitar/deshabilitar botones de toolbar ──
   $selectedIds.subscribe(ids => {
     const selected = ids.length > 0;
-    ['tool-btn-duplicar', 'tool-btn-eliminar'].forEach(bid => {
+    const multi = ids.length > 1;
+    const hasGroup = selected && getSelectedAll().some(i => i.groupId);
+    const actionButtons = ['tool-btn-duplicar', 'tool-btn-eliminar', 'tool-btn-copiar'];
+    actionButtons.forEach(bid => {
       const b = document.getElementById(bid);
       if (b) {
         if (selected) b.removeAttribute('disabled');
         else b.setAttribute('disabled', 'true');
       }
     });
+    const btnGroup = document.getElementById('tool-btn-grupo');
+    if (btnGroup) {
+      if (multi) btnGroup.removeAttribute('disabled');
+      else btnGroup.setAttribute('disabled', 'true');
+    }
+    const btnUngroup = document.getElementById('tool-btn-desagrupar');
+    if (btnUngroup) {
+      if (hasGroup) btnUngroup.removeAttribute('disabled');
+      else btnUngroup.setAttribute('disabled', 'true');
+    }
     // Undo/redo
     document.getElementById('tool-btn-undo').toggleAttribute('disabled', !canUndo());
     document.getElementById('tool-btn-redo').toggleAttribute('disabled', !canRedo());

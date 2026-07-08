@@ -47,6 +47,7 @@ export class StickerItem {
     this.locked   = cfg.locked ?? false;
     this.page     = cfg.page ?? 1;
     this.z        = cfg.z ?? 1;
+    this.groupId  = cfg.groupId ?? null;
   }
 
   static fromJSON(data) {

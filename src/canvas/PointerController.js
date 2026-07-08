@@ -1,6 +1,6 @@
 // PointerController.js — Drag/resize/rotate. FIX BUG B: swap w/h en rotación 90°/270°.
 
-import { clamp, getRotatedBounds } from './StickerItem.js?v=1.9.4';
+import { clamp, getRotatedBounds } from './StickerItem.js?v=1.9.5';
 
 const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize' };
 
@@ -27,7 +27,10 @@ export class PointerController {
   startDrag(item, ev) {
     if (this.editor.crop.active || item.locked) { this.editor.select(item.id); return; }
     this.editor.select(item.id);
-    this.action = { mode: ACTION.DRAG, id: item.id, startX: ev.clientX, startY: ev.clientY, itemX: item.x, itemY: item.y };
+    const group = item.groupId
+      ? this.editor.items.filter(i => i.groupId === item.groupId).map(i => ({ id: i.id, x: i.x, y: i.y }))
+      : [];
+    this.action = { mode: ACTION.DRAG, id: item.id, startX: ev.clientX, startY: ev.clientY, itemX: item.x, itemY: item.y, group };
     document.body.classList.add('drag-locked');
   }
 
@@ -81,7 +84,11 @@ export class PointerController {
     el.style.top     = item.y + 'px';
     el.style.width   = item.w + 'px';
     el.style.height  = item.h + 'px';
-    el.style.transform = item.rotation ? `rotate(${item.rotation}deg)` : 'none';
+    let t = '';
+    if (item.flipX) t += ' scaleX(-1)';
+    if (item.flipY) t += ' scaleY(-1)';
+    if (item.rotation) t += ` rotate(${item.rotation}deg)`;
+    el.style.transform = t.trim() || 'none';
   }
 
   _applyCropStyle() {
@@ -151,6 +158,19 @@ export class PointerController {
 
       item.x = clamp(nx, minX, maxX);
       item.y = clamp(ny, minY, maxY);
+
+      // Mover miembros del grupo con el mismo delta
+      const actualDx = item.x - action.itemX;
+      const actualDy = item.y - action.itemY;
+      for (const gi of action.group || []) {
+        if (gi.id === item.id) continue;
+        const member = editor.items.find(i => i.id === gi.id);
+        if (!member) continue;
+        const mb = getRotatedBounds(member.w, member.h, member.rotation);
+        member.x = clamp(gi.x + actualDx, -mb.offsetX, sheet.w - member.w + mb.offsetX);
+        member.y = clamp(gi.y + actualDy, -mb.offsetY, sheet.h - member.h + mb.offsetY);
+        this._applyStyle(member);
+      }
 
       // Re-calcular guías en la posición final (snapped/clamped) para dibujarlas
       editor.guides.compute(item, editor.items, item.x, item.y);
