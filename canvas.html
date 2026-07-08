@@ -274,16 +274,18 @@
 
 <script type="module">
   import {
-    $items, $selectedId, $canvasZoom, $showGrid, $cropActive, $cropId,
+    $items, $selectedIds, $canvasZoom, $showGrid, $cropActive, $cropId,
     $editingTextId, $isSaving, $isPrinting, $isSaveModalOpen,
     $materialType, $printQuantity, $projectTitle,
     $pagesCount, $activePage, $pageColors, $guides, $fonts, $products,
-    initCanvas, sync, getSelected, getSheet, sortedItems, itemsOnPage, itemStyle,
+    initCanvas, sync, getSelected, getSelectedAll, getSheet, sortedItems, itemsOnPage, itemStyle,
     select, clearSelection, syncZoom, zoomIn, zoomOut, zoomPercent, fitZoom,
     undo, redo, canUndo, canRedo, pushHistory,
     printCanvas, setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
     addText, addShape, handleFiles, duplicateSelected, deleteSelected,
     bringForward, sendToBack, moveOneUp, moveOneDown,
+    alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
+    distributeHorizontal, distributeVertical,
     toggleGrid, startCropMode, applyCrop, cancelCropMode, cropBoxStyle, getCropHandles,
     gridFill, resetProject,
     getRulerXStyle, getRulerYStyle, getGridStyle,
@@ -291,7 +293,7 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.8.0';
+  } from './src/canvas/canvasView.js?v=1.8.1';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -503,8 +505,8 @@
   });
 
   // ── Habilitar/deshabilitar botones de toolbar ──
-  $selectedId.subscribe(id => {
-    const selected = !!id;
+  $selectedIds.subscribe(ids => {
+    const selected = ids.length > 0;
     ['tool-btn-duplicar', 'tool-btn-eliminar'].forEach(bid => {
       const b = document.getElementById(bid);
       if (b) {
@@ -528,8 +530,9 @@
 
   function updateCropButtonVisibility() {
     const sel = getSelected();
-    const isImage = sel && sel.type === 'image';
-    const isCropActive = $cropActive.get() && $cropId.get() === ($selectedId.get());
+    const selectedIds = $selectedIds.get();
+    const isImage = sel && sel.type === 'image' && selectedIds.length === 1;
+    const isCropActive = $cropActive.get() && selectedIds.length === 1 && $cropId.get() === selectedIds[0];
 
     elCropButtons.classList.toggle('hidden', !isImage);
     if (isImage) {
@@ -551,7 +554,7 @@
     const sheet = getSheet();
     const showGrid = $showGrid.get();
     const items = sortedItems().filter(i => (i.page || 1) === activePage);
-    const selectedId = $selectedId.get();
+    const selectedIds = new Set($selectedIds.get());
     const cropActive = $cropActive.get();
     const cropId = $cropId.get();
 
@@ -578,9 +581,9 @@
 
     // Items
     items.forEach(item => {
-      const isSelected = item.id === selectedId;
+      const isSelected = selectedIds.has(item.id);
       const isCropping = cropActive && cropId === item.id;
-      const showHandles = isSelected && !item.locked && !isCropping;
+      const showHandles = isSelected && selectedIds.size === 1 && !item.locked && !isCropping;
 
       const itemEl = document.createElement('div');
       itemEl.className = 'item' + (isSelected ? ' selected' : '') + (item.locked ? ' locked-item' : '');
@@ -596,8 +599,8 @@
       itemEl.style.opacity = style.opacity;
       itemEl.style.cursor = style.cursor;
 
-      itemEl.addEventListener('pointerdown', e => { e.stopPropagation(); onItemPointerDown(e, item.id); });
-      itemEl.addEventListener('click', e => { e.stopPropagation(); select(item.id); });
+      itemEl.addEventListener('pointerdown', e => { e.stopPropagation(); onItemPointerDown(e, item.id, e.ctrlKey || e.metaKey); });
+      itemEl.addEventListener('click', e => { e.stopPropagation(); select(item.id, e.ctrlKey || e.metaKey); });
       itemEl.addEventListener('dblclick', e => {
         e.stopPropagation();
         if (item.type === 'text' && !item.locked) $editingTextId.set(item.id);
@@ -761,9 +764,11 @@
   // ── Property Bars ──
   function renderPropertyBars() {
     const sel = getSelected();
+    const selectedAll = getSelectedAll();
+    const hasSelection = selectedAll.length > 0;
 
     // Desktop
-    if (sel) {
+    if (hasSelection) {
       elPropsBarEmpty.classList.add('hidden');
       elPropsBarContent.classList.remove('hidden');
       elPropsBarDesktop.classList.remove('hidden');
@@ -771,22 +776,23 @@
       elPropsBarEmpty.classList.remove('hidden');
       elPropsBarContent.classList.add('hidden');
     }
-    renderPropContent(elPropsBarContent, sel, false);
-    renderMobileProps(sel);
+    renderPropContent(elPropsBarContent, sel, selectedAll, false);
+    renderMobileProps(sel, selectedAll);
   }
 
-  function renderMobileProps(sel) {
+  function renderMobileProps(sel, selectedAll) {
     elPropsBarMobile.innerHTML = '';
-    if (!sel) {
+    if (selectedAll.length === 0) {
       elPropsBarMobile.classList.add('hidden');
       return;
     }
     elPropsBarMobile.classList.remove('hidden');
-    renderPropContent(elPropsBarMobile, sel, true);
+    renderPropContent(elPropsBarMobile, sel, selectedAll, true);
   }
 
-  function renderPropContent(container, sel, isMobile) {
-    if (!sel) { container.innerHTML = ''; return; }
+  function renderPropContent(container, sel, selectedAll, isMobile) {
+    if (selectedAll.length === 0) { container.innerHTML = ''; return; }
+    const multi = selectedAll.length > 1;
     let h = '';
 
     const labelClass = 'text-[10px] font-bold text-slate-400 uppercase tracking-wider';
@@ -801,8 +807,27 @@
     h += `<button class="prop-move-down ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}">↓</button>`;
     h += '</div>';
 
-    // Lock
-    h += `<button class="prop-toggle-lock ${isMobile ? 'px-2 py-1 rounded text-xs font-semibold border-r border-slate-200 pr-2 mr-0 transition' : 'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition border-r border-slate-200 pr-3'}" style="${sel.locked ? 'bg-amber-100 text-amber-700' : (isMobile ? 'bg-white border border-slate-200 text-slate-600' : 'hover:bg-slate-200 text-slate-600')}">${sel.locked ? '🔒 Bloq.' : '🔓 Libre'}</button>`;
+    if (multi) {
+      // Alineación
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Alinear</span>`;
+      h += `<button class="prop-align-left px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Izquierda">⬅</button>`;
+      h += `<button class="prop-align-center-h px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Centro horizontal">↔</button>`;
+      h += `<button class="prop-align-right px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Derecha">➡</button>`;
+      h += `<button class="prop-align-top px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Arriba">⬆</button>`;
+      h += `<button class="prop-align-center-v px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Centro vertical">↕</button>`;
+      h += `<button class="prop-align-bottom px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Abajo">⬇</button>`;
+      h += '</div>';
+
+      // Distribución
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Distribuir</span>`;
+      h += `<button class="prop-distribute-h px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Distribuir horizontal">↔⇄</button>`;
+      h += `<button class="prop-distribute-v px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs" title="Distribuir vertical">↕⇅</button>`;
+      h += '</div>';
+    } else {
+      // Lock (solo un item)
+      h += `<button class="prop-toggle-lock ${isMobile ? 'px-2 py-1 rounded text-xs font-semibold border-r border-slate-200 pr-2 mr-0 transition' : 'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition border-r border-slate-200 pr-3'}" style="${sel.locked ? 'bg-amber-100 text-amber-700' : (isMobile ? 'bg-white border border-slate-200 text-slate-600' : 'hover:bg-slate-200 text-slate-600')}">${sel.locked ? '🔒 Bloq.' : '🔓 Libre'}</button>`;
 
     // Opacidad
     h += `<div class="${groupClass}">`;
@@ -887,7 +912,7 @@
       h += '</div>';
     }
 
-    // Grid fill
+    // Grid fill (siempre visible con selección)
     h += `<div class="border-l border-slate-200 pl-${isMobile ? '2' : '3'} ${isMobile ? '' : 'ml-auto'} shrink-0">`;
     h += `<button class="prop-grid-fill flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-700 hover:text-violet-700 text-xs font-semibold transition ${isMobile ? '' : 'border border-slate-200 hover:border-violet-300'}">⊞ ${isMobile ? 'Llenar' : 'Llenar hoja'}</button>`;
     h += '</div>';
@@ -902,6 +927,17 @@
     container.querySelector('.prop-send-back')?.addEventListener('click', sendToBack);
     container.querySelector('.prop-move-up')?.addEventListener('click', moveOneUp);
     container.querySelector('.prop-move-down')?.addEventListener('click', moveOneDown);
+
+    // Alineación / distribución (multi-selección)
+    container.querySelector('.prop-align-left')?.addEventListener('click', () => { alignLeft(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-align-center-h')?.addEventListener('click', () => { alignCenterH(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-align-right')?.addEventListener('click', () => { alignRight(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-align-top')?.addEventListener('click', () => { alignTop(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-align-center-v')?.addEventListener('click', () => { alignCenterV(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-align-bottom')?.addEventListener('click', () => { alignBottom(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-distribute-h')?.addEventListener('click', () => { distributeHorizontal(); pushHistory(); renderSheet(); });
+    container.querySelector('.prop-distribute-v')?.addEventListener('click', () => { distributeVertical(); pushHistory(); renderSheet(); });
+
     container.querySelector('.prop-toggle-lock')?.addEventListener('click', () => {
       sel.locked = !sel.locked;
       pushHistory();
@@ -1041,7 +1077,6 @@
       });
     }
 
-    // Image trim/restore listeners
   }
 
   function escapeHtml(str) {
@@ -1051,7 +1086,7 @@
   }
 
   // ── Reactividad de items ──
-  // $selectedId y $cropActive ya llaman scheduleRenderSheet() en suscripciones de toolbar.
+  // $selectedIds y $cropActive ya llaman scheduleRenderSheet() en suscripciones de toolbar.
   $items.subscribe(() => scheduleRenderSheet());
   $cropId.subscribe(() => scheduleRenderSheet());
   $editingTextId.subscribe(() => scheduleRenderSheet());

@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.8.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.8.0';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.8.0';
-import { AuthManager } from '../auth/AuthManager.js?v=1.8.0';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.8.0';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.8.0';
+import { CanvasEditor } from './CanvasEditor.js?v=1.8.1';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.8.1';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.8.1';
+import { AuthManager } from '../auth/AuthManager.js?v=1.8.1';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.8.1';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.8.1';
 
 
 const PX_PER_CM = 37.8095;
@@ -17,7 +17,7 @@ let auth = null;
 
 // ── Átomos reactivos ──
 const $items = atom([]);
-const $selectedId = atom(null);
+const $selectedIds = atom([]);
 const $canvasZoom = atom(1.0);
 const $showGrid = atom(false);
 const $cropActive = atom(false);
@@ -38,16 +38,20 @@ const $products = atom(PRODUCTS);
 
 // ── Helpers ──
 function getSelected() {
-  return $items.get().find(i => i.id === $selectedId.get()) || null;
+  const ids = $selectedIds.get();
+  return ids.length ? $items.get().find(i => i.id === ids[0]) || null : null;
 }
-
+function getSelectedAll() {
+  const ids = new Set($selectedIds.get());
+  return $items.get().filter(i => ids.has(i.id));
+}
 function getSheet() {
   return editor.paper.sheet;
 }
 
 function sync() {
   $items.set([...editor.items]);
-  $selectedId.set(editor.selectedId);
+  $selectedIds.set([...editor.selectedIds]);
   $cropActive.set(editor.crop.active);
   $cropId.set(editor.crop.id);
   $canvasZoom.set(editor.canvasZoom);
@@ -126,13 +130,13 @@ function _bindResize(canvasMainRef) {
 }
 
 // ── Selection ──
-function select(id) {
-  editor.select(id);
-  $selectedId.set(id);
+function select(id, additive = false) {
+  editor.select(id, additive);
+  $selectedIds.set([...editor.selectedIds]);
 }
 function clearSelection() {
   editor.clearSelection();
-  $selectedId.set(null);
+  $selectedIds.set([]);
 }
 
 // ── Zoom ──
@@ -302,6 +306,16 @@ function gridFill() {
   sync();
 }
 
+// ── Alineación / Distribución ──
+function alignLeft()        { editor.alignLeft();        sync(); }
+function alignCenterH()     { editor.alignCenterH();     sync(); }
+function alignRight()       { editor.alignRight();       sync(); }
+function alignTop()         { editor.alignTop();         sync(); }
+function alignCenterV()     { editor.alignCenterV();     sync(); }
+function alignBottom()      { editor.alignBottom();      sync(); }
+function distributeHorizontal() { editor.distributeHorizontal(); sync(); }
+function distributeVertical()   { editor.distributeVertical();   sync(); }
+
 // ── Reset ──
 function resetProject() {
   if (!confirm('¿Borrar todo el lienzo e iniciar un nuevo proyecto?')) return;
@@ -325,19 +339,20 @@ function capturePointer(ev) {
   } catch {}
 }
 
-function onItemPointerDown(ev, id) {
+function onItemPointerDown(ev, id, additive = false) {
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
+  if (additive) return; // Ctrl/Cmd+click se maneja en el evento click para multi-selección
   if (item.locked) { select(id); return; }
   editor.pointer.startDrag(item, ev);
-  $selectedId.set(id);
+  select(id);
   capturePointer(ev);
 }
 function onResizeHandlePointerDown(ev, id, handle) {
   const item = editor.items.find(i => i.id === id);
   if (!item) return;
   editor.pointer.startResize(item, ev, handle);
-  $selectedId.set(id);
+  select(id);
   capturePointer(ev);
 }
 function onRotateHandlePointerDown(ev, id) {
@@ -345,7 +360,7 @@ function onRotateHandlePointerDown(ev, id) {
   if (!item) return;
   const sheetRect = ev.currentTarget.closest('.sheet').getBoundingClientRect();
   editor.pointer.startRotate(item, sheetRect, ev);
-  $selectedId.set(id);
+  select(id);
   capturePointer(ev);
 }
 
@@ -427,14 +442,14 @@ function setCurrentPageColor(v) {
 
 // ── Exports ──
 export {
-  $items, $selectedId, $canvasZoom, $showGrid, $cropActive, $cropId,
+  $items, $selectedIds, $canvasZoom, $showGrid, $cropActive, $cropId,
   $editingTextId, $isSaving, $isPrinting, $isSaveModalOpen,
   $materialType, $printQuantity, $projectTitle,
   $pagesCount, $activePage, $pageColors, $guides, $fonts, $products,
 };
 
 export {
-  initCanvas, sync, getSelected, getSheet, sortedItems, itemsOnPage, itemStyle,
+  initCanvas, sync, getSelected, getSelectedAll, getSheet, sortedItems, itemsOnPage, itemStyle,
   select, clearSelection,
   syncZoom, zoomIn, zoomOut, zoomPercent, fitZoom,
   undo, redo, canUndo, canRedo, pushHistory,
@@ -442,6 +457,8 @@ export {
   setPage, addPage, deletePage, updatePaperSize, injectPrintCss,
   addText, addShape, handleFiles, duplicateSelected, deleteSelected,
   bringForward, sendToBack, moveOneUp, moveOneDown,
+  alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
+  distributeHorizontal, distributeVertical,
   toggleGrid,
   startCropMode, applyCrop, cancelCropMode, cropBoxStyle, getCropHandles,
   gridFill, resetProject,

@@ -1,6 +1,6 @@
 // HistoryManager.js — Snapshots JSON para undo/redo
 
-import { StickerItem } from './StickerItem.js?v=1.8.0';
+import { StickerItem } from './StickerItem.js?v=1.8.1';
 
 const MAX_HISTORY = 60;
 
@@ -38,6 +38,6 @@ export class HistoryManager {
   _restore() {
     const data = JSON.parse(this.history[this.index]);
     this.editor.items = data.map(d => StickerItem.fromJSON(d));
-    this.editor.selectedId = null;
+    this.editor.clearSelection();
   }
 }
