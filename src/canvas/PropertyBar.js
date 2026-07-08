@@ -34,8 +34,8 @@ export class PropertyBar {
     // ── Capas ──────────────────────────────────────────────────────────────
     h += `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
     if (!isMobile) h += `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>`;
-    h += pbBtn('prop-bring-forward', 'flip_to_front', 'Traer al frente (Ctrl+Shift+])');
-    h += pbBtn('prop-send-back',    'flip_to_back',  'Enviar al fondo (Ctrl+Shift+[)');
+    h += pbBtn('prop-bring-forward', 'vertical_align_top', 'Traer al frente (Ctrl+Shift+])');
+    h += pbBtn('prop-send-back',    'vertical_align_bottom',  'Enviar al fondo (Ctrl+Shift+[)');
     h += pbBtn('prop-move-up',      'arrow_upward',  'Subir capa (Ctrl+])');
     h += pbBtn('prop-move-down',    'arrow_downward','Bajar capa (Ctrl+[)');
     h += `</div>`;
@@ -89,8 +89,8 @@ export class PropertyBar {
   _flipHtml(sel, isMobile) {
     let h = `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
     if (!isMobile) h += `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1">Voltear</span>`;
-    h += `<button class="pb-btn prop-flip-x ${sel.flipX ? 'pb-btn-active' : ''}" title="Voltear horizontal">${mi('flip')}</button>`;
-    h += `<button class="pb-btn prop-flip-y ${sel.flipY ? 'pb-btn-active' : ''}" title="Voltear vertical" style="transform:rotate(90deg)">${mi('flip')}</button>`;
+    h += `<button class="pb-btn prop-flip-x ${sel.flipX ? 'pb-btn-active' : ''}" title="Voltear horizontal">${mi('swap_horiz')}</button>`;
+    h += `<button class="pb-btn prop-flip-y ${sel.flipY ? 'pb-btn-active' : ''}" title="Voltear vertical">${mi('swap_vert')}</button>`;
     h += `</div>`;
     return h;
   }

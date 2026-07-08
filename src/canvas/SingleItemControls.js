@@ -99,7 +99,7 @@ export class SingleItemControls {
       // Texto curvo
       h += `<div class="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">`;
       if (!isMobile) h += `<span class="${LABEL}">Curvo</span>`;
-      h += `<button class="pb-btn prop-text-curve-toggle${sel.textCurved ? ' pb-btn-active' : ''}" title="Texto curvo">${mi('360')}</button>`;
+      h += `<button class="pb-btn prop-text-curve-toggle${sel.textCurved ? ' pb-btn-active' : ''}" title="Texto curvo">${mi('text_rotation_down')}</button>`;
       if (sel.textCurved) {
         h += `<input type="range" value="${sel.textArcRadius ?? 200}" min="30" max="600" step="10" class="prop-text-arc-radius ${isMobile ? 'w-14' : 'w-20'} h-1.5 accent-violet-600 cursor-pointer" title="Radio del arco" />`;
         h += `<span class="text-[10px] text-slate-500 w-7 tabular-nums">${sel.textArcRadius ?? 200}</span>`;
@@ -109,7 +109,7 @@ export class SingleItemControls {
       // Sombra
       h += `<div class="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">`;
       if (!isMobile) h += `<span class="${LABEL}">Sombra</span>`;
-      h += `<button class="pb-btn prop-text-shadow-toggle${sel.textShadow ? ' pb-btn-active' : ''}" title="Sombra de texto">${mi('wb_twilight')}</button>`;
+      h += `<button class="pb-btn prop-text-shadow-toggle${sel.textShadow ? ' pb-btn-active' : ''}" title="Sombra de texto">${mi('blur_on')}</button>`;
       if (sel.textShadow) {
         h += `<input type="color" value="${sel.shadowColor || '#000000'}" class="prop-shadow-color w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5 bg-white" title="Color de sombra" />`;
         h += `<input type="number" value="${sel.shadowBlur ?? 4}" min="0" max="50" class="prop-shadow-blur w-10 px-1 py-0.5 border border-slate-200 rounded text-[11px] text-center focus:outline-none" title="Desenfoque" />`;
@@ -119,7 +119,7 @@ export class SingleItemControls {
       // Contorno
       h += `<div class="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">`;
       if (!isMobile) h += `<span class="${LABEL}">Contorno</span>`;
-      h += `<button class="pb-btn prop-text-outline-toggle${sel.textOutline ? ' pb-btn-active' : ''}" title="Contorno de texto">${mi('format_color_text')}</button>`;
+      h += `<button class="pb-btn prop-text-outline-toggle${sel.textOutline ? ' pb-btn-active' : ''}" title="Contorno de texto">${mi('border_color')}</button>`;
       if (sel.textOutline) {
         h += `<input type="color" value="${sel.outlineColor || '#ffffff'}" class="prop-outline-color w-6 h-6 rounded cursor-pointer border border-slate-200 p-0.5 bg-white" title="Color de contorno" />`;
         h += `<input type="number" value="${sel.outlineWidth ?? 1}" min="0.5" max="10" step="0.5" class="prop-outline-width w-10 px-1 py-0.5 border border-slate-200 rounded text-[11px] text-center focus:outline-none" title="Ancho" />`;
