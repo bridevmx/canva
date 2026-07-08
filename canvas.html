@@ -294,9 +294,9 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.9.1';
+  } from './src/canvas/canvasView.js?v=1.9.2';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.1';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.2';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -552,6 +552,7 @@
 
   // ── Render Sheet ──
   function renderSheet() {
+    console.count('[renderSheet] calls');
     const activePage = $activePage.get();
     const bg = $pageColors.get()[activePage] || '#ffffff';
     const sheet = getSheet();
