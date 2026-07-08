@@ -106,6 +106,36 @@
       .pb-btn{width:40px;height:40px}
       .pb-btn .mi{font-size:22px}
     }
+    /* ── Bottom Nav (móvil) ── */
+    #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;background:white;border-top:1px solid #e2e8f0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+    @media(max-width:767px){#bottom-nav{display:flex}}
+    .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;border:none;background:transparent;cursor:pointer;color:#64748b;transition:color .15s;-webkit-tap-highlight-color:transparent;min-height:56px}
+    .bnav-btn .mi{font-size:24px;line-height:1}
+    .bnav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1}
+    .bnav-btn.active{color:#7c3aed}
+    .bnav-btn.active .mi{font-variation-settings:'FILL' 1}
+    .bnav-btn:disabled{opacity:.35;cursor:not-allowed}
+    /* ── Bottom Sheet (móvil props) ── */
+    #props-sheet{position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:none;max-height:70vh;overflow:hidden;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+    #props-sheet.sheet-open{transform:translateY(0)}
+    @media(max-width:767px){#props-sheet{display:flex}}
+    #props-sheet-handle{width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px}
+    #props-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;shrink-0}
+    #props-sheet-title{font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em}
+    #props-sheet-close{width:28px;height:28px;border-radius:9999px;border:none;background:#f1f5f9;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b}
+    #props-sheet-body{overflow-x:auto;overflow-y:hidden;padding:0 12px 12px;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+    #props-sheet-body::-webkit-scrollbar{display:none}
+    /* overlay del sheet */
+    #props-sheet-overlay{position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s}
+    #props-sheet-overlay.visible{opacity:1}
+    @media(max-width:767px){#props-sheet-overlay.open{display:block}}
+    /* padding inferior del canvas en móvil para no quedar bajo bottom-nav */
+    @media(max-width:767px){
+      #canvas-main{padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))!important}
+    }
+    /* Filas del sheet "Más" */
+    .more-row-btn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 8px;border:none;background:transparent;cursor:pointer;border-radius:12px;font-size:15px;font-weight:600;color:#1e293b;text-align:left;-webkit-tap-highlight-color:transparent;transition:background .12s}
+    .more-row-btn:hover,.more-row-btn:active{background:#f8fafc}
   </style>
 </head>
 <body>
@@ -195,8 +225,8 @@
       </div>
     </div>
 
-    <!-- FILA 2: Toolbar de herramientas -->
-    <div class="flex items-center overflow-x-auto tb-scroll px-1 border-b border-slate-100 bg-white min-h-[52px] gap-0.5">
+    <!-- FILA 2: Toolbar de herramientas (solo desktop ≥md; móvil usa bottom-nav) -->
+    <div class="hidden md:flex items-center overflow-x-auto tb-scroll px-1 border-b border-slate-100 bg-white min-h-[52px] gap-0.5">
 
       <!-- Añadir elementos -->
       <button id="tool-btn-imagen" class="tbtn shrink-0" title="Agregar imagen">
@@ -280,8 +310,8 @@
       <div id="props-bar-content" class="hidden flex items-center gap-2 whitespace-nowrap"></div>
     </div>
 
-    <!-- FILA 3b: Propiedades Mobile (<md) -->
-    <div id="props-bar-mobile" class="md:hidden w-full bg-slate-50 border-b border-slate-100 px-2 py-1 flex items-center gap-1.5 overflow-x-auto tb-scroll min-h-[46px] shrink-0"></div>
+    <!-- FILA 3b: Propiedades Mobile — se mueve al bottom sheet, oculto aquí -->
+    <div id="props-bar-mobile" class="hidden"></div>
 
   </header>
 
@@ -413,6 +443,98 @@
     <div id="layers-overlay" class="no-print hidden fixed inset-0 bg-slate-900/20 z-40 sm:hidden"></div>
   </div>
 
+  <!-- ══════════════ BOTTOM NAV (móvil) ══════════════ -->
+  <nav id="bottom-nav" class="no-print" aria-label="Navegación móvil">
+
+    <!-- Añadir -->
+    <button id="bnav-add" class="bnav-btn" title="Añadir elemento">
+      <span class="mi">add_circle</span>
+      <span class="bnav-label">Añadir</span>
+    </button>
+
+    <!-- Editar / Propiedades -->
+    <button id="bnav-edit" class="bnav-btn" disabled title="Propiedades del elemento seleccionado">
+      <span class="mi">tune</span>
+      <span class="bnav-label">Editar</span>
+    </button>
+
+    <!-- Capas -->
+    <button id="bnav-layers" class="bnav-btn" title="Panel de capas">
+      <span class="mi">layers</span>
+      <span class="bnav-label">Capas</span>
+    </button>
+
+    <!-- Deshacer -->
+    <button id="bnav-undo" class="bnav-btn" disabled title="Deshacer (Ctrl+Z)">
+      <span class="mi">undo</span>
+      <span class="bnav-label">Deshacer</span>
+    </button>
+
+    <!-- Más acciones -->
+    <button id="bnav-more" class="bnav-btn" title="Más acciones">
+      <span class="mi">more_horiz</span>
+      <span class="bnav-label">Más</span>
+    </button>
+
+  </nav>
+
+  <!-- ══════════════ BOTTOM SHEET — AÑADIR (móvil) ══════════════ -->
+  <div id="add-sheet-overlay" class="no-print" style="position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s"></div>
+  <div id="add-sheet" class="no-print" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
+    <div style="width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px;flex-shrink:0"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;flex-shrink:0">
+      <span style="font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em">Añadir elemento</span>
+      <button id="add-sheet-close" style="width:28px;height:28px;border-radius:9999px;border:none;background:#f1f5f9;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b"><span class="mi" style="font-size:18px">close</span></button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 16px 16px">
+      <button id="add-sheet-imagen" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:16px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;color:#475569;font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent">
+        <span class="mi" style="font-size:32px;color:#3b82f6">image</span>Imagen
+      </button>
+      <button id="add-sheet-texto" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:16px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;color:#475569;font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent">
+        <span class="mi" style="font-size:32px;color:#8b5cf6">text_fields</span>Texto
+      </button>
+      <button id="add-sheet-forma" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:16px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;color:#475569;font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent">
+        <span class="mi" style="font-size:32px;color:#10b981">category</span>Forma
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════ BOTTOM SHEET — PROPIEDADES (móvil) ══════════════ -->
+  <div id="props-sheet-overlay" class="no-print"></div>
+  <div id="props-sheet" class="no-print">
+    <div id="props-sheet-handle"></div>
+    <div id="props-sheet-header">
+      <span id="props-sheet-title">Propiedades</span>
+      <button id="props-sheet-close"><span class="mi" style="font-size:16px">close</span></button>
+    </div>
+    <div id="props-sheet-body"></div>
+  </div>
+
+  <!-- ══════════════ BOTTOM SHEET — MÁS ACCIONES (móvil) ══════════════ -->
+  <div id="more-sheet-overlay" class="no-print" style="position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s"></div>
+  <div id="more-sheet" class="no-print" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
+    <div style="width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px;flex-shrink:0"></div>
+    <div style="padding:0 16px 10px;flex-shrink:0">
+      <span style="font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em">Más acciones</span>
+    </div>
+    <div style="display:flex;flex-direction:column;padding:0 12px 12px;gap:2px">
+      <!-- Acciones de ítem -->
+      <div id="more-item-actions" class="hidden" style="display:none;flex-direction:column;gap:2px">
+        <button id="more-btn-duplicar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#6366f1">copy_all</span><span>Duplicar</span></button>
+        <button id="more-btn-eliminar" class="more-row-btn" style="color:#ef4444"><span class="mi" style="font-size:22px">delete</span><span>Eliminar</span></button>
+        <button id="more-btn-grupo" class="more-row-btn"><span class="mi" style="font-size:22px;color:#0ea5e9">group_work</span><span>Agrupar</span></button>
+        <button id="more-btn-desagrupar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#0ea5e9">ungroup</span><span>Desagrupar</span></button>
+        <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+      </div>
+      <!-- Acciones globales -->
+      <button id="more-btn-pegar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#64748b">content_paste</span><span>Pegar</span></button>
+      <button id="more-btn-grid" class="more-row-btn"><span id="more-grid-icon" class="mi" style="font-size:22px;color:#64748b">grid_on</span><span id="more-grid-label">Cuadrícula</span></button>
+      <button id="more-btn-ayuda" class="more-row-btn"><span class="mi" style="font-size:22px;color:#64748b">help_outline</span><span>Atajos de teclado</span></button>
+      <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+      <button id="more-btn-imprimir" class="more-row-btn" style="color:#059669"><span class="mi" style="font-size:22px">print</span><span>Imprimir</span></button>
+    </div>
+  </div>
+
 
 </div>
 </body>
@@ -472,13 +594,11 @@
   const elCropStartWrap = document.getElementById('crop-start-btn-wrap');
   const elCropActionsWrap = document.getElementById('crop-actions-wrap');
   const elGridIcon = document.getElementById('grid-icon');
-  const elGridLabel = document.getElementById('grid-label');
   const elHeaderUsername = document.getElementById('header-username');
   const elBtnAdmin = document.getElementById('btn-admin');
   const elPropsBarDesktop = document.getElementById('props-bar-desktop');
   const elPropsBarContent = document.getElementById('props-bar-content');
   const elPropsBarEmpty = document.getElementById('props-bar-empty');
-  const elPropsBarMobile = document.getElementById('props-bar-mobile');
 
   // ── Debounce de renderSheet ──
   // Se define antes que cualquier suscripción para evitar TDZ.
@@ -526,8 +646,10 @@
   $isSaving.subscribe(saving => {
     const btn = document.getElementById('btn-save-admin-btn');
     if (!btn) return;
-    btn.querySelector('span:first-child').textContent = saving ? '⏳' : '💾';
-    btn.querySelector('span:last-child').textContent = saving ? 'Guardando...' : 'GUARDAR CAMBIOS';
+    const iconEl = btn.querySelector('.mi');
+    const labelEl = btn.querySelector('span:not(.mi)');
+    if (iconEl) iconEl.textContent = saving ? 'hourglass_top' : 'save';
+    if (labelEl) labelEl.textContent = saving ? 'Guardando...' : 'Guardar';
     if (saving) btn.setAttribute('disabled', 'true');
     else btn.removeAttribute('disabled');
   });
@@ -699,9 +821,7 @@
 
   // ── Grid toggle reactivo ──
   $showGrid.subscribe(show => {
-    elGridIcon.classList.toggle('text-violet-600', show);
-    elGridLabel.classList.toggle('text-violet-600', show);
-    elGridLabel.classList.toggle('font-bold', show);
+    elGridIcon?.classList.toggle('text-violet-600', show);
     scheduleRenderSheet();
   });
 
@@ -762,6 +882,8 @@
   $items.subscribe(() => {
     document.getElementById('tool-btn-undo').toggleAttribute('disabled', !canUndo());
     document.getElementById('tool-btn-redo').toggleAttribute('disabled', !canRedo());
+    // Sync bottom nav undo
+    document.getElementById('bnav-undo')?.toggleAttribute('disabled', !canUndo());
   });
 
   // ── Render Sheet ──
@@ -1042,6 +1164,133 @@
     lifecycle: { pushHistory, sync, renderSheet, renderPropertyBars }
   });
 
+  // ── Bottom Nav + Bottom Sheets (móvil) ──────────────────────────────────
+  {
+    // ── Helpers genéricos de sheet ──
+    function openSheet(sheetEl, overlayEl) {
+      sheetEl.classList.add('sheet-open');
+      overlayEl.style.display = 'block';
+      requestAnimationFrame(() => overlayEl.style.opacity = '1');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeSheet(sheetEl, overlayEl) {
+      sheetEl.classList.remove('sheet-open');
+      overlayEl.style.opacity = '0';
+      setTimeout(() => {
+        overlayEl.style.display = 'none';
+        document.body.style.overflow = '';
+      }, 280);
+    }
+
+    const _sheets = {
+      add:   { el: document.getElementById('add-sheet'),   ov: document.getElementById('add-sheet-overlay')  },
+      props: { el: document.getElementById('props-sheet'), ov: document.getElementById('props-sheet-overlay') },
+      more:  { el: document.getElementById('more-sheet'),  ov: document.getElementById('more-sheet-overlay')  },
+    };
+
+    function openOnly(name) {
+      Object.entries(_sheets).forEach(([k, s]) => {
+        if (k === name) openSheet(s.el, s.ov);
+        else closeSheet(s.el, s.ov);
+      });
+      ['bnav-add','bnav-edit','bnav-layers','bnav-more'].forEach(id => {
+        document.getElementById(id)?.classList.remove('active');
+      });
+      const map = { add: 'bnav-add', props: 'bnav-edit', more: 'bnav-more' };
+      if (map[name]) document.getElementById(map[name])?.classList.add('active');
+    }
+    function closeAll() {
+      Object.values(_sheets).forEach(s => closeSheet(s.el, s.ov));
+      ['bnav-add','bnav-edit','bnav-more'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    }
+
+    // Cerrar con overlay
+    Object.values(_sheets).forEach(s => s.ov.addEventListener('click', closeAll));
+    document.getElementById('add-sheet-close')?.addEventListener('click', closeAll);
+    document.getElementById('props-sheet-close')?.addEventListener('click', closeAll);
+
+    // ── Props Sheet ──
+    function renderPropsSheet() {
+      const body = document.getElementById('props-sheet-body');
+      const title = document.getElementById('props-sheet-title');
+      const sel = getSelected();
+      const selectedAll = getSelectedAll();
+      if (!body) return;
+      if (selectedAll.length === 0) {
+        body.innerHTML = '<span style="color:#94a3b8;font-size:12px">Selecciona un elemento</span>';
+        return;
+      }
+      const typeMap = { image: 'Imagen', text: 'Texto', shape: 'Forma' };
+      if (title) title.textContent = selectedAll.length > 1
+        ? `${selectedAll.length} elementos` : (typeMap[sel?.type] || 'Elemento');
+      propertyBar.render(body, sel, selectedAll, true);
+    }
+
+    // Exponer para que renderPropertyBars pueda llamarlo
+    window._renderPropsSheet = renderPropsSheet;
+    window._propsSheetEl = () => _sheets.props.el;
+
+    // ── Listeners ──
+    document.getElementById('bnav-add')?.addEventListener('click', () => {
+      _sheets.add.el.classList.contains('sheet-open') ? closeAll() : openOnly('add');
+    });
+    document.getElementById('bnav-edit')?.addEventListener('click', () => {
+      if (_sheets.props.el.classList.contains('sheet-open')) closeAll();
+      else { renderPropsSheet(); openOnly('props'); }
+    });
+    document.getElementById('bnav-layers')?.addEventListener('click', () => { closeAll(); toggleLayersPanel(); });
+    document.getElementById('bnav-undo')?.addEventListener('click', undo);
+    document.getElementById('bnav-more')?.addEventListener('click', () => {
+      if (_sheets.more.el.classList.contains('sheet-open')) closeAll();
+      else { updateMoreSheet(); openOnly('more'); }
+    });
+
+    // Add sheet
+    document.getElementById('add-sheet-imagen')?.addEventListener('click', () => { closeAll(); elFileInput.click(); });
+    document.getElementById('add-sheet-texto')?.addEventListener('click',  () => { closeAll(); addText(); });
+    document.getElementById('add-sheet-forma')?.addEventListener('click',  () => { closeAll(); addShape('rect'); });
+
+    // Sync bnav-edit / bnav-undo al cambiar selección
+    $selectedIds.subscribe(ids => {
+      const hasSelection = ids.length > 0;
+      document.getElementById('bnav-edit')?.toggleAttribute('disabled', !hasSelection);
+      document.getElementById('bnav-undo')?.toggleAttribute('disabled', !canUndo());
+      if (_sheets.props.el.classList.contains('sheet-open')) {
+        if (hasSelection) renderPropsSheet();
+        else closeAll();
+      }
+    });
+
+    // More sheet
+    function updateMoreSheet() {
+      const ids = $selectedIds.get();
+      const hasSelection = ids.length > 0;
+      const multi = ids.length > 1;
+      const hasGroup = hasSelection && getSelectedAll().some(i => i.groupId);
+      const moreItemActions = document.getElementById('more-item-actions');
+      if (moreItemActions) moreItemActions.style.display = hasSelection ? 'flex' : 'none';
+      document.getElementById('more-btn-duplicar')?.toggleAttribute('disabled', !hasSelection);
+      document.getElementById('more-btn-eliminar')?.toggleAttribute('disabled', !hasSelection);
+      document.getElementById('more-btn-grupo')?.toggleAttribute('disabled', !multi);
+      document.getElementById('more-btn-desagrupar')?.toggleAttribute('disabled', !hasGroup);
+      const gridOn = $showGrid.get();
+      const mgi = document.getElementById('more-grid-icon');
+      const mgl = document.getElementById('more-grid-label');
+      if (mgi) mgi.textContent = gridOn ? 'grid_off' : 'grid_on';
+      if (mgl) mgl.textContent = gridOn ? 'Ocultar cuadrícula' : 'Cuadrícula';
+    }
+
+    document.getElementById('more-btn-duplicar')?.addEventListener('click',   () => { closeAll(); duplicateSelected(); });
+    document.getElementById('more-btn-eliminar')?.addEventListener('click',    () => { closeAll(); deleteSelected(); });
+    document.getElementById('more-btn-grupo')?.addEventListener('click',       () => { closeAll(); groupSelected(); });
+    document.getElementById('more-btn-desagrupar')?.addEventListener('click',  () => { closeAll(); ungroupSelected(); });
+    document.getElementById('more-btn-pegar')?.addEventListener('click',       () => { closeAll(); paste(); });
+    document.getElementById('more-btn-grid')?.addEventListener('click', () => { toggleGrid(!$showGrid.get()); closeAll(); });
+    document.getElementById('more-btn-ayuda')?.addEventListener('click',    () => { closeAll(); openShortcutsModal(); });
+    document.getElementById('more-btn-imprimir')?.addEventListener('click', () => { closeAll(); $isSaveModalOpen.set(true); });
+  }
+  // ── Fin Bottom Nav ───────────────────────────────────────────────────────
+
   function renderPropertyBars() {
     const sel = getSelected();
     const selectedAll = getSelectedAll();
@@ -1051,19 +1300,20 @@
       elPropsBarEmpty.classList.add('hidden');
       elPropsBarContent.classList.remove('hidden');
       elPropsBarDesktop.classList.remove('hidden');
-      elPropsBarMobile.classList.remove('hidden');
     } else {
       elPropsBarEmpty.classList.remove('hidden');
       elPropsBarContent.classList.add('hidden');
       elPropsBarDesktop.classList.add('hidden');
-      elPropsBarMobile.classList.add('hidden');
-      elPropsBarMobile.innerHTML = '';
       elPropsBarContent.innerHTML = '';
       return;
     }
 
     propertyBar.render(elPropsBarContent, sel, selectedAll, false);
-    propertyBar.render(elPropsBarMobile, sel, selectedAll, true);
+
+    // Si el props-sheet móvil está abierto, sincronizarlo también
+    if (window._propsSheetEl?.()?.classList.contains('sheet-open')) {
+      window._renderPropsSheet?.();
+    }
   }
 
   // ── Rubber‑band selection ──
