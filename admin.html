@@ -7,65 +7,151 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
   <script src="auth.js"></script>
-  <script>
-    if (!isAuthenticated()) { window.location.replace('/login'); }
-    else if (!isAdmin()) { window.location.replace('/canvas'); }
-  </script>
+  <script>if(!isAuthenticated()){window.location.replace('/login')}else if(!isAdmin()){window.location.replace('/canvas')}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:Inter,sans-serif}
+    .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;text-transform:none!important}
+    .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
+    .stat-card{transition:all .2s ease}.stat-card:hover{transform:translateY(-2px)}
+    .order-row{transition:all .2s ease}.order-row:hover{background:#f8fafc}
+    .shimmer{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}to{background-position:-200% 0}}
+    .admin-btn{transition:all .15s ease;user-select:none}.admin-btn:active{transform:scale(.95)}
+    .filter-btn{transition:all .15s ease}
+    @media(pointer:coarse){.admin-btn{padding:10px 14px!important;min-height:44px}.stat-card{padding:1rem!important}}
+  </style>
 </head>
-<body>
-  <div id="app" class="min-h-screen bg-slate-100">
-    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-50">
-      <div onclick="window.location.href='/admin'" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" title="Ir al Dashboard Admin">
-        <span class="text-xl">🏠</span>
-        <span class="font-bold text-slate-800">StickerMaker</span>
-        <span class="text-xs bg-violet-100 text-violet-700 rounded-full px-2 py-0.5 font-bold ml-1">Admin</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <button onclick="window.location.href='/canvas'" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
-          ✏️ Canvas
-        </button>
-        <span id="user-name" class="text-sm text-slate-500 hidden sm:inline truncate max-w-[120px]"></span>
-        <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition">
-          Salir
-        </button>
+<body class="bg-slate-100 min-h-screen selection:bg-violet-100">
+
+  <div id="app" class="min-h-screen">
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div onclick="window.location.href='/admin'" class="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition">
+          <span class="mi mi-md text-violet-600">admin_panel_settings</span>
+          <span class="font-black text-slate-800 tracking-tight text-lg">StickerMaker</span>
+          <span class="text-[10px] bg-violet-100 text-violet-700 rounded-full px-2 py-0.5 font-black ml-0.5 uppercase tracking-wider">Admin</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.location.href='/canvas'" class="admin-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+            <span class="mi mi-sm">brush</span>
+            <span class="hidden sm:inline">Canvas</span>
+          </button>
+          <span id="user-name" class="text-sm text-slate-400 font-semibold hidden sm:inline truncate max-w-[120px]"></span>
+          <button id="btn-logout" class="admin-btn px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition flex items-center gap-1.5">
+            <span class="mi mi-sm">logout</span>
+            <span class="hidden sm:inline">Salir</span>
+          </button>
+        </div>
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-6">
-      <!-- Estadísticas -->
+    <main class="max-w-6xl mx-auto px-4 py-6">
+
+      <!-- ═══════════ STATS ═══════════ -->
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
-          <p id="stat-total" class="text-3xl font-black text-slate-800 mt-1">0</p>
+        <div class="stat-card bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="mi mi-sm text-slate-400">inventory_2</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
+          </div>
+          <p id="stat-total" class="text-2xl sm:text-3xl font-black text-slate-800">0</p>
         </div>
-        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
-          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Recibidos</p>
-          <p id="stat-recibido" class="text-3xl font-black text-amber-700 mt-1">0</p>
+        <div class="stat-card bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="mi mi-sm text-amber-500">pending_actions</span>
+            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Recibidos</span>
+          </div>
+          <p id="stat-recibido" class="text-2xl sm:text-3xl font-black text-amber-700">0</p>
         </div>
-        <div class="bg-violet-50 rounded-2xl p-4 border border-violet-200 shadow-sm">
-          <p class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">En Ajuste</p>
-          <p id="stat-ajuste_diseno" class="text-3xl font-black text-violet-700 mt-1">0</p>
+        <div class="stat-card bg-violet-50 rounded-2xl p-4 border border-violet-200 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="mi mi-sm text-violet-500">edit_note</span>
+            <span class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">En Ajuste</span>
+          </div>
+          <p id="stat-ajuste_diseno" class="text-2xl sm:text-3xl font-black text-violet-700">0</p>
         </div>
-        <div class="bg-blue-50 rounded-2xl p-4 border border-blue-200 shadow-sm">
-          <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Producción</p>
-          <p id="stat-produccion" class="text-3xl font-black text-blue-700 mt-1">0</p>
+        <div class="stat-card bg-blue-50 rounded-2xl p-4 border border-blue-200 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="mi mi-sm text-blue-500">manufacturing</span>
+            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Producción</span>
+          </div>
+          <p id="stat-produccion" class="text-2xl sm:text-3xl font-black text-blue-700">0</p>
         </div>
-        <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 shadow-sm">
-          <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Finalizados</p>
-          <p id="stat-finalizado" class="text-3xl font-black text-emerald-700 mt-1">0</p>
+        <div class="stat-card bg-emerald-50 rounded-2xl p-4 border border-emerald-200 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="mi mi-sm text-emerald-500">check_circle</span>
+            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Finalizados</span>
+          </div>
+          <p id="stat-finalizado" class="text-2xl sm:text-3xl font-black text-emerald-700">0</p>
         </div>
       </div>
 
-      <!-- Filtros -->
-      <div class="flex items-center gap-2 mb-4 flex-wrap">
-        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Filtrar:</span>
-        <div id="filter-buttons" class="flex items-center gap-2 flex-wrap"></div>
-        <button id="btn-refresh" class="ml-auto px-3 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-semibold transition flex items-center gap-1">
-          <span id="refresh-icon">↻</span> Actualizar
+      <!-- ═══════════ FILTROS ═══════════ -->
+      <div class="flex items-center gap-2 mb-5 flex-wrap">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+          <span class="mi mi-sm">filter_list</span>
+          <span class="hidden sm:inline">Filtrar:</span>
+        </span>
+        <div id="filter-buttons" class="flex items-center gap-1.5 flex-wrap"></div>
+        <button id="btn-refresh" class="admin-btn ml-auto px-3 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-bold transition flex items-center gap-1.5">
+          <span id="refresh-icon" class="mi mi-sm">refresh</span>
+          <span class="hidden sm:inline">Actualizar</span>
         </button>
       </div>
 
-      <!-- Lista de Pedidos -->
+      <!-- ═══════════ LOADING SKELETON ═══════════ -->
+      <div id="loading-skeleton" class="hidden space-y-3">
+        <div class="bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 space-y-2">
+              <div class="shimmer w-48 h-5 rounded"></div>
+              <div class="shimmer w-32 h-4 rounded"></div>
+            </div>
+            <div class="flex gap-2">
+              <div class="shimmer w-16 h-8 rounded-xl"></div>
+              <div class="shimmer w-20 h-8 rounded-xl"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 hidden sm:block">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 space-y-2">
+              <div class="shimmer w-56 h-5 rounded"></div>
+              <div class="shimmer w-40 h-4 rounded"></div>
+            </div>
+            <div class="flex gap-2">
+              <div class="shimmer w-16 h-8 rounded-xl"></div>
+              <div class="shimmer w-20 h-8 rounded-xl"></div>
+              <div class="shimmer w-24 h-8 rounded-xl"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ EMPTY STATE ═══════════ -->
+      <div id="empty-state" class="hidden text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+        <div class="mi mi-lg text-slate-300 mb-4">inbox</div>
+        <h3 class="text-xl font-black text-slate-800">No hay pedidos</h3>
+        <p class="text-slate-400 font-medium mt-1.5 text-sm">Aún no se han registrado pedidos.</p>
+      </div>
+
+      <!-- ═══════════ ERROR STATE ═══════════ -->
+      <div id="error-state" class="hidden text-center py-16 bg-white rounded-3xl border-2 border-red-200">
+        <div class="mi mi-lg text-red-300 mb-4">error_outline</div>
+        <h3 class="text-xl font-black text-slate-800">Error al cargar</h3>
+        <p class="text-slate-400 font-medium mt-1.5 mb-6 text-sm">No se pudieron cargar los pedidos.</p>
+        <button id="btn-retry" class="admin-btn inline-flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-400 text-white font-bold text-sm rounded-xl transition">
+          <span class="mi mi-sm">refresh</span>
+          <span>Reintentar</span>
+        </button>
+      </div>
+
+      <!-- ═══════════ ORDERS LIST ═══════════ -->
       <div id="orders-list" class="space-y-3"></div>
     </main>
   </div>
@@ -78,41 +164,47 @@
 
     const $orders = atom([]);
     const $loading = atom(false);
+    const $error = atom(false);
     const $filter = atom('todos');
     const $printingId = atom(null);
 
     const pb = getAuthPb();
     const FILTERS = ['todos', 'recibido', 'ajuste_diseno', 'produccion', 'finalizado', 'cancelado', 'error'];
-    const STATUS_COLORS = {
-      recibido: 'bg-amber-100 text-amber-700',
-      ajuste_diseno: 'bg-violet-100 text-violet-700',
-      produccion: 'bg-blue-100 text-blue-700',
-      finalizado: 'bg-emerald-100 text-emerald-700',
-      cancelado: 'bg-slate-100 text-slate-500',
-      error: 'bg-red-600 text-white animate-pulse'
+    const STATUS_META = {
+      recibido:      { label: 'Recibido',      badge: 'bg-amber-100 text-amber-700' },
+      ajuste_diseno: { label: 'Ajuste Diseño', badge: 'bg-violet-100 text-violet-700' },
+      produccion:    { label: 'Producción',    badge: 'bg-blue-100 text-blue-700' },
+      finalizado:    { label: 'Finalizado',    badge: 'bg-emerald-100 text-emerald-700' },
+      cancelado:     { label: 'Cancelado',     badge: 'bg-slate-100 text-slate-500' },
+      error:         { label: 'Error',         badge: 'bg-red-600 text-white animate-pulse' }
     };
 
-    // ─── UI References ───
-    const elUserName = document.getElementById('user-name');
-    const elBtnLogout = document.getElementById('btn-logout');
-    const elFilterButtons = document.getElementById('filter-buttons');
-    const elOrdersList = document.getElementById('orders-list');
-    const elBtnRefresh = document.getElementById('btn-refresh');
-    const elRefreshIcon = document.getElementById('refresh-icon');
+    // ─── DOM refs ───
+    const $ = id => document.getElementById(id);
+    const elUserName = $('user-name');
+    const elBtnLogout = $('btn-logout');
+    const elFilterButtons = $('filter-buttons');
+    const elOrdersList = $('orders-list');
+    const elBtnRefresh = $('btn-refresh');
+    const elRefreshIcon = $('refresh-icon');
+    const elSkeleton = $('loading-skeleton');
+    const elEmptyState = $('empty-state');
+    const elErrorState = $('error-state');
+    const elBtnRetry = $('btn-retry');
 
-    // ─── Auth UI ───
+    // ─── Auth ───
     $authUser.subscribe(user => {
       elUserName.textContent = user?.name || user?.email || '';
     });
     elBtnLogout.addEventListener('click', () => logout());
 
-    // ─── Filtros ───
+    // ─── Filters ───
     function renderFilters() {
       elFilterButtons.innerHTML = '';
       FILTERS.forEach(f => {
         const btn = document.createElement('button');
-        btn.textContent = f === 'todos' ? 'Todos' : f.replace('_', ' ');
-        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition';
+        btn.textContent = f === 'todos' ? 'Todas' : STATUS_META[f]?.label || f.replace('_', ' ');
+        btn.className = 'filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border';
         btn.addEventListener('click', () => $filter.set(f));
         elFilterButtons.appendChild(btn);
       });
@@ -120,36 +212,33 @@
     }
     renderFilters();
 
-    $filter.subscribe(filter => {
+    function updateFilterStyles() {
+      const current = $filter.get();
+      elFilterButtons.querySelectorAll('button').forEach(btn => {
+        const idx = Array.from(elFilterButtons.children).indexOf(btn);
+        const f = FILTERS[idx];
+        if (f === current) {
+          btn.className = 'filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border border-violet-300 bg-violet-600 text-white shadow';
+        } else {
+          btn.className = 'filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+        }
+      });
+    }
+
+    $filter.subscribe(() => {
       updateFilterStyles();
       renderOrders();
       updateStats();
     });
 
-    function updateFilterStyles() {
-      const current = $filter.get();
-      const buttons = elFilterButtons.querySelectorAll('button');
-      buttons.forEach((btn, i) => {
-        const f = FILTERS[i];
-        if (f === current) {
-          btn.className = 'bg-slate-800 text-white shadow px-3 py-1.5 rounded-xl text-xs font-semibold transition';
-        } else {
-          btn.className = 'bg-white text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition';
-        }
-      });
-    }
-
     // ─── Stats ───
     function updateStats() {
       const orders = $orders.get();
-      const filter = $filter.get();
-      const filtered = filter === 'todos' ? orders : orders.filter(o => o.status === filter);
-
-      document.getElementById('stat-total').textContent = orders.length;
-      document.getElementById('stat-recibido').textContent = orders.filter(o => o.status === 'recibido').length;
-      document.getElementById('stat-ajuste_diseno').textContent = orders.filter(o => o.status === 'ajuste_diseno').length;
-      document.getElementById('stat-produccion').textContent = orders.filter(o => o.status === 'produccion').length;
-      document.getElementById('stat-finalizado').textContent = orders.filter(o => o.status === 'finalizado').length;
+      $('stat-total').textContent = orders.length;
+      $('stat-recibido').textContent = orders.filter(o => o.status === 'recibido').length;
+      $('stat-ajuste_diseno').textContent = orders.filter(o => o.status === 'ajuste_diseno').length;
+      $('stat-produccion').textContent = orders.filter(o => o.status === 'produccion').length;
+      $('stat-finalizado').textContent = orders.filter(o => o.status === 'finalizado').length;
     }
 
     function filteredOrders() {
@@ -166,11 +255,11 @@
 
       orders.forEach(order => {
         const status = order.status || 'recibido';
-        const statusClass = STATUS_COLORS[status] || STATUS_COLORS.recibido;
+        const meta = STATUS_META[status] || STATUS_META.recibido;
         const isPrinting = printingId === order.id;
 
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition';
+        card.className = 'order-row bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition';
         card.setAttribute('data-order-id', order.id);
 
         card.innerHTML = `
@@ -178,38 +267,56 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap mb-1">
                 <h3 class="font-bold text-slate-800 truncate">${escapeHtml(order.title || 'Sin nombre')}</h3>
-                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 uppercase tracking-wide ${statusClass}">
-                  ${status.replace('_', ' ')}
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 uppercase tracking-wide ${meta.badge}">
+                  ${meta.label}
                 </span>
               </div>
-              <p class="text-xs text-slate-400">
-                <span>${new Date(order.created).toLocaleString('es-MX')}</span>
-                · <span class="font-semibold">${(order.paper_size || 'a4').toUpperCase()}</span>
-                ${order.admin_canvas_data ? '<span class="ml-2 text-violet-500 font-bold">✓ Editado por Admin</span>' : ''}
+              <p class="text-xs text-slate-400 flex items-center gap-1.5 flex-wrap">
+                <span class="flex items-center gap-1">
+                  <span class="mi mi-sm text-slate-300">calendar_today</span>
+                  ${new Date(order.created).toLocaleString('es-MX')}
+                </span>
+                <span class="text-slate-200 hidden sm:inline">·</span>
+                <span class="flex items-center gap-1">
+                  <span class="mi mi-sm text-slate-300">description</span>
+                  ${(order.paper_size || 'a4').toUpperCase()}
+                </span>
+                ${order.admin_canvas_data ? '<span class="ml-1 flex items-center gap-0.5 text-violet-500 font-bold text-[11px]"><span class="mi mi-sm">check_circle</span>Editado</span>' : ''}
               </p>
             </div>
 
             <div class="flex items-center gap-1.5 flex-wrap shrink-0">
-              <button class="btn-edit px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition" data-order-id="${order.id}">✏️ Editar</button>
+              <button class="btn-edit admin-btn px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1" data-order-id="${order.id}">
+                <span class="mi mi-sm">edit</span>
+                <span>Editar</span>
+              </button>
 
               ${(status === 'recibido' || status === 'ajuste_diseno') ? `
-                <button class="btn-produccion px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-200" data-order-id="${order.id}">🚀 A Producción</button>
+                <button class="btn-produccion admin-btn px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-200 flex items-center gap-1" data-order-id="${order.id}">
+                  <span class="mi mi-sm">rocket_launch</span>
+                  <span>Producción</span>
+                </button>
               ` : ''}
 
-              <button class="btn-print px-3 py-2 rounded-xl border-2 transition font-bold text-xs ${isPrinting
+              <button class="btn-print admin-btn px-3 py-2 rounded-xl border-2 transition font-bold text-xs flex items-center gap-1 ${isPrinting
                 ? 'bg-amber-100 border-amber-200 text-amber-700 animate-pulse'
-                : (printingId ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed' : 'bg-violet-600 border-violet-600 text-white hover:bg-violet-500 active:scale-95 shadow-lg shadow-violet-200')
+                : (printingId ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed' : 'bg-violet-600 border-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-200')
               }" data-order-id="${order.id}" ${printingId && !isPrinting ? 'disabled' : ''}>
-                <span>${isPrinting ? '⏳' : '🖨️'}</span>
+                <span class="mi mi-sm">${isPrinting ? 'hourglass_top' : 'print'}</span>
                 <span>${isPrinting ? 'Imprimiendo...' : 'Imprimir'}</span>
               </button>
 
               ${status === 'produccion' ? `
-                <button class="btn-finalizar px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition" data-order-id="${order.id}">✅ Finalizar</button>
+                <button class="btn-finalizar admin-btn px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1" data-order-id="${order.id}">
+                  <span class="mi mi-sm">check_circle</span>
+                  <span>Finalizar</span>
+                </button>
               ` : ''}
 
               ${(status !== 'finalizado' && status !== 'cancelado') ? `
-                <button class="btn-cancelar p-1.5 rounded-xl hover:bg-red-50 text-red-300 hover:text-red-500 transition" data-order-id="${order.id}" title="Cancelar">🚫</button>
+                <button class="btn-cancelar admin-btn p-1.5 rounded-xl hover:bg-red-50 text-red-300 hover:text-red-500 transition" data-order-id="${order.id}" title="Cancelar">
+                  <span class="mi mi-sm">cancel</span>
+                </button>
               ` : ''}
             </div>
           </div>
@@ -267,15 +374,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId: id, printer: printer })
         });
-
         const result = await response.json();
         if (response.ok && result.success) {
-          console.log('✅ Impresión enviada con éxito');
+          console.log('Impresión enviada con éxito');
         } else {
-          alert(`⚠️ No se pudo imprimir: ${result.error || 'Error desconocido'}`);
+          alert(`No se pudo imprimir: ${result.error || 'Error desconocido'}`);
         }
       } catch (e) {
-        alert('🔴 Error Crítico: No se pudo conectar con el servidor de impresión. Revisa que printer.tiendagenesis.com esté en línea.');
+        alert('Error: No se pudo conectar con el servidor de impresión.');
       } finally {
         $printingId.set(null);
       }
@@ -284,27 +390,62 @@
     // ─── Load Orders ───
     async function loadOrders() {
       $loading.set(true);
+      $error.set(false);
       try {
         const result = await pb.collection('sticker_orders').getList(1, 200, { sort: '-created' });
         $orders.set(result.items);
       } catch (e) {
         console.error(e);
+        $error.set(true);
       } finally {
         $loading.set(false);
       }
     }
 
     elBtnRefresh.addEventListener('click', loadOrders);
+    elBtnRetry.addEventListener('click', loadOrders);
+
+    // ─── UI State ───
+    function updateUIState() {
+      const loading = $loading.get();
+      const error = $error.get();
+      const orders = $orders.get();
+
+      elSkeleton.classList.toggle('hidden', !loading);
+      elErrorState.classList.toggle('hidden', !error);
+      elEmptyState.classList.toggle('hidden', loading || error || orders.length > 0);
+
+      if (loading) {
+        elOrdersList.classList.add('hidden');
+      } else if (error) {
+        elOrdersList.classList.add('hidden');
+      } else if (orders.length === 0) {
+        elOrdersList.classList.add('hidden');
+      } else {
+        elOrdersList.classList.remove('hidden');
+      }
+    }
 
     $loading.subscribe(loading => {
-      if (loading) {
-        elRefreshIcon.className = 'animate-spin inline-block';
-      } else {
-        elRefreshIcon.className = '';
-      }
+      if (loading) elRefreshIcon.textContent = 'sync';
+      else elRefreshIcon.textContent = 'refresh';
+      updateUIState();
+    });
+    $error.subscribe(updateUIState);
+
+    $orders.subscribe(orders => {
+      updateStats();
+      updateUIState();
+      // renderOrders will be triggered by $filter subscriber if needed
+      // but we need initial render
+      if (orders.length > 0) renderOrders();
     });
 
-    // ─── Realtime Subscription ───
+    $printingId.subscribe(() => {
+      if ($orders.get().length > 0) renderOrders();
+    });
+
+    // ─── Realtime ───
     async function subscribeRealtime() {
       try {
         await pb.collection('sticker_orders').subscribe('*', (e) => {
@@ -322,23 +463,15 @@
       }
     }
 
-    // ─── Reactivity ───
-    $orders.subscribe(() => {
-      renderOrders();
-      updateStats();
-    });
-
-    $printingId.subscribe(() => renderOrders());
-
-    // ─── Init ───
-    await loadOrders();
-    await subscribeRealtime();
-
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
     }
+
+    // ─── Init ───
+    await loadOrders();
+    await subscribeRealtime();
   </script>
 </body>
 </html>
