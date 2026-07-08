@@ -1,7 +1,7 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
 import { CanvasEditor } from './CanvasEditor.js?v=2.0.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=2.0.4';
+import { CanvasPersistence } from './CanvasPersistence.js?v=2.0.5';
 import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=2.0.0';
 import { AuthManager } from '../auth/AuthManager.js?v=2.0.0';
 import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=2.0.0';
@@ -69,8 +69,10 @@ function sync() {
 const AUTO_SAVE_KEY = 'canvas-autosave';
 const AUTO_SAVE_INTERVAL = 30000;
 let _autoSaveTimer = null;
+let _autoSaveDisabled = false;
 
 function _doAutoSave() {
+  if (_autoSaveDisabled) return;
   if (!editor || editor.items.length === 0) return;
   try {
     const data = {
@@ -85,6 +87,7 @@ function _doAutoSave() {
 }
 
 function scheduleAutoSave() {
+  if (_autoSaveDisabled) return;
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(_doAutoSave, AUTO_SAVE_INTERVAL);
 }
@@ -107,6 +110,7 @@ function restoreAutoSave() {
     editor.history.reset();
     editor.history.push();
     localStorage.removeItem(AUTO_SAVE_KEY);
+    _autoSaveDisabled = false;
     return true;
   } catch { return null; }
 }
@@ -114,6 +118,7 @@ function restoreAutoSave() {
 function clearAutoSave() {
   clearTimeout(_autoSaveTimer);
   localStorage.removeItem(AUTO_SAVE_KEY);
+  _autoSaveDisabled = true;
 }
 
 function sortedItems() {
