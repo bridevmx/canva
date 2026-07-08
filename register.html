@@ -16,81 +16,80 @@
     .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
     @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     .fade-up{animation:fadeUp .35s ease forwards}
-    input:-webkit-autofill{-webkit-box-shadow:0 0 0 30px rgba(15,23,42,.95) inset!important;-webkit-text-fill-color:#fff!important}
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 overflow-y-auto selection:bg-violet-500/30">
+<body class="bg-slate-50 min-h-screen selection:bg-violet-100">
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md fade-up">
 
       <!-- Header -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-600/15 border border-violet-500/20 mb-5">
-          <span class="mi mi-lg text-violet-400" style="font-size:32px">person_add</span>
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-100 border border-violet-200 mb-5">
+          <span class="mi mi-lg text-violet-600" style="font-size:32px">person_add</span>
         </div>
-        <h1 class="text-2xl font-black text-white tracking-tight">Crear cuenta</h1>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Crear cuenta</h1>
         <p class="text-slate-400 text-sm mt-1">Registrate para empezar a crear</p>
       </div>
 
       <!-- Card -->
-      <div class="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 backdrop-blur-xl shadow-2xl shadow-black/20">
-        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
-        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
+      <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+        <div id="error-alert" class="hidden bg-red-50 text-red-600 border border-red-200 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
+        <div id="success-alert" class="hidden bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl px-5 py-3.5 text-sm text-center mb-4"></div>
 
         <form class="space-y-3.5" onsubmit="return false">
           <!-- Username -->
           <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span class="mi mi-sm text-slate-500">badge</span>
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-400">badge</span>
               Nombre de Usuario
             </label>
             <input id="input-username" type="text" placeholder="Ej. juanito123" autocomplete="username"
-              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all duration-200" />
           </div>
 
           <!-- Email -->
           <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span class="mi mi-sm text-slate-500">email</span>
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-400">email</span>
               Correo Electrónico
             </label>
             <input id="input-email" type="email" placeholder="tu@correo.com" autocomplete="email"
-              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all duration-200" />
           </div>
 
           <!-- Phone -->
           <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span class="mi mi-sm text-slate-500">phone</span>
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-400">phone</span>
               Teléfono Celular
             </label>
             <input id="input-phone" type="tel" placeholder="1234567890" autocomplete="tel"
-              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all duration-200" />
           </div>
 
           <!-- Password -->
           <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span class="mi mi-sm text-slate-500">lock</span>
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-400">lock</span>
               Contraseña
             </label>
             <input id="input-password" type="password" placeholder="Min. 8 caracteres" autocomplete="new-password"
-              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all duration-200" />
           </div>
 
           <!-- Password Confirm -->
           <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span class="mi mi-sm text-slate-500">lock_outline</span>
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="mi mi-sm text-slate-400">lock_outline</span>
               Confirmar Contraseña
             </label>
             <input id="input-password-confirm" type="password" placeholder="Repite tu contraseña" autocomplete="new-password"
-              class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200" />
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all duration-200" />
           </div>
 
           <!-- Submit Button -->
           <button id="btn-register" disabled type="submit"
-            class="w-full flex items-center justify-center gap-2.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-900/30 hover:shadow-violet-600/30 hover:-translate-y-0.5 active:translate-y-0 mt-2">
+            class="w-full flex items-center justify-center gap-2.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-200 hover:shadow-violet-300 hover:-translate-y-0.5 active:translate-y-0 mt-2">
             <span class="mi mi-sm">how_to_reg</span>
             <span id="btn-text">Crear cuenta</span>
           </button>
@@ -98,19 +97,19 @@
 
         <!-- Divider -->
         <div class="flex items-center gap-3 my-6">
-          <div class="flex-1 h-px bg-white/[0.06]"></div>
-          <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">o</span>
-          <div class="flex-1 h-px bg-white/[0.06]"></div>
+          <div class="flex-1 h-px bg-slate-100"></div>
+          <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">o</span>
+          <div class="flex-1 h-px bg-slate-100"></div>
         </div>
 
         <!-- Login link -->
-        <a href="/login" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200">
+        <a href="/login" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all duration-200">
           <span class="mi mi-sm">login</span>
           ¿Ya tienes cuenta? Inicia sesion
         </a>
 
         <!-- Back link -->
-        <a href="/" class="flex items-center justify-center gap-2 w-full py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-600 hover:text-slate-400 transition-all duration-200">
+        <a href="/" class="flex items-center justify-center gap-2 w-full py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-400 hover:text-slate-600 transition-all duration-200">
           <span class="mi mi-sm">arrow_back</span>
           Volver al inicio
         </a>

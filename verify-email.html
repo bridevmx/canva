@@ -13,9 +13,8 @@
     body{font-family:Inter,sans-serif}
     .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;text-transform:none!important}
     .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    .fade-up{animation:fadeUp .4s ease forwards}
-    .fade-up-delay{animation:fadeUp .4s ease .1s forwards;opacity:0}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .35s ease forwards}
     @keyframes spin{to{transform:rotate(360deg)}}
     .spinner{animation:spin .8s linear infinite}
     @keyframes checkPop{0%{transform:scale(0);opacity:0}50%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
@@ -24,47 +23,47 @@
     .error-shake{animation:errorShake .4s ease}
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 overflow-y-auto selection:bg-violet-500/30">
+<body class="bg-slate-50 min-h-screen selection:bg-violet-100">
   <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
+    <div class="w-full max-w-md fade-up">
 
       <!-- Header -->
-      <div class="text-center mb-8 fade-up">
-        <div id="icon-container" class="relative inline-flex items-center justify-center w-20 h-20 rounded-full mb-5 transition-all duration-500">
+      <div class="text-center mb-8">
+        <div id="icon-container" class="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 transition-all duration-500">
           <!-- Spinner state -->
-          <div id="icon-loading" class="absolute inset-0 rounded-full bg-violet-600/15 border border-violet-500/20">
+          <div id="icon-loading" class="absolute inset-0 rounded-2xl bg-violet-100 border border-violet-200">
             <div class="flex items-center justify-center h-full">
-              <div class="w-10 h-10 border-[3px] border-violet-500/30 border-t-violet-400 rounded-full spinner"></div>
+              <div class="w-8 h-8 border-[3px] border-violet-200 border-t-violet-600 rounded-full spinner"></div>
             </div>
           </div>
           <!-- Success state -->
-          <div id="icon-success" class="absolute inset-0 rounded-full bg-emerald-600/15 border border-emerald-500/20 hidden">
+          <div id="icon-success" class="absolute inset-0 rounded-2xl bg-emerald-100 border border-emerald-200 hidden">
             <div class="flex items-center justify-center h-full">
-              <span class="mi text-emerald-400 check-pop" style="font-size:40px">check_circle</span>
+              <span class="mi mi-lg text-emerald-600 check-pop">check_circle</span>
             </div>
           </div>
           <!-- Error state -->
-          <div id="icon-error" class="absolute inset-0 rounded-full bg-red-600/15 border border-red-500/20 hidden">
+          <div id="icon-error" class="absolute inset-0 rounded-2xl bg-red-100 border border-red-200 hidden">
             <div class="flex items-center justify-center h-full">
-              <span class="mi text-red-400 error-shake" style="font-size:40px">error</span>
+              <span class="mi mi-lg text-red-500 error-shake">error</span>
             </div>
           </div>
         </div>
-        <h1 id="title" class="text-2xl font-black text-white tracking-tight">Verificando tu cuenta...</h1>
-        <p id="subtitle" class="text-slate-400 text-sm mt-2 max-w-xs mx-auto leading-relaxed">Un momento mientras confirmamos tu dirección de correo</p>
+        <h1 id="title" class="text-2xl font-black text-slate-900 tracking-tight">Verificando tu cuenta...</h1>
+        <p id="subtitle" class="text-slate-400 text-sm mt-1">Un momento mientras confirmamos tu correo</p>
       </div>
 
       <!-- Card -->
-      <div class="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 backdrop-blur-xl shadow-2xl shadow-black/20 fade-up-delay">
-        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl px-5 py-3.5 text-sm text-center"></div>
-        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl px-5 py-3.5 text-sm text-center"></div>
+      <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+        <div id="error-alert" class="hidden bg-red-50 text-red-600 border border-red-200 rounded-2xl px-5 py-3.5 text-sm text-center"></div>
+        <div id="success-alert" class="hidden bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl px-5 py-3.5 text-sm text-center"></div>
 
         <div id="actions" class="hidden space-y-3 mt-4">
-          <a href="/login" id="btn-login" class="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-900/30 hover:shadow-violet-600/30 hover:-translate-y-0.5 active:translate-y-0">
+          <a href="/login" class="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-200 hover:shadow-violet-300 hover:-translate-y-0.5 active:translate-y-0">
             <span class="mi mi-sm">login</span>
             Ir al inicio de sesión
           </a>
-          <a href="/" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200">
+          <a href="/" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all duration-200">
             <span class="mi mi-sm">home</span>
             Volver al inicio
           </a>
