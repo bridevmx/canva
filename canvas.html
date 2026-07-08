@@ -171,9 +171,9 @@
     #props-sheet-overlay{position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s}
     #props-sheet-overlay.visible{opacity:1}
     @media(max-width:639px){#props-sheet-overlay.open{display:block}}
-    /* padding inferior del canvas en móvil para no quedar bajo bottom-nav */
+    /* padding inferior del canvas en móvil para no quedar bajo bottom-nav y permitir auto-scroll */
     @media(max-width:639px){
-      #canvas-main{padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))!important}
+      #canvas-main{padding-bottom:60vh!important}
       #header-toolbar{display:none!important}
       #props-bar-desktop{display:none!important}
     }
