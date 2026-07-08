@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StickerMaker - Verificar email</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <script src="auth.js"></script>
+</head>
+<body>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <span class="text-5xl">✉️</span>
+        <h1 class="text-2xl font-black text-white mt-3 tracking-tight">Verificación de email</h1>
+        <p id="subtitle" class="text-slate-400 text-sm mt-1">Verificando tu cuenta...</p>
+      </div>
+
+      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4 backdrop-blur-sm shadow-xl">
+        <div id="loading-spinner" class="flex justify-center py-4">
+          <div class="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
+        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
+
+        <p class="text-center text-slate-500 text-xs pt-3 border-t border-white/10 leading-relaxed">
+          <a href="/login" class="text-violet-400 hover:text-violet-300 font-bold transition">Ir al inicio de sesión →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getAuthPb } from './src/auth/authStore.js';
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    const elSpinner = document.getElementById('loading-spinner');
+    const elErrorAlert = document.getElementById('error-alert');
+    const elSuccessAlert = document.getElementById('success-alert');
+    const elSubtitle = document.getElementById('subtitle');
+
+    async function verifyEmail() {
+      if (!token) {
+        elSpinner.classList.add('hidden');
+        elErrorAlert.textContent = 'Enlace inválido. Solicita una nueva verificación.';
+        elErrorAlert.classList.remove('hidden');
+        elSubtitle.textContent = 'No se pudo verificar tu cuenta';
+        return;
+      }
+
+      try {
+        const pb = getAuthPb();
+        await pb.collection('users_canva').confirmVerification(token);
+        elSpinner.classList.add('hidden');
+        elSuccessAlert.textContent = 'Email verificado correctamente. Ya puedes iniciar sesión.';
+        elSuccessAlert.classList.remove('hidden');
+        elSubtitle.textContent = 'Cuenta verificada';
+      } catch (e) {
+        elSpinner.classList.add('hidden');
+        elErrorAlert.textContent = e?.data?.message || 'El enlace es inválido o ha expirado.';
+        elErrorAlert.classList.remove('hidden');
+        elSubtitle.textContent = 'No se pudo verificar tu cuenta';
+      }
+    }
+
+    verifyEmail();
+  </script>
+</body>
+</html>
