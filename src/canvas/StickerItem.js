@@ -41,6 +41,8 @@ export class StickerItem {
     this.w        = cfg.w ?? 200;
     this.h        = cfg.h ?? 200;
     this.rotation = cfg.rotation ?? 0;
+    this.flipX    = cfg.flipX ?? false;
+    this.flipY    = cfg.flipY ?? false;
     this.opacity  = cfg.opacity ?? 1.0;
     this.locked   = cfg.locked ?? false;
     this.page     = cfg.page ?? 1;
@@ -88,9 +90,18 @@ export class StickerItem {
       width:  clamp(this.w, 20, sheetW) + 'px',
       height: clamp(this.h, 20, sheetH) + 'px',
       zIndex: this.z,
-      transform: this.rotation ? `rotate(${this.rotation}deg)` : 'none',
+      transform: this._buildTransform(),
       opacity: this.opacity ?? 1.0,
       cursor: this.locked ? 'default' : 'move'
     };
+  }
+
+  _buildTransform() {
+    let t = '';
+    if (this.flipX) t += ' scaleX(-1)';
+    if (this.flipY) t += ' scaleY(-1)';
+    if (this.rotation) t += ` rotate(${this.rotation}deg)`;
+    return t.trim() || 'none';
+  }
   }
 }

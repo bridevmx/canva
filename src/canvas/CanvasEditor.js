@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.8.1';
-import { ImageItem }      from './ImageItem.js?v=1.8.1';
-import { TextItem }       from './TextItem.js?v=1.8.1';
-import { ShapeItem }     from './ShapeItem.js?v=1.8.1';
-import { CropController } from './CropController.js?v=1.8.1';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.8.2';
+import { ImageItem }      from './ImageItem.js?v=1.8.2';
+import { TextItem }       from './TextItem.js?v=1.8.2';
+import { ShapeItem }     from './ShapeItem.js?v=1.8.2';
+import { CropController } from './CropController.js?v=1.8.2';
 
-import { HistoryManager } from './HistoryManager.js?v=1.8.1';
-import { GuidesManager }  from './GuidesManager.js?v=1.8.1';
-import { PointerController } from './PointerController.js?v=1.8.1';
-import { PaperManager }   from './PaperManager.js?v=1.8.1';
-import { FONTS }          from '../pb.config.js?v=1.8.1';
+import { HistoryManager } from './HistoryManager.js?v=1.8.2';
+import { GuidesManager }  from './GuidesManager.js?v=1.8.2';
+import { PointerController } from './PointerController.js?v=1.8.2';
+import { PaperManager }   from './PaperManager.js?v=1.8.2';
+import { FONTS }          from '../pb.config.js?v=1.8.2';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -257,6 +257,15 @@ export class CanvasEditor {
       item.y = y - a.offsetY;
       y += a.h + gap;
     }
+    this.history.push();
+  }
+
+  flipHorizontal() {
+    for (const item of this._selectedItems()) item.flipX = !item.flipX;
+    this.history.push();
+  }
+  flipVertical() {
+    for (const item of this._selectedItems()) item.flipY = !item.flipY;
     this.history.push();
   }
 

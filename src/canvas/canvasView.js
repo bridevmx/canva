@@ -1,11 +1,11 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.8.1';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.8.1';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.8.1';
-import { AuthManager } from '../auth/AuthManager.js?v=1.8.1';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.8.1';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.8.1';
+import { CanvasEditor } from './CanvasEditor.js?v=1.8.2';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.8.2';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.8.2';
+import { AuthManager } from '../auth/AuthManager.js?v=1.8.2';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.8.2';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.8.2';
 
 
 const PX_PER_CM = 37.8095;
@@ -315,6 +315,8 @@ function alignCenterV()     { editor.alignCenterV();     sync(); }
 function alignBottom()      { editor.alignBottom();      sync(); }
 function distributeHorizontal() { editor.distributeHorizontal(); sync(); }
 function distributeVertical()   { editor.distributeVertical();   sync(); }
+function flipHorizontal()   { editor.flipHorizontal();   sync(); }
+function flipVertical()     { editor.flipVertical();     sync(); }
 
 // ── Reset ──
 function resetProject() {
@@ -459,6 +461,7 @@ export {
   bringForward, sendToBack, moveOneUp, moveOneDown,
   alignLeft, alignCenterH, alignRight, alignTop, alignCenterV, alignBottom,
   distributeHorizontal, distributeVertical,
+  flipHorizontal, flipVertical,
   toggleGrid,
   startCropMode, applyCrop, cancelCropMode, cropBoxStyle, getCropHandles,
   gridFill, resetProject,
