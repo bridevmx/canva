@@ -1,5 +1,5 @@
 // PropertyBar.js — Renderizado de la barra de propiedades del canvas.
-import { SingleItemControls } from './SingleItemControls.js?v=1.9.3';
+import { SingleItemControls } from './SingleItemControls.js?v=1.9.4';
 
 export class PropertyBar {
   constructor({ FONTS, actions, lifecycle }) {
@@ -30,10 +30,10 @@ export class PropertyBar {
     // Capas
     h += `<div class="flex items-center gap-${isMobile ? '0.5' : '1'} ${isMobile ? 'border-r border-slate-200 pr-2' : 'border-r border-slate-200 pr-3'}">`;
     if (!isMobile) h += '<span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Capas</span>';
-    h += `<button class="prop-bring-forward ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al frente">⏫</button>`;
-    h += `<button class="prop-send-back ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al fondo">⏬</button>`;
-    h += `<button class="prop-move-up ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}">↑</button>`;
-    h += `<button class="prop-move-down ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}">↓</button>`;
+    h += `<button class="prop-bring-forward ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al frente (Ctrl+Shift+]">⏫</button>`;
+    h += `<button class="prop-send-back ${isMobile ? 'p-1.5 hover:bg-slate-200 rounded text-base' : 'p-1 hover:bg-slate-200 rounded'}" title="Al fondo (Ctrl+Shift+[)">⏬</button>`;
+    h += `<button class="prop-move-up ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}" title="Subir capa (Ctrl+])">↑</button>`;
+    h += `<button class="prop-move-down ${isMobile ? 'px-2 py-1 hover:bg-slate-200 rounded font-bold text-sm' : 'px-1.5 py-0.5 hover:bg-slate-200 rounded font-bold text-xs'}" title="Bajar capa (Ctrl+[)">↓</button>`;
     h += '</div>';
 
     if (multi) {

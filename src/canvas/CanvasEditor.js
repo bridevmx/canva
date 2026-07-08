@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.3';
-import { ImageItem }      from './ImageItem.js?v=1.9.3';
-import { TextItem }       from './TextItem.js?v=1.9.3';
-import { ShapeItem }     from './ShapeItem.js?v=1.9.3';
-import { CropController } from './CropController.js?v=1.9.3';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.4';
+import { ImageItem }      from './ImageItem.js?v=1.9.4';
+import { TextItem }       from './TextItem.js?v=1.9.4';
+import { ShapeItem }     from './ShapeItem.js?v=1.9.4';
+import { CropController } from './CropController.js?v=1.9.4';
 
-import { HistoryManager } from './HistoryManager.js?v=1.9.3';
-import { GuidesManager }  from './GuidesManager.js?v=1.9.3';
-import { PointerController } from './PointerController.js?v=1.9.3';
-import { PaperManager }   from './PaperManager.js?v=1.9.3';
-import { FONTS }          from '../pb.config.js?v=1.9.3';
+import { HistoryManager } from './HistoryManager.js?v=1.9.4';
+import { GuidesManager }  from './GuidesManager.js?v=1.9.4';
+import { PointerController } from './PointerController.js?v=1.9.4';
+import { PaperManager }   from './PaperManager.js?v=1.9.4';
+import { FONTS }          from '../pb.config.js?v=1.9.4';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -56,6 +56,11 @@ export class CanvasEditor {
   itemsOnPage(p) { return this.sortedItems().filter(i => (i.page || 1) === p); }
 
   normalizeZ() { this.sortedItems().forEach((item, i) => item.z = i + 1); }
+
+  toggleGrid() {
+    this.showGrid = !this.showGrid;
+    if (this.onToggleGrid) this.onToggleGrid(this.showGrid);
+  }
 
   // ── Add elements ───────────────────────────────────
   addText(cfg = {}) {
@@ -114,11 +119,13 @@ export class CanvasEditor {
     const selected = this.items.filter(i => this.selectedIds.has(i.id));
     selected.forEach((item, i) => { item.z = this.nextZ() + i; });
     this.normalizeZ();
+    this.history.push();
   }
   sendToBack() {
     const selected = this.items.filter(i => this.selectedIds.has(i.id));
     selected.forEach((item, i) => { item.z = -selected.length + i; });
     this.normalizeZ();
+    this.history.push();
   }
   moveOneUp() {
     if (this.selectedIds.size === 0) return;
@@ -133,6 +140,7 @@ export class CanvasEditor {
     items[lastIdx + 1].z = firstZ;
     for (let i = firstIdx; i <= lastIdx; i++) items[i].z++;
     this.normalizeZ();
+    this.history.push();
   }
   moveOneDown() {
     if (this.selectedIds.size === 0) return;
@@ -146,6 +154,7 @@ export class CanvasEditor {
     items[firstIdx - 1].z = lastZ;
     for (let i = firstIdx; i <= lastIdx; i++) items[i].z--;
     this.normalizeZ();
+    this.history.push();
   }
 
   // ── Alineación y distribución ───────────────────────
@@ -356,6 +365,22 @@ export class CanvasEditor {
     }
     if (ev.key.toLowerCase() === 'y' && (ev.ctrlKey || ev.metaKey)) {
       ev.preventDefault(); this.history.redo();
+      window.dispatchEvent(new CustomEvent('editor:change'));
+    }
+    if (ev.key.toLowerCase() === 'g' && (ev.ctrlKey || ev.metaKey)) {
+      ev.preventDefault(); this.toggleGrid();
+      window.dispatchEvent(new CustomEvent('editor:change'));
+    }
+    if ((ev.key === ']' || ev.key === '}') && (ev.ctrlKey || ev.metaKey) && this.selectedIds.size > 0) {
+      ev.preventDefault();
+      if (ev.shiftKey || ev.key === '}') this.bringForward();
+      else this.moveOneUp();
+      window.dispatchEvent(new CustomEvent('editor:change'));
+    }
+    if ((ev.key === '[' || ev.key === '{') && (ev.ctrlKey || ev.metaKey) && this.selectedIds.size > 0) {
+      ev.preventDefault();
+      if (ev.shiftKey || ev.key === '{') this.sendToBack();
+      else this.moveOneDown();
       window.dispatchEvent(new CustomEvent('editor:change'));
     }
     if (ev.key.startsWith('Arrow') && this.selectedIds.size > 0) {

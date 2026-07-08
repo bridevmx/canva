@@ -21,7 +21,9 @@
     .sheet{position:relative;overflow:hidden;background:white;box-shadow:0 10px 30px rgba(0,0,0,.18);user-select:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .item{position:absolute;cursor:move;touch-action:none}
     .item.selected{outline:2px dashed #2563eb;outline-offset:1px}
-    .item.locked-item{cursor:default}
+    .item.locked-item{cursor:default;opacity:.92}
+    .item.locked-item.selected{outline-color:#f59e0b}
+    .lock-indicator{position:absolute;top:1px;right:1px;background:#f59e0b;color:white;font-size:10px;font-weight:700;padding:1px 4px;border-radius:3px;pointer-events:none;z-index:10;line-height:1}
     .resize-handle{position:absolute;width:22px;height:22px;border-radius:9999px;background:#2563eb;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none}
     .resize-handle.handle-nw{top:-8px;left:-8px;cursor:nwse-resize}
     .resize-handle.handle-ne{top:-8px;right:-8px;cursor:nesw-resize}
@@ -147,7 +149,7 @@
 
       <div class="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
 
-      <button id="tool-btn-grid" class="tbtn shrink-0" title="Alternar Cuadrícula">
+      <button id="tool-btn-grid" class="tbtn shrink-0" title="Alternar Cuadrícula (Ctrl+G)">
         <span id="grid-icon" class="tbtn-icon text-slate-600">📏</span>
         <span id="grid-label" class="tbtn-label whitespace-nowrap">Cuadrícula</span>
       </button>
@@ -294,9 +296,9 @@
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.9.3';
+  } from './src/canvas/canvasView.js?v=1.9.4';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.3';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.4';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -695,10 +697,11 @@
       }
 
       // Lock indicator
-      if (item.locked && isSelected) {
+      if (item.locked) {
         const lock = document.createElement('div');
-        lock.className = 'absolute top-1 right-1 text-xs bg-amber-400 text-white rounded px-1 pointer-events-none select-none z-10';
+        lock.className = 'lock-indicator';
         lock.textContent = '🔒';
+        lock.title = 'Bloqueado';
         itemEl.appendChild(lock);
       }
 
