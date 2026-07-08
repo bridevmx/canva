@@ -1,5 +1,5 @@
 // PropertyBar.js — Renderizado de la barra de propiedades del canvas.
-import { SingleItemControls } from './SingleItemControls.js?v=1.9.0';
+import { SingleItemControls } from './SingleItemControls.js?v=1.9.1';
 
 export class PropertyBar {
   constructor({ FONTS, actions, lifecycle }) {
@@ -32,11 +32,9 @@ export class PropertyBar {
     h += '</div>';
 
     if (multi) {
-      console.log('[PropertyBar] building multi-select bar');
       h += this._alignHtml(groupClass, labelClass, isMobile);
       h += this._distributeHtml(groupClass, labelClass, isMobile);
     } else {
-      console.log('[PropertyBar] building single-select bar, type=', sel.type);
       h += this._lockHtml(sel, isMobile);
       h += this._flipHtml(sel, groupClass, labelClass, isMobile);
       h += this._opacityHtml(sel, groupClass, labelClass, isMobile);
@@ -78,7 +76,6 @@ export class PropertyBar {
   }
 
   _flipHtml(sel, groupClass, labelClass, isMobile) {
-    console.log('[PropertyBar] _flipHtml called, flipX=', sel.flipX, 'flipY=', sel.flipY);
     let h = `<div class="${groupClass}">`;
     if (!isMobile) h += `<span class="${labelClass}">Voltear</span>`;
     h += `<button class="prop-flip-x px-1.5 py-0.5 hover:bg-slate-200 rounded text-xs ${sel.flipX ? 'bg-blue-100 text-blue-700' : 'text-slate-700'}" title="Horizontal">↔</button>`;
@@ -98,7 +95,6 @@ export class PropertyBar {
   }
 
   _bindEvents(container, sel, multi) {
-    console.log('[PropertyBar] _bindEvents called, multi=', multi);
     const { actions, lifecycle } = this;
 
     container.querySelector('.prop-bring-forward')?.addEventListener('click', actions.bringForward);
@@ -122,20 +118,12 @@ export class PropertyBar {
         lifecycle.renderPropertyBars();
         lifecycle.renderSheet();
       });
-      container.addEventListener('pointerdown', e => {
-        console.log('[PropertyBar] pointerdown on container, target classes=', e.target.className);
-      });
       container.addEventListener('click', e => {
-        console.log('[PropertyBar] click on container, target classes=', e.target.className);
         if (e.target.closest('.prop-flip-x')) {
-          console.log('[PropertyBar] flip-x clicked');
           actions.flipHorizontal();
-          lifecycle.renderPropertyBars();
         }
         if (e.target.closest('.prop-flip-y')) {
-          console.log('[PropertyBar] flip-y clicked');
           actions.flipVertical();
-          lifecycle.renderPropertyBars();
         }
       });
       const opacitySlider = container.querySelector('.prop-opacity');

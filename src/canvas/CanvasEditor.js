@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.0';
-import { ImageItem }      from './ImageItem.js?v=1.9.0';
-import { TextItem }       from './TextItem.js?v=1.9.0';
-import { ShapeItem }     from './ShapeItem.js?v=1.9.0';
-import { CropController } from './CropController.js?v=1.9.0';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.1';
+import { ImageItem }      from './ImageItem.js?v=1.9.1';
+import { TextItem }       from './TextItem.js?v=1.9.1';
+import { ShapeItem }     from './ShapeItem.js?v=1.9.1';
+import { CropController } from './CropController.js?v=1.9.1';
 
-import { HistoryManager } from './HistoryManager.js?v=1.9.0';
-import { GuidesManager }  from './GuidesManager.js?v=1.9.0';
-import { PointerController } from './PointerController.js?v=1.9.0';
-import { PaperManager }   from './PaperManager.js?v=1.9.0';
-import { FONTS }          from '../pb.config.js?v=1.9.0';
+import { HistoryManager } from './HistoryManager.js?v=1.9.1';
+import { GuidesManager }  from './GuidesManager.js?v=1.9.1';
+import { PointerController } from './PointerController.js?v=1.9.1';
+import { PaperManager }   from './PaperManager.js?v=1.9.1';
+import { FONTS }          from '../pb.config.js?v=1.9.1';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -262,14 +262,12 @@ export class CanvasEditor {
 
   flipHorizontal() {
     const items = this._selectedItems();
-    console.log('[CanvasEditor] flipHorizontal selected:', items.length);
-    for (const item of items) { item.flipX = !item.flipX; console.log('  ->', item.id, 'flipX=', item.flipX); }
+    for (const item of items) item.flipX = !item.flipX;
     this.history.push();
   }
   flipVertical() {
     const items = this._selectedItems();
-    console.log('[CanvasEditor] flipVertical selected:', items.length);
-    for (const item of items) { item.flipY = !item.flipY; console.log('  ->', item.id, 'flipY=', item.flipY); }
+    for (const item of items) item.flipY = !item.flipY;
     this.history.push();
   }
 
