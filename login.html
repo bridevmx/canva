@@ -6,6 +6,8 @@
   <title>StickerMaker - Iniciar sesión</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="auth.js"></script>
   <script>
     if (isAuthenticated()) {
@@ -15,6 +17,11 @@
       window.location.replace(ALLOWED_REDIRECTS.includes(redirect) ? redirect : '/dashboard')
     }
   </script>
+  <style>
+    body{font-family:Inter,sans-serif}
+    .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;text-transform:none!important}
+    .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
+  </style>
 </head>
 <body>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4">
@@ -39,7 +46,7 @@
             <input id="input-password" type="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
             <div class="flex justify-end mt-1.5">
               <a href="/forgot-password" class="inline-flex items-center gap-1 text-violet-400 hover:text-violet-300 text-[11px] font-bold uppercase tracking-wider transition">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <span class="mi" style="font-size:14px">lock_reset</span>
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
