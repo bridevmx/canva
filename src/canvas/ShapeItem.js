@@ -1,6 +1,6 @@
 // ShapeItem.js — Item tipo forma (rectángulo o círculo) con relleno y borde
 
-import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.2';
+import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.3';
 
 export class ShapeItem extends StickerItem {
   constructor(cfg = {}) {

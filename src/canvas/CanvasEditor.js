@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.2';
-import { ImageItem }      from './ImageItem.js?v=1.9.2';
-import { TextItem }       from './TextItem.js?v=1.9.2';
-import { ShapeItem }     from './ShapeItem.js?v=1.9.2';
-import { CropController } from './CropController.js?v=1.9.2';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.9.3';
+import { ImageItem }      from './ImageItem.js?v=1.9.3';
+import { TextItem }       from './TextItem.js?v=1.9.3';
+import { ShapeItem }     from './ShapeItem.js?v=1.9.3';
+import { CropController } from './CropController.js?v=1.9.3';
 
-import { HistoryManager } from './HistoryManager.js?v=1.9.2';
-import { GuidesManager }  from './GuidesManager.js?v=1.9.2';
-import { PointerController } from './PointerController.js?v=1.9.2';
-import { PaperManager }   from './PaperManager.js?v=1.9.2';
-import { FONTS }          from '../pb.config.js?v=1.9.2';
+import { HistoryManager } from './HistoryManager.js?v=1.9.3';
+import { GuidesManager }  from './GuidesManager.js?v=1.9.3';
+import { PointerController } from './PointerController.js?v=1.9.3';
+import { PaperManager }   from './PaperManager.js?v=1.9.3';
+import { FONTS }          from '../pb.config.js?v=1.9.3';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
