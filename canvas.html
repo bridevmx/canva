@@ -1295,7 +1295,13 @@
     });
     document.getElementById('bnav-edit')?.addEventListener('click', () => {
       if (_sheets.props.el.classList.contains('sheet-open')) closeAll();
-      else { renderPropsSheet(); openOnly('props'); }
+      else {
+        renderPropsSheet();
+        openOnly('props');
+        setTimeout(() => {
+          if (typeof scrollToSelectedElement === 'function') scrollToSelectedElement();
+        }, 300);
+      }
     });
     document.getElementById('bnav-layers')?.addEventListener('click', () => { closeAll(); toggleLayersPanel(); });
     document.getElementById('bnav-undo')?.addEventListener('click', undo);
@@ -1372,6 +1378,28 @@
     // Si el props-sheet móvil está abierto, sincronizarlo también
     if (window._propsSheetEl?.()?.classList.contains('sheet-open')) {
       window._renderPropsSheet?.();
+      // Auto-scroll en móvil para no tapar el elemento
+      requestAnimationFrame(() => scrollToSelectedElement());
+    }
+  }
+
+  function scrollToSelectedElement() {
+    if (window.innerWidth >= 640) return;
+    const propsSheet = window._propsSheetEl?.();
+    if (!propsSheet || !propsSheet.classList.contains('sheet-open')) return;
+    const selectedAll = getSelectedAll();
+    if (selectedAll.length === 0) return;
+    const itemEl = document.querySelector(`.item[data-id="${selectedAll[0].id}"]`);
+    if (!itemEl) return;
+    const itemRect = itemEl.getBoundingClientRect();
+    const sheetRect = propsSheet.getBoundingClientRect();
+    const overlapMargin = 30;
+    if (itemRect.bottom > sheetRect.top - overlapMargin) {
+      const overflowY = itemRect.bottom - (sheetRect.top - overlapMargin);
+      elCanvasMain.scrollBy({
+        top: overflowY,
+        behavior: 'smooth'
+      });
     }
   }
 
