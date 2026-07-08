@@ -669,7 +669,9 @@
     updateCropButtonVisibility();
     renderPropertyBars();
     scheduleRenderSheet();
-    renderLayersPanel();
+    // No llamar renderLayersPanel() aquí: destruye el DOM e impide dblclick
+    // En su lugar se togglean clases via updateLayersSelection()
+    updateLayersSelection();
   });
 
   $cropActive.subscribe(() => {
@@ -1060,12 +1062,24 @@
     else openLayersPanel();
   }
 
+  function updateLayersSelection() {
+    if (!layersOpen) return;
+    const selectedIds = new Set($selectedIds.get());
+    elLayersList.querySelectorAll('.layer-item').forEach(row => {
+      const isSel = selectedIds.has(row.dataset.id);
+      row.classList.toggle('bg-violet-100', isSel);
+      row.classList.toggle('text-violet-800', isSel);
+      row.classList.toggle('hover:bg-slate-100', !isSel);
+      row.classList.toggle('text-slate-700', !isSel);
+    });
+  }
+
   function renderLayersPanel() {
     if (!layersOpen) return;
     const activePage = $activePage.get();
     const selectedIds = new Set($selectedIds.get());
     const items = sortedItems().filter(i => (i.page || 1) === activePage);
-    const reversed = [...items].reverse(); // capas de arriba hacia abajo
+    const reversed = [...items].reverse();
 
     let html = '';
     for (const item of reversed) {
@@ -1075,6 +1089,7 @@
       const visible = item.visible !== false;
       const locked = item.locked;
       const groupClass = item.groupId ? 'pl-6' : '';
+      const isText = item.type === 'text';
       html += `
         <div class="layer-item flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs cursor-pointer select-none transition ${isSelected ? 'bg-violet-100 text-violet-800' : 'hover:bg-slate-100 text-slate-700'} ${groupClass}"
              data-id="${item.id}" draggable="true">
@@ -1083,6 +1098,7 @@
           <button class="layer-lock w-5 h-5 flex items-center justify-center rounded hover:bg-slate-200 ${locked ? 'text-amber-600' : 'text-slate-400'}" title="${locked ? 'Desbloquear' : 'Bloquear'}">${locked ? '🔒' : '🔓'}</button>
           <span class="layer-icon">${icon}</span>
           <span class="layer-name flex-1 truncate ${item.name ? 'font-semibold' : 'text-slate-500'}" title="Doble click para renombrar">${name}</span>
+          ${isText ? '<button class="layer-edit-text w-5 h-5 flex items-center justify-center rounded hover:bg-slate-200 text-slate-400 hover:text-blue-600" title="Editar texto">✏️</button>' : ''}
         </div>`;
     }
     elLayersList.innerHTML = html || '<p class="text-slate-400 text-xs text-center py-4">No hay elementos en esta hoja</p>';
@@ -1091,28 +1107,45 @@
       const id = row.dataset.id;
 
       row.addEventListener('click', e => {
-        if (e.target.closest('.layer-visible, .layer-lock, .layer-drag')) return;
+        if (e.target.closest('.layer-visible, .layer-lock, .layer-drag, .layer-edit-text')) return;
         select(id, e.ctrlKey || e.metaKey);
       });
 
       row.addEventListener('dblclick', e => {
-        if (e.target.closest('.layer-visible, .layer-lock')) return;
+        if (e.target.closest('.layer-visible, .layer-lock, .layer-edit-text')) return;
+        const item = $items.get().find(i => i.id === id);
+        if (!item) return;
         const nameSpan = row.querySelector('.layer-name');
         const input = document.createElement('input');
         input.type = 'text';
-        input.value = $items.get().find(i => i.id === id)?.name || '';
+        input.value = item.name || '';
         input.className = 'w-full px-1 py-0.5 text-xs border border-violet-300 rounded outline-none';
         nameSpan.replaceWith(input);
         input.focus();
         input.select();
+        let saving = false;
         const save = () => {
+          if (saving) return;
+          saving = true;
           const newName = input.value.trim();
           setLayerName(id, newName || null);
-          input.replaceWith(nameSpan);
         };
         input.addEventListener('blur', save);
-        input.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); save(); } if (ev.key === 'Escape') { input.replaceWith(nameSpan); } });
+        input.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter') { ev.preventDefault(); save(); }
+          if (ev.key === 'Escape') { input.replaceWith(nameSpan); }
+        });
       });
+
+        const editBtn = row.querySelector('.layer-edit-text');
+      if (editBtn) {
+        editBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          select(id);
+          $editingTextId.set(id);
+          scheduleRenderSheet();
+        });
+      }
 
       row.querySelector('.layer-visible').addEventListener('click', e => {
         e.stopPropagation();
