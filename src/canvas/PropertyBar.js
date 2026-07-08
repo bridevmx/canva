@@ -1,5 +1,5 @@
 // PropertyBar.js — Renderizado de la barra de propiedades del canvas.
-import { SingleItemControls } from './SingleItemControls.js?v=1.8.6';
+import { SingleItemControls } from './SingleItemControls.js?v=1.8.7';
 
 export class PropertyBar {
   constructor({ FONTS, actions, lifecycle }) {
@@ -122,15 +122,17 @@ export class PropertyBar {
         lifecycle.renderPropertyBars();
         lifecycle.renderSheet();
       });
-      container.querySelector('.prop-flip-x')?.addEventListener('click', () => {
-        console.log('[PropertyBar] flip-x clicked');
-        actions.flipHorizontal();
-        lifecycle.renderPropertyBars();
-      });
-      container.querySelector('.prop-flip-y')?.addEventListener('click', () => {
-        console.log('[PropertyBar] flip-y clicked');
-        actions.flipVertical();
-        lifecycle.renderPropertyBars();
+      container.addEventListener('click', e => {
+        if (e.target.closest('.prop-flip-x')) {
+          console.log('[PropertyBar] flip-x clicked');
+          actions.flipHorizontal();
+          lifecycle.renderPropertyBars();
+        }
+        if (e.target.closest('.prop-flip-y')) {
+          console.log('[PropertyBar] flip-y clicked');
+          actions.flipVertical();
+          lifecycle.renderPropertyBars();
+        }
       });
       const opacitySlider = container.querySelector('.prop-opacity');
       if (opacitySlider) {
