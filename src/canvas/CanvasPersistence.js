@@ -1,7 +1,7 @@
 // CanvasPersistence.js — Cargar/guardar proyectos desde/hacia PocketBase
 
-import { COLLECTIONS, FIELDS } from '../pb.config.js?v=1.9.6';
-import { StickerItem }  from './StickerItem.js?v=1.9.6';
+import { COLLECTIONS, FIELDS } from '../pb.config.js?v=1.9.7';
+import { StickerItem }  from './StickerItem.js?v=1.9.7';
 
 export class CanvasPersistence {
   constructor(editor, pb, auth) {
