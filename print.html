@@ -130,6 +130,9 @@
       items = data.items || [];
       pageColors = data.pageColors || { 1: rec.page_bg || '#ffffff' };
 
+      let fileToken;
+      try { fileToken = await pb.files.getToken(); } catch (e) { fileToken = ''; }
+
       let maxPage = 1;
       items.forEach(item => {
         if (item.page === undefined) item.page = 1;
@@ -139,7 +142,11 @@
           const prefix = item.src.replace('FILE:', '').split('.')[0].replace(/-/g, '_');
           const assets = Array.isArray(rec.upload_assets) ? rec.upload_assets : [rec.upload_assets];
           const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
-          if (fn) item.src = pb.files.getURL(rec, fn);
+          if (fn) {
+            item.src = fileToken
+              ? pb.files.getURL(rec, fn, { token: fileToken })
+              : pb.files.getURL(rec, fn);
+          }
         }
       });
       pagesCount = maxPage;

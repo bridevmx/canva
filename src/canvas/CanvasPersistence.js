@@ -32,6 +32,8 @@ export class CanvasPersistence {
     if (!id) return;
     const record = await this.pb.collection(COLLECTIONS.orders).getOne(id);
     this.currentRecordId = id;
+    let fileToken;
+    try { fileToken = await this.pb.files.getToken(); } catch (e) { fileToken = ''; }
     this.editingAsAdmin = this.auth.isAdmin();
 
     this.editor.paper.setSize(record[FIELDS.orders.paperSize] || 'a4');
@@ -62,7 +64,9 @@ export class CanvasPersistence {
         else if (typeof record.upload_assets === 'string' && record.upload_assets.trim()) assets = [record.upload_assets];
         const fn = assets.find(f => f.startsWith(prefix) || f.includes(prefix));
         if (fn) {
-          const url = this.pb.files.getURL(record, fn);
+          const url = fileToken
+            ? this.pb.files.getURL(record, fn, { token: fileToken })
+            : this.pb.files.getURL(record, fn);
           item.src = url;
           if (item.originalSrc) item.originalSrc = url;
         }
