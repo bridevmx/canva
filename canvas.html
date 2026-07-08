@@ -15,7 +15,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Round:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Righteous&family=Russo+One&family=Sacramento&family=Satisfy&family=Inter:wght@400;700;900&family=Anton&family=Pacifico&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Bebas+Neue&family=Lobster&family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Chewy&family=Permanent+Marker&family=Nunito:wght@400;700;900&family=Raleway:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Archivo+Black&family=Passion+One:wght@400;700;900&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     html,body{margin:0;padding:0;background:#e5e7eb;font-family:Inter,sans-serif}
@@ -72,7 +72,7 @@
     }
     .hidden{display:none!important}
     /* ── Material Icons ── */
-    .mi{font-family:'Material Symbols Round';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+    .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle}
     /* ── Topbar ── */
     .top-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;transition:background .15s,color .15s;cursor:pointer;border:none;background:transparent;color:#475569;white-space:nowrap}
     .top-btn:hover{background:#f1f5f9}
@@ -112,8 +112,7 @@
     .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;border:none;background:transparent;cursor:pointer;color:#64748b;transition:color .15s;-webkit-tap-highlight-color:transparent;min-height:56px}
     .bnav-btn .mi{font-size:24px;line-height:1}
     .bnav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1}
-    .bnav-btn.active{color:#7c3aed}
-    .bnav-btn.active .mi{font-variation-settings:'FILL' 1}
+    .bnav-btn.active{color:#7c3aed;font-weight:700}
     .bnav-btn:disabled{opacity:.35;cursor:not-allowed}
     /* ── Bottom Sheet (móvil props) ── */
     #props-sheet{position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:none;max-height:70vh;overflow:hidden;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -275,7 +274,7 @@
         <span class="mi">group_work</span><span class="tbtn-label">Agrupar</span>
       </button>
       <button id="tool-btn-desagrupar" disabled class="tbtn shrink-0" title="Desagrupar (Ctrl+Shift+G)">
-        <span class="mi">call_split</span><span class="tbtn-label hidden sm:inline">Desagrupar</span>
+        <span class="mi">ungroup</span><span class="tbtn-label hidden sm:inline">Desagrupar</span>
       </button>
 
       <!-- Fondo de hoja (compacto) -->
@@ -523,7 +522,7 @@
         <button id="more-btn-duplicar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#6366f1">copy_all</span><span>Duplicar</span></button>
         <button id="more-btn-eliminar" class="more-row-btn" style="color:#ef4444"><span class="mi" style="font-size:22px">delete</span><span>Eliminar</span></button>
         <button id="more-btn-grupo" class="more-row-btn"><span class="mi" style="font-size:22px;color:#0ea5e9">group_work</span><span>Agrupar</span></button>
-        <button id="more-btn-desagrupar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#0ea5e9">call_split</span><span>Desagrupar</span></button>
+        <button id="more-btn-desagrupar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#0ea5e9">ungroup</span><span>Desagrupar</span></button>
         <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
       </div>
       <!-- Acciones globales -->
