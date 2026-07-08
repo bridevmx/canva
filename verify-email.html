@@ -6,28 +6,71 @@
   <title>StickerMaker - Verificar email</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.0/dist/pocketbase.umd.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="auth.js"></script>
+  <style>
+    body{font-family:Inter,sans-serif}
+    .mi{font-family:'Material Icons';font-style:normal;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;user-select:none;vertical-align:middle;text-transform:none!important}
+    .mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .4s ease forwards}
+    .fade-up-delay{animation:fadeUp .4s ease .1s forwards;opacity:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{animation:spin .8s linear infinite}
+    @keyframes checkPop{0%{transform:scale(0);opacity:0}50%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+    .check-pop{animation:checkPop .4s ease forwards}
+    @keyframes errorShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+    .error-shake{animation:errorShake .4s ease}
+  </style>
 </head>
-<body>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 flex items-center justify-center p-4">
-    <div class="w-full max-w-sm">
-      <div class="text-center mb-8">
-        <span class="text-5xl">✉️</span>
-        <h1 class="text-2xl font-black text-white mt-3 tracking-tight">Verificación de email</h1>
-        <p id="subtitle" class="text-slate-400 text-sm mt-1">Verificando tu cuenta...</p>
-      </div>
+<body class="bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 overflow-y-auto selection:bg-violet-500/30">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
 
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4 backdrop-blur-sm shadow-xl">
-        <div id="loading-spinner" class="flex justify-center py-4">
-          <div class="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+      <!-- Header -->
+      <div class="text-center mb-8 fade-up">
+        <div id="icon-container" class="relative inline-flex items-center justify-center w-20 h-20 rounded-full mb-5 transition-all duration-500">
+          <!-- Spinner state -->
+          <div id="icon-loading" class="absolute inset-0 rounded-full bg-violet-600/15 border border-violet-500/20">
+            <div class="flex items-center justify-center h-full">
+              <div class="w-10 h-10 border-[3px] border-violet-500/30 border-t-violet-400 rounded-full spinner"></div>
+            </div>
+          </div>
+          <!-- Success state -->
+          <div id="icon-success" class="absolute inset-0 rounded-full bg-emerald-600/15 border border-emerald-500/20 hidden">
+            <div class="flex items-center justify-center h-full">
+              <span class="mi text-emerald-400 check-pop" style="font-size:40px">check_circle</span>
+            </div>
+          </div>
+          <!-- Error state -->
+          <div id="icon-error" class="absolute inset-0 rounded-full bg-red-600/15 border border-red-500/20 hidden">
+            <div class="flex items-center justify-center h-full">
+              <span class="mi text-red-400 error-shake" style="font-size:40px">error</span>
+            </div>
+          </div>
         </div>
-        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
-        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-center"></div>
-
-        <p class="text-center text-slate-500 text-xs pt-3 border-t border-white/10 leading-relaxed">
-          <a href="/login" class="text-violet-400 hover:text-violet-300 font-bold transition">Ir al inicio de sesión →</a>
-        </p>
+        <h1 id="title" class="text-2xl font-black text-white tracking-tight">Verificando tu cuenta...</h1>
+        <p id="subtitle" class="text-slate-400 text-sm mt-2 max-w-xs mx-auto leading-relaxed">Un momento mientras confirmamos tu dirección de correo</p>
       </div>
+
+      <!-- Card -->
+      <div class="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 backdrop-blur-xl shadow-2xl shadow-black/20 fade-up-delay">
+        <div id="error-alert" class="hidden bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl px-5 py-3.5 text-sm text-center"></div>
+        <div id="success-alert" class="hidden bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl px-5 py-3.5 text-sm text-center"></div>
+
+        <div id="actions" class="hidden space-y-3 mt-4">
+          <a href="/login" id="btn-login" class="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-sm font-bold text-white transition-all duration-200 shadow-lg shadow-violet-900/30 hover:shadow-violet-600/30 hover:-translate-y-0.5 active:translate-y-0">
+            <span class="mi mi-sm">login</span>
+            Ir al inicio de sesión
+          </a>
+          <a href="/" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200">
+            <span class="mi mi-sm">home</span>
+            Volver al inicio
+          </a>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -37,32 +80,47 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
 
-    const elSpinner = document.getElementById('loading-spinner');
+    const elIconLoading = document.getElementById('icon-loading');
+    const elIconSuccess = document.getElementById('icon-success');
+    const elIconError = document.getElementById('icon-error');
+    const elTitle = document.getElementById('title');
+    const elSubtitle = document.getElementById('subtitle');
     const elErrorAlert = document.getElementById('error-alert');
     const elSuccessAlert = document.getElementById('success-alert');
-    const elSubtitle = document.getElementById('subtitle');
+    const elActions = document.getElementById('actions');
+
+    function showSuccess(msg) {
+      elIconLoading.classList.add('hidden');
+      elIconSuccess.classList.remove('hidden');
+      elTitle.textContent = 'Email verificado!';
+      elSubtitle.textContent = '';
+      elSuccessAlert.textContent = msg;
+      elSuccessAlert.classList.remove('hidden');
+      elActions.classList.remove('hidden');
+    }
+
+    function showError(msg) {
+      elIconLoading.classList.add('hidden');
+      elIconError.classList.remove('hidden');
+      elTitle.textContent = 'No se pudo verificar';
+      elSubtitle.textContent = '';
+      elErrorAlert.textContent = msg;
+      elErrorAlert.classList.remove('hidden');
+      elActions.classList.remove('hidden');
+    }
 
     async function verifyEmail() {
       if (!token) {
-        elSpinner.classList.add('hidden');
-        elErrorAlert.textContent = 'Enlace inválido. Solicita una nueva verificación.';
-        elErrorAlert.classList.remove('hidden');
-        elSubtitle.textContent = 'No se pudo verificar tu cuenta';
+        showError('Enlace inválido. Solicita una nueva verificación desde tu correo de registro.');
         return;
       }
 
       try {
         const pb = getAuthPb();
         await pb.collection('users_canva').confirmVerification(token);
-        elSpinner.classList.add('hidden');
-        elSuccessAlert.textContent = 'Email verificado correctamente. Ya puedes iniciar sesión.';
-        elSuccessAlert.classList.remove('hidden');
-        elSubtitle.textContent = 'Cuenta verificada';
+        showSuccess('Tu cuenta fue verificada correctamente. Ya puedes iniciar sesión.');
       } catch (e) {
-        elSpinner.classList.add('hidden');
-        elErrorAlert.textContent = e?.data?.message || 'El enlace es inválido o ha expirado.';
-        elErrorAlert.classList.remove('hidden');
-        elSubtitle.textContent = 'No se pudo verificar tu cuenta';
+        showError(e?.data?.message || 'El enlace es inválido o ha expirado. Solicita uno nuevo.');
       }
     }
 
