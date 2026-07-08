@@ -1,6 +1,6 @@
 // PointerController.js — Drag/resize/rotate. FIX BUG B: swap w/h en rotación 90°/270°.
 
-import { clamp, getRotatedBounds } from './StickerItem.js?v=1.8.4';
+import { clamp, getRotatedBounds } from './StickerItem.js?v=1.8.5';
 
 const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize' };
 

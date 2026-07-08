@@ -1,5 +1,5 @@
 // PropertyBar.js — Renderizado de la barra de propiedades del canvas.
-import { SingleItemControls } from './SingleItemControls.js?v=1.8.4';
+import { SingleItemControls } from './SingleItemControls.js?v=1.8.5';
 
 export class PropertyBar {
   constructor({ FONTS, actions, lifecycle }) {
@@ -119,10 +119,12 @@ export class PropertyBar {
         lifecycle.renderSheet();
       });
       container.querySelector('.prop-flip-x')?.addEventListener('click', () => {
+        console.log('[PropertyBar] flip-x clicked');
         actions.flipHorizontal();
         lifecycle.renderPropertyBars();
       });
       container.querySelector('.prop-flip-y')?.addEventListener('click', () => {
+        console.log('[PropertyBar] flip-y clicked');
         actions.flipVertical();
         lifecycle.renderPropertyBars();
       });

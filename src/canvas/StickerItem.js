@@ -101,6 +101,8 @@ export class StickerItem {
     if (this.flipX) t += ' scaleX(-1)';
     if (this.flipY) t += ' scaleY(-1)';
     if (this.rotation) t += ` rotate(${this.rotation}deg)`;
-    return t.trim() || 'none';
+    const result = t.trim() || 'none';
+    if (this.flipX || this.flipY) console.log('[StickerItem] transform:', result, 'flipX=', this.flipX, 'flipY=', this.flipY);
+    return result;
   }
 }

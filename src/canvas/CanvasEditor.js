@@ -1,16 +1,16 @@
 // CanvasEditor.js — Núcleo del editor. Coordina items, paper, history, crop, pointer.
 
-import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.8.4';
-import { ImageItem }      from './ImageItem.js?v=1.8.4';
-import { TextItem }       from './TextItem.js?v=1.8.4';
-import { ShapeItem }     from './ShapeItem.js?v=1.8.4';
-import { CropController } from './CropController.js?v=1.8.4';
+import { StickerItem, clamp, generateId, getRotatedBounds } from './StickerItem.js?v=1.8.5';
+import { ImageItem }      from './ImageItem.js?v=1.8.5';
+import { TextItem }       from './TextItem.js?v=1.8.5';
+import { ShapeItem }     from './ShapeItem.js?v=1.8.5';
+import { CropController } from './CropController.js?v=1.8.5';
 
-import { HistoryManager } from './HistoryManager.js?v=1.8.4';
-import { GuidesManager }  from './GuidesManager.js?v=1.8.4';
-import { PointerController } from './PointerController.js?v=1.8.4';
-import { PaperManager }   from './PaperManager.js?v=1.8.4';
-import { FONTS }          from '../pb.config.js?v=1.8.4';
+import { HistoryManager } from './HistoryManager.js?v=1.8.5';
+import { GuidesManager }  from './GuidesManager.js?v=1.8.5';
+import { PointerController } from './PointerController.js?v=1.8.5';
+import { PaperManager }   from './PaperManager.js?v=1.8.5';
+import { FONTS }          from '../pb.config.js?v=1.8.5';
 
 const ZOOM_MIN = 0.1, ZOOM_MAX = 3.0;
 const PAPER_SIZES_W = { a4: 794, letter: 816 };
@@ -261,11 +261,15 @@ export class CanvasEditor {
   }
 
   flipHorizontal() {
-    for (const item of this._selectedItems()) item.flipX = !item.flipX;
+    const items = this._selectedItems();
+    console.log('[CanvasEditor] flipHorizontal selected:', items.length);
+    for (const item of items) { item.flipX = !item.flipX; console.log('  ->', item.id, 'flipX=', item.flipX); }
     this.history.push();
   }
   flipVertical() {
-    for (const item of this._selectedItems()) item.flipY = !item.flipY;
+    const items = this._selectedItems();
+    console.log('[CanvasEditor] flipVertical selected:', items.length);
+    for (const item of items) { item.flipY = !item.flipY; console.log('  ->', item.id, 'flipY=', item.flipY); }
     this.history.push();
   }
 
