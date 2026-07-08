@@ -1,11 +1,12 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
-import { CanvasEditor } from './CanvasEditor.js?v=1.9.7';
-import { CanvasPersistence } from './CanvasPersistence.js?v=1.9.7';
-import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.9.7';
-import { AuthManager } from '../auth/AuthManager.js?v=1.9.7';
-import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.9.7';
-import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.9.7';
+import { CanvasEditor } from './CanvasEditor.js?v=1.9.9';
+import { CanvasPersistence } from './CanvasPersistence.js?v=1.9.9';
+import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=1.9.9';
+import { AuthManager } from '../auth/AuthManager.js?v=1.9.9';
+import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=1.9.9';
+import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=1.9.9';
+import { StickerItem } from './StickerItem.js?v=1.9.9';
 
 
 const PX_PER_CM = 37.8095;
@@ -61,6 +62,57 @@ function sync() {
   $pagesCount.set(editor.paper.pagesCount);
   $activePage.set(editor.paper.activePage);
   $pageColors.set({ ...editor.paper.pageColors });
+  scheduleAutoSave();
+}
+
+// ── Auto-save localStorage ──
+const AUTO_SAVE_KEY = 'canvas-autosave';
+const AUTO_SAVE_INTERVAL = 30000;
+let _autoSaveTimer = null;
+
+function _doAutoSave() {
+  if (!editor || editor.items.length === 0) return;
+  try {
+    const data = {
+      items: editor.items,
+      paperSize: editor.paper.paperSize,
+      activePage: editor.paper.activePage,
+      pageColors: editor.paper.pageColors,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(data));
+  } catch (e) { /* quota exceeded, ignore */ }
+}
+
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(_doAutoSave, AUTO_SAVE_INTERVAL);
+}
+
+function hasAutoSave() {
+  return localStorage.getItem(AUTO_SAVE_KEY) !== null;
+}
+
+function restoreAutoSave() {
+  try {
+    const raw = localStorage.getItem(AUTO_SAVE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data.items || !Array.isArray(data.items)) return null;
+    editor.items = data.items.map(d => StickerItem.fromJSON(d));
+    if (data.paperSize) editor.paper.setSize(data.paperSize);
+    if (data.activePage) editor.paper.setActive(data.activePage);
+    if (data.pageColors) editor.paper.pageColors = data.pageColors;
+    editor.clearSelection();
+    editor.history.reset();
+    editor.history.push();
+    localStorage.removeItem(AUTO_SAVE_KEY);
+    return true;
+  } catch { return null; }
+}
+
+function clearAutoSave() {
+  localStorage.removeItem(AUTO_SAVE_KEY);
 }
 
 function sortedItems() {
@@ -103,6 +155,10 @@ async function initCanvas(canvasMainRef) {
   canvasMainRef.addEventListener('touchend', e => onCanvasTouchEnd(e), { passive: true });
 
   window.addEventListener('editor:change', () => sync());
+
+  // Auto-save periodic
+  setInterval(_doAutoSave, AUTO_SAVE_INTERVAL);
+  window.addEventListener('beforeunload', () => _doAutoSave());
 
   await persistence.loadUserProjects();
 
@@ -499,5 +555,6 @@ export {
   startCropMove, startCropResize,
   saveProject, getEditableAsAdmin,
   computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
+  hasAutoSave, restoreAutoSave, clearAutoSave,
   FONTS, PRODUCTS, PAPER_SIZES,
 };

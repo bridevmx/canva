@@ -1,4 +1,14 @@
-// SingleItemControls.js — Controles específicos de item único en la barra de propiedades.
+import { SHAPE_STYLES } from './ShapeItem.js?v=1.9.9';
+
+const SHAPE_BTNS = [
+  { key: 'rect',     icon: '▭' },
+  { key: 'circle',   icon: '⬤' },
+  { key: 'star',     icon: '★' },
+  { key: 'heart',    icon: '♥' },
+  { key: 'triangle', icon: '▲' },
+  { key: 'hexagon',  icon: '⬡' },
+  { key: 'bubble',   icon: '💬' },
+];
 
 export class SingleItemControls {
   constructor({ FONTS }) {
@@ -8,7 +18,6 @@ export class SingleItemControls {
   renderHtml(sel, groupClass, labelClass, isMobile) {
     let h = '';
 
-    // Imagen: fit
     if (sel.type === 'image') {
       h += `<div class="${groupClass}">`;
       if (!isMobile) h += `<span class="${labelClass}">Ajuste</span>`;
@@ -19,12 +28,13 @@ export class SingleItemControls {
       h += '</select></div>';
     }
 
-    // Forma
     if (sel.type === 'shape') {
       h += `<div class="${groupClass}">`;
       if (!isMobile) h += `<span class="${labelClass}">Forma</span>`;
-      h += `<button class="prop-shape-rect px-2 py-0.5 rounded text-xs font-medium transition ${sel.shapeType === 'rect' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">▭ ${isMobile ? '' : 'Rect'}</button>`;
-      h += `<button class="prop-shape-circle px-2 py-0.5 rounded text-xs font-medium transition ${sel.shapeType === 'circle' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">⬤ ${isMobile ? '' : 'Círculo'}</button>`;
+      for (const b of SHAPE_BTNS) {
+        const active = sel.shapeType === b.key;
+        h += `<button class="prop-shape-${b.key} px-1.5 py-0.5 rounded text-xs font-medium transition ${active ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">${b.icon}</button>`;
+      }
       h += '</div>';
 
       h += `<div class="${groupClass}">`;
@@ -40,7 +50,6 @@ export class SingleItemControls {
       h += '</div>';
     }
 
-    // Texto
     if (sel.type === 'text') {
       h += `<div class="${groupClass}">`;
       if (!isMobile) h += `<span class="${labelClass}">Fuente</span>`;
@@ -60,7 +69,18 @@ export class SingleItemControls {
       h += `<input type="color" value="${sel.color || '#000000'}" class="prop-text-color w-7 h-7 rounded cursor-pointer border border-slate-200 p-0 bg-white" />`;
       h += '</div>';
 
-      h += `<button class="prop-text-bold px-2 py-0.5 rounded text-xs font-semibold transition border-r border-slate-200 pr-2 mr-0 ${sel.fontWeight === 'bold' || sel.fontWeight >= 700 ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">B</button>`;
+      h += `<div class="${groupClass}">`;
+      h += `<button class="prop-text-bold px-2 py-0.5 rounded text-xs font-semibold transition ${sel.fontWeight === 'bold' || sel.fontWeight >= 700 ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border border-slate-200'}">B</button>`;
+      h += '</div>';
+
+      h += `<div class="${groupClass}">`;
+      if (!isMobile) h += `<span class="${labelClass}">Curvo</span>`;
+      h += `<input type="checkbox" class="prop-text-curve-toggle" ${sel.textCurved ? 'checked' : ''} />`;
+      if (sel.textCurved) {
+        h += `<input type="range" value="${sel.textArcRadius ?? 200}" min="30" max="600" step="10" class="prop-text-arc-radius w-16 h-1.5 accent-blue-600 cursor-pointer" />`;
+        h += `<span class="text-xs text-slate-500 w-6">${sel.textArcRadius ?? 200}</span>`;
+      }
+      h += '</div>';
 
       h += `<div class="${groupClass}">`;
       if (!isMobile) h += `<span class="${labelClass}">Sombra</span>`;
@@ -96,18 +116,17 @@ export class SingleItemControls {
       });
     }
 
-    container.querySelector('.prop-shape-rect')?.addEventListener('click', () => {
-      sel.shapeType = 'rect';
-      lifecycle.pushHistory();
-      lifecycle.renderPropertyBars();
-      lifecycle.renderSheet();
-    });
-    container.querySelector('.prop-shape-circle')?.addEventListener('click', () => {
-      sel.shapeType = 'circle';
-      lifecycle.pushHistory();
-      lifecycle.renderPropertyBars();
-      lifecycle.renderSheet();
-    });
+    for (const b of SHAPE_BTNS) {
+      const btn = container.querySelector(`.prop-shape-${b.key}`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          sel.shapeType = b.key;
+          lifecycle.pushHistory();
+          lifecycle.renderPropertyBars();
+          lifecycle.renderSheet();
+        });
+      }
+    }
 
     const fillColor = container.querySelector('.prop-fill-color');
     if (fillColor) {
@@ -152,6 +171,24 @@ export class SingleItemControls {
         updateText();
       });
     }
+
+    const curveToggle = container.querySelector('.prop-text-curve-toggle');
+    if (curveToggle) {
+      curveToggle.addEventListener('change', () => {
+        sel.textCurved = curveToggle.checked;
+        if (sel.textCurved && !sel.textArcRadius) sel.textArcRadius = 200;
+        updateText();
+      });
+    }
+    const arcRadius = container.querySelector('.prop-text-arc-radius');
+    if (arcRadius) {
+      arcRadius.addEventListener('input', () => {
+        sel.textArcRadius = parseInt(arcRadius.value);
+        lifecycle.sync();
+      });
+      arcRadius.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+    }
+
     const shadowToggle = container.querySelector('.prop-text-shadow-toggle');
     if (shadowToggle) {
       shadowToggle.addEventListener('change', () => {

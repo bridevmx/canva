@@ -197,20 +197,56 @@
             img.style.cssText = `width:100%;height:100%;object-fit:${item.fit || 'contain'}`;
             wrapper.appendChild(img);
           } else if (item.type === 'text') {
-            const div = document.createElement('div');
-            div.className = 'text-box';
-            div.textContent = item.text;
-            div.style.cssText = `font-family:${item.fontFamily};color:${item.color};font-size:${item.fontSize}px;font-weight:${item.fontWeight};` +
-              (item.textShadow ? `text-shadow:${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor};` : '') +
-              (item.textOutline ? `-webkit-text-stroke:${item.outlineWidth}px ${item.outlineColor};` : '');
-            wrapper.appendChild(div);
+            if (item.textCurved) {
+              const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+              svg.setAttribute('width', '100%');
+              svg.setAttribute('height', '100%');
+              svg.style.overflow = 'visible';
+              const w = Math.max(item.w || 300, 10);
+              const R = Math.max(item.textArcRadius || 200, w / 2 + 1);
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              path.setAttribute('id', 'text-arc-' + item.id);
+              path.setAttribute('d', `M 0,0 A ${R},${R} 0 0,0 ${w},0`);
+              path.setAttribute('fill', 'none');
+              svg.appendChild(path);
+              const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+              tp.setAttribute('href', '#text-arc-' + item.id);
+              tp.textContent = item.text;
+              tp.style.fontFamily = item.fontFamily;
+              tp.style.fontSize = item.fontSize + 'px';
+              tp.style.fontWeight = item.fontWeight;
+              tp.style.fill = item.color;
+              if (item.textShadow) tp.style.textShadow = `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}`;
+              if (item.textOutline) tp.style.webkitTextStroke = `${item.outlineWidth}px ${item.outlineColor}`;
+              txt.appendChild(tp);
+              svg.appendChild(txt);
+              wrapper.appendChild(svg);
+            } else {
+              const div = document.createElement('div');
+              div.className = 'text-box';
+              div.textContent = item.text;
+              div.style.cssText = `font-family:${item.fontFamily};color:${item.color};font-size:${item.fontSize}px;font-weight:${item.fontWeight};` +
+                (item.textShadow ? `text-shadow:${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor};` : '') +
+                (item.textOutline ? `-webkit-text-stroke:${item.outlineWidth}px ${item.outlineColor};` : '');
+              wrapper.appendChild(div);
+            }
           } else if (item.type === 'shape') {
             const div = document.createElement('div');
-            div.style.cssText = `width:100%;height:100%;` +
-              `background:${item.fillColor || '#3b82f6'};` +
-              `border-radius:${item.shapeType === 'circle' ? '50%' : '4px'};` +
-              ((item.strokeWidth ?? 0) > 0 ? `border:${item.strokeWidth}px solid ${item.strokeColor};` : '') +
-              `box-sizing:border-box`;
+            let css = `width:100%;height:100%;background:${item.fillColor || '#3b82f6'};box-sizing:border-box;`;
+            if (item.shapeType === 'circle') css += 'border-radius:50%;';
+            else if (item.shapeType === 'bubble') css += 'border-radius:8px;';
+            else if (item.shapeType === 'rect') css += 'border-radius:4px;';
+            else css += 'border-radius:0;';
+            if ((item.strokeWidth ?? 0) > 0) css += `border:${item.strokeWidth}px solid ${item.strokeColor};`;
+            const clip = {
+              star: 'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+              heart: 'polygon(50% 15%,70% 0%,85% 15%,100% 30%,100% 50%,50% 100%,0% 50%,0% 30%,15% 15%,30% 0%)',
+              triangle: 'polygon(50% 0%,0% 100%,100% 100%)',
+              hexagon: 'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)',
+            }[item.shapeType];
+            if (clip) css += `clip-path:${clip};`;
+            div.style.cssText = css;
             wrapper.appendChild(div);
           }
 

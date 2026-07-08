@@ -45,6 +45,7 @@
     .tb-scroll::-webkit-scrollbar{height:3px}.tb-scroll::-webkit-scrollbar-track{background:transparent}.tb-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:9999px}
     .drag-locked{overflow:hidden!important;touch-action:none!important}
     .canvas-zoom-outer{position:relative}.canvas-zoom-inner{transform-origin:top left}
+    .rubber-band{position:absolute;border:1.5px dashed #2563eb;background:rgba(37,99,235,0.08);pointer-events:none;z-index:50}
     @media(pointer:coarse){
       .resize-handle{width:28px!important;height:28px!important}
       .resize-handle.handle-nw{top:-14px!important;left:-14px!important}
@@ -289,6 +290,13 @@
     </div>
   </div>
 
+  <!-- ══════════════ AUTO-SAVE BANNER ══════════════ -->
+  <div id="autosave-banner" class="hidden no-print bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-center gap-3 text-sm shrink-0 flex-wrap">
+    <span class="text-amber-800 font-medium">📄 Se encontró un borrador guardado. ¿Restaurar?</span>
+    <button id="autosave-restore-btn" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-white font-bold text-xs transition">Sí, restaurar</button>
+    <button id="autosave-cancel-btn" class="px-3 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 font-semibold text-xs transition border border-slate-200">No, descartar</button>
+  </div>
+
   <!-- ══════════════ CANVAS + PANEL DE CAPAS ══════════════ -->
   <div id="workspace" class="flex-1 flex overflow-hidden print:block relative">
     <main id="canvas-main"
@@ -365,10 +373,11 @@
     onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
+    hasAutoSave, restoreAutoSave, clearAutoSave,
     FONTS, PRODUCTS, PAPER_SIZES,
-  } from './src/canvas/canvasView.js?v=1.9.7';
+  } from './src/canvas/canvasView.js?v=1.9.9';
 
-  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.7';
+  import { PropertyBar } from './src/canvas/PropertyBar.js?v=1.9.9';
 
   import { $authUser, logout } from './src/auth/authStore.js';
 
@@ -422,6 +431,12 @@
   // ── Init ──
   await initCanvas(elCanvasMain);
   injectPrintCss();
+
+  // Auto-save restore check
+  if (hasAutoSave()) {
+    const banner = document.getElementById('autosave-banner');
+    if (banner) banner.classList.remove('hidden');
+  }
 
   // Setup rulers
   Object.assign(elRulerX.style, getRulerXStyle());
@@ -490,6 +505,19 @@
   document.getElementById('tool-btn-zoom-out').addEventListener('click', zoomOut);
   document.getElementById('tool-btn-zoom-in').addEventListener('click', zoomIn);
   document.getElementById('tool-btn-fit').addEventListener('click', () => fitZoom(elCanvasMain));
+
+  // Auto-save restore
+  document.getElementById('autosave-restore-btn').addEventListener('click', () => {
+    const ok = restoreAutoSave();
+    if (ok) {
+      document.getElementById('autosave-banner')?.classList.add('hidden');
+      sync();
+    }
+  });
+  document.getElementById('autosave-cancel-btn').addEventListener('click', () => {
+    clearAutoSave();
+    document.getElementById('autosave-banner')?.classList.add('hidden');
+  });
 
   // ── Modal ──
   document.getElementById('modal-close-btn').addEventListener('click', () => $isSaveModalOpen.set(false));
@@ -688,9 +716,7 @@
     sheetEl.style.height = sheet.h + 'px';
     sheetEl.dataset.page = activePage;
 
-    sheetEl.addEventListener('mousedown', e => {
-      if (e.target === sheetEl) clearSelection();
-    });
+    sheetEl.addEventListener('pointerdown', e => { if (e.target === sheetEl) startRubberBand(e, sheetEl); });
 
     // Grid
     if (showGrid) {
@@ -763,19 +789,48 @@
         itemEl.appendChild(wrapper);
       } else if (item.type === 'text') {
         const wrapper = document.createElement('div');
-        wrapper.className = 'w-full h-full relative';
+        wrapper.className = 'w-full h-full relative overflow-visible';
 
         if ($editingTextId.get() !== item.id) {
-          const div = document.createElement('div');
-          div.className = 'text-box pointer-events-none';
-          div.style.fontFamily = item.fontFamily;
-          div.style.color = item.color;
-          div.style.fontSize = item.fontSize + 'px';
-          div.style.fontWeight = item.fontWeight;
-          div.style.textShadow = item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none';
-          div.style.webkitTextStroke = item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none';
-          div.textContent = item.text;
-          wrapper.appendChild(div);
+          if (item.textCurved) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.overflow = 'visible';
+            const w = Math.max(item.w || 300, 10);
+            const R = Math.max(item.textArcRadius || 200, w / 2 + 1);
+            const h = R - Math.sqrt(R * R - (w / 2) * (w / 2));
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('id', `text-arc-${item.id}`);
+            path.setAttribute('d', `M 0,0 A ${R},${R} 0 0,0 ${w},0`);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', 'none');
+            svg.appendChild(path);
+            const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+            tp.setAttribute('href', `#text-arc-${item.id}`);
+            tp.textContent = item.text;
+            tp.style.fontFamily = item.fontFamily;
+            tp.style.fontSize = item.fontSize + 'px';
+            tp.style.fontWeight = item.fontWeight;
+            tp.style.fill = item.color;
+            if (item.textShadow) tp.style.textShadow = `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}`;
+            if (item.textOutline) tp.style.webkitTextStroke = `${item.outlineWidth}px ${item.outlineColor}`;
+            txt.appendChild(tp);
+            svg.appendChild(txt);
+            wrapper.appendChild(svg);
+          } else {
+            const div = document.createElement('div');
+            div.className = 'text-box pointer-events-none';
+            div.style.fontFamily = item.fontFamily;
+            div.style.color = item.color;
+            div.style.fontSize = item.fontSize + 'px';
+            div.style.fontWeight = item.fontWeight;
+            div.style.textShadow = item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none';
+            div.style.webkitTextStroke = item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none';
+            div.textContent = item.text;
+            wrapper.appendChild(div);
+          }
         } else {
           const textarea = document.createElement('textarea');
           textarea.value = item.text;
@@ -786,9 +841,7 @@
           textarea.style.fontWeight = item.fontWeight;
           textarea.style.textShadow = item.textShadow ? `${item.shadowOffsetX}px ${item.shadowOffsetY}px ${item.shadowBlur}px ${item.shadowColor}` : 'none';
           textarea.style.webkitTextStroke = item.textOutline ? `${item.outlineWidth}px ${item.outlineColor}` : 'none';
-          textarea.addEventListener('input', () => {
-            item.text = textarea.value;
-          });
+          textarea.addEventListener('input', () => { item.text = textarea.value; });
           textarea.addEventListener('blur', () => {
             $editingTextId.set(null);
             pushHistory();
@@ -804,11 +857,25 @@
         itemEl.appendChild(wrapper);
       } else if (item.type === 'shape') {
         const div = document.createElement('div');
-        div.className = 'w-full h-full pointer-events-none';
-        div.style.background = item.fillColor || '#3b82f6';
-        div.style.borderRadius = item.shapeType === 'circle' ? '50%' : '4px';
-        div.style.border = (item.strokeWidth || 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none';
-        div.style.boxSizing = 'border-box';
+        div.className = 'w-full h-full pointer-events-none' + (item.shapeType === 'bubble' ? ' shape-bubble' : '');
+        if (typeof item.toShapeStyle === 'function') {
+          const ss = item.toShapeStyle();
+          div.style.background = ss.background;
+          div.style.borderRadius = ss.borderRadius || '0';
+          div.style.clipPath = ss.clipPath || '';
+          div.style.border = ss.border;
+          div.style.boxSizing = ss.boxSizing;
+        } else {
+          div.style.background = item.fillColor || '#3b82f6';
+          div.style.borderRadius = item.shapeType === 'circle' ? '50%' : '4px';
+          div.style.border = (item.strokeWidth || 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none';
+          div.style.boxSizing = 'border-box';
+        }
+        if (item.shapeType === 'bubble') {
+          const tail = document.createElement('div');
+          tail.style.cssText = `position:absolute;bottom:-10px;left:35%;width:0;height:0;border:12px solid transparent;border-top-color:${item.fillColor || '#3b82f6'};border-bottom:0;pointer-events:none;z-index:1;`;
+          div.appendChild(tail);
+        }
         itemEl.appendChild(div);
       }
 
@@ -918,6 +985,60 @@
 
     propertyBar.render(elPropsBarContent, sel, selectedAll, false);
     propertyBar.render(elPropsBarMobile, sel, selectedAll, true);
+  }
+
+  // ── Rubber‑band selection ──
+  let _rb = null;
+  function startRubberBand(e, sheetEl) {
+    const rect = sheetEl.getBoundingClientRect();
+    const z = $canvasZoom.get();
+    _rb = { startX: (e.clientX - rect.left) / z, startY: (e.clientY - rect.top) / z, sheetEl };
+    const div = document.createElement('div');
+    div.className = 'rubber-band';
+    sheetEl.appendChild(div);
+    _rb.el = div;
+    window.addEventListener('pointermove', _onRbMove);
+    window.addEventListener('pointerup', _onRbEnd);
+  }
+  function _onRbMove(e) {
+    if (!_rb) return;
+    const rect = _rb.sheetEl.getBoundingClientRect();
+    const z = $canvasZoom.get();
+    const x = (e.clientX - rect.left) / z;
+    const y = (e.clientY - rect.top) / z;
+    const l = Math.min(_rb.startX, x);
+    const t = Math.min(_rb.startY, y);
+    _rb.el.style.left = l + 'px';
+    _rb.el.style.top  = t + 'px';
+    _rb.el.style.width  = Math.abs(x - _rb.startX) + 'px';
+    _rb.el.style.height = Math.abs(y - _rb.startY) + 'px';
+  }
+  function _onRbEnd(e) {
+    if (!_rb) return;
+    window.removeEventListener('pointermove', _onRbMove);
+    window.removeEventListener('pointerup', _onRbEnd);
+    const rect = _rb.sheetEl.getBoundingClientRect();
+    const z = $canvasZoom.get();
+    const x = (e.clientX - rect.left) / z;
+    const y = (e.clientY - rect.top) / z;
+    const l = Math.min(_rb.startX, x);
+    const r = Math.max(_rb.startX, x);
+    const t = Math.min(_rb.startY, y);
+    const b = Math.max(_rb.startY, y);
+    _rb.el.remove();
+    if (r - l < 3 && b - t < 3) { _rb = null; clearSelection(); return; }
+    const page = $activePage.get();
+    const items = sortedItems().filter(i => (i.page || 1) === page);
+    const ids = items.filter(item => {
+      const iL = item.x, iR = item.x + item.w;
+      const iT = item.y, iB = item.y + item.h;
+      return iL < r && iR > l && iT < b && iB > t;
+    }).map(i => i.id);
+    if (ids.length) {
+      select(ids[0], false);
+      for (let i = 1; i < ids.length; i++) select(ids[i], true);
+    } else clearSelection();
+    _rb = null;
   }
 
   // ── Panel de capas ──

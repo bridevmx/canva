@@ -1,6 +1,6 @@
 // TextItem.js — Item tipo texto con tipografía, sombra y contorno
 
-import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.7';
+import { StickerItem, registerItemFactory, ITEM_TYPES } from './StickerItem.js?v=1.9.9';
 
 export class TextItem extends StickerItem {
   constructor(cfg = {}) {
@@ -20,6 +20,9 @@ export class TextItem extends StickerItem {
     this.textOutline    = cfg.textOutline ?? false;
     this.outlineColor   = cfg.outlineColor ?? '#000000';
     this.outlineWidth   = cfg.outlineWidth ?? 2;
+
+    this.textCurved    = cfg.textCurved ?? false;
+    this.textArcRadius = cfg.textArcRadius ?? 200;
   }
 
   toTextStyle() {
