@@ -1,0 +1,149 @@
+{
+  "site": {
+    "brandName": "StickerMaker",
+    "brandTagline": "Impresión Comestible de Alta Gama",
+    "brandIcon": "local_florist",
+    "primaryColor": "violet",
+    "accentColor": "rose",
+    "ctaText": "Iniciar sesión",
+    "ctaUrl": "/login"
+  },
+  "landing": {
+    "hero": {
+      "badge": {
+        "icon": "cake",
+        "text": "Impresión Comestible de Alta Gama"
+      },
+      "title": {
+        "prefix": "Eleva la repostería",
+        "highlight": "nivel obra de arte."
+      },
+      "subtitle": "Herramientas de expertos, para los repósteros más exigentes. Configura tus tamaños, elige tu lienzo y haz magia.",
+      "cta": {
+        "text": "Abrir Editor de Impresión",
+        "icon": "arrow_forward"
+      }
+    },
+    "products": [
+      {
+        "id": "rice_03",
+        "icon": "local_florist",
+        "title": "Oblea de Arroz 0.3 mm",
+        "tagline": "La delicada",
+        "headline": "El secreto detrás de las flores comestibles perfectas.",
+        "description": "Logra texturas realistas y movimientos naturales. Su flexibilidad única es ideal para encajes, mariposas y arte floral que no se quiebra.",
+        "usage": "Floristería comestible y decoraciones flexibles.",
+        "badge": null,
+        "color": "rose"
+      },
+      {
+        "id": "rice_04",
+        "icon": "print",
+        "title": "Oblea de Arroz 0.4 mm",
+        "tagline": "La todoterreno",
+        "headline": "Versatilidad y nitidez en cada impresión.",
+        "description": "Nuestra Oblea de Espesor Estándar. El equilibrio exacto entre resistencia y flexibilidad para fotos, logotipos y aplicaciones sobre crema o fondant.",
+        "usage": "Impresiones generales y decoraciones de pasteles.",
+        "badge": null,
+        "color": "violet"
+      },
+      {
+        "id": "rice_06",
+        "icon": "shield",
+        "title": "Oblea de Arroz 0.6 mm",
+        "tagline": "La de alto soporte",
+        "headline": "Rigidez extrema para tus Cake Toppers.",
+        "description": "¿Cansado de que tus decoraciones se doblen? Disfruta de una firmeza superior. Perfecta para figuras en pie sin necesitar soportes extra.",
+        "usage": "Toppers rígidos y figuras 3D.",
+        "badge": "Best Seller",
+        "color": "violet"
+      },
+      {
+        "id": "sugar_sheet",
+        "icon": "cake",
+        "title": "Hoja de Azúcar",
+        "tagline": "La de lujo",
+        "headline": "Calidad fotográfica sobre tu pastel.",
+        "description": "Lámina de alta resolución con acabado blanco ultra liso para colores vibrantes. Flexible, fácil de cortar y se funde con tu cobertura.",
+        "usage": "Retratos, logos corporativos y acabados premium.",
+        "badge": null,
+        "color": "amber"
+      },
+      {
+        "id": "gelatin_transfer",
+        "icon": "palette",
+        "title": "Transfer para Gelatina",
+        "tagline": "La técnica",
+        "headline": "Magia y precisión en tus creaciones.",
+        "description": "Diseñada para migrar la tinta de forma limpia y rápida, logrando gelatinas artísticas con acabados profesionales que sorprenden a todos.",
+        "usage": "Gelatina, fondant y chocolate blanco.",
+        "badge": null,
+        "color": "emerald"
+      }
+    ],
+    "footer": {
+      "text": "¡Pide el calibre ideal para tu proyecto deslizando a nuestro editor!",
+      "tags": ["#ImpresionComestible", "StickerMaker", "#ReposteriaCreativa"]
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "StickerMaker",
+      "subtitle": "Accede a tu cuenta",
+      "icon": "vpn_key",
+      "identityLabel": "Email, Usuario o Teléfono",
+      "identityPlaceholder": "Correo, usuario o celular",
+      "passwordLabel": "Contraseña",
+      "submitText": "Ingresar",
+      "forgotPasswordText": "¿Olvidaste tu contraseña?",
+      "registerText": "¿No tienes cuenta? Regístrate gratis",
+      "backText": "Volver al inicio"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "subtitle": "Registrate para empezar a crear",
+      "icon": "person_add",
+      "usernameLabel": "Nombre de Usuario",
+      "usernamePlaceholder": "Ej. juanito123",
+      "emailLabel": "Correo Electrónico",
+      "emailPlaceholder": "tu@correo.com",
+      "phoneLabel": "Teléfono Celular",
+      "phonePlaceholder": "1234567890",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Min. 8 caracteres",
+      "passwordConfirmLabel": "Confirmar Contraseña",
+      "passwordConfirmPlaceholder": "Repite tu contraseña",
+      "submitText": "Crear cuenta",
+      "loginText": "¿Ya tienes cuenta? Inicia sesión",
+      "backText": "Volver al inicio"
+    },
+    "forgotPassword": {
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Te enviaremos un enlace para restablecerla",
+      "icon": "lock_reset",
+      "emailLabel": "Correo Electrónico",
+      "emailPlaceholder": "tu@correo.com",
+      "submitText": "Enviar enlace",
+      "backText": "Volver al inicio de sesión"
+    },
+    "resetPassword": {
+      "title": "Restablecer contraseña",
+      "subtitle": "Ingresa tu nueva contraseña",
+      "icon": "shield",
+      "passwordLabel": "Nueva Contraseña",
+      "passwordPlaceholder": "Min. 8 caracteres",
+      "passwordConfirmLabel": "Confirmar Contraseña",
+      "passwordConfirmPlaceholder": "Repite tu contraseña",
+      "submitText": "Restablecer contraseña",
+      "backText": "Volver al inicio de sesión"
+    },
+    "verifyEmail": {
+      "title": "Verificando tu cuenta...",
+      "subtitle": "Un momento mientras confirmamos tu correo",
+      "successTitle": "Email verificado!",
+      "errorTitle": "No se pudo verificar",
+      "loginText": "Ir al inicio de sesión",
+      "homeText": "Volver al inicio"
+    }
+  }
+}
