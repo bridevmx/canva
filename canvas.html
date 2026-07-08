@@ -108,16 +108,15 @@
     }
     /* ── Bottom Nav (móvil) ── */
     #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;background:white;border-top:1px solid #e2e8f0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 12px rgba(0,0,0,.08)}
-    @media(max-width:767px){#bottom-nav{display:flex}}
+    @media(max-width:639px){#bottom-nav{display:flex}}
     .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;border:none;background:transparent;cursor:pointer;color:#64748b;transition:color .15s;-webkit-tap-highlight-color:transparent;min-height:56px}
     .bnav-btn .mi{font-size:24px;line-height:1}
     .bnav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1}
     .bnav-btn.active{color:#7c3aed;font-weight:700}
     .bnav-btn:disabled{opacity:.35;cursor:not-allowed}
     /* ── Bottom Sheet (móvil props) ── */
-    #props-sheet{position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:none;max-height:70vh;overflow:hidden;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
-    #props-sheet.sheet-open{transform:translateY(0)}
-    @media(max-width:767px){#props-sheet{display:flex}}
+    #props-sheet{position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:70vh;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
+    #props-sheet.sheet-open, #add-sheet.sheet-open, #more-sheet.sheet-open{transform:translateY(0)!important}
     #props-sheet-handle{width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px}
     #props-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;shrink-0}
     #props-sheet-title{font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em}
@@ -127,9 +126,9 @@
     /* overlay del sheet */
     #props-sheet-overlay{position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s}
     #props-sheet-overlay.visible{opacity:1}
-    @media(max-width:767px){#props-sheet-overlay.open{display:block}}
+    @media(max-width:639px){#props-sheet-overlay.open{display:block}}
     /* padding inferior del canvas en móvil para no quedar bajo bottom-nav */
-    @media(max-width:767px){
+    @media(max-width:639px){
       #canvas-main{padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))!important}
     }
     /* Filas del sheet "Más" */
@@ -224,8 +223,8 @@
       </div>
     </div>
 
-    <!-- FILA 2: Toolbar de herramientas (solo desktop ≥md; móvil usa bottom-nav) -->
-    <div class="hidden md:flex items-center overflow-x-auto tb-scroll px-1 border-b border-slate-100 bg-white min-h-[52px] gap-0.5">
+    <!-- FILA 2: Toolbar de herramientas (solo desktop ≥sm; móvil usa bottom-nav) -->
+    <div class="hidden sm:flex items-center overflow-x-auto tb-scroll px-1 border-b border-slate-100 bg-white min-h-[52px] gap-0.5">
 
       <!-- Añadir elementos -->
       <button id="tool-btn-imagen" class="tbtn shrink-0" title="Agregar imagen">
@@ -303,8 +302,8 @@
       </div>
     </div>
 
-    <!-- FILA 3: Propiedades Desktop (≥md) -->
-    <div id="props-bar-desktop" class="hidden md:flex w-full bg-slate-50 border-b border-slate-100 px-3 py-1 items-center gap-2 overflow-x-auto tb-scroll min-h-[46px] shrink-0">
+    <!-- FILA 3: Propiedades Desktop (≥sm) -->
+    <div id="props-bar-desktop" class="hidden sm:flex w-full bg-slate-50 border-b border-slate-100 px-3 py-1 items-center gap-2 overflow-x-auto tb-scroll min-h-[46px] shrink-0">
       <p id="props-bar-empty" class="text-slate-400 italic text-xs">Selecciona un elemento…</p>
       <div id="props-bar-content" class="hidden flex items-center gap-2 whitespace-nowrap"></div>
     </div>
@@ -427,19 +426,20 @@
 
     <!-- ══════════════ PANEL DE CAPAS ══════════════ -->
     <aside id="layers-panel"
-      class="no-print hidden fixed sm:relative inset-y-0 right-0 w-64 sm:w-56 lg:w-64 bg-white border-l border-slate-200 flex-col shrink-0 z-50 shadow-2xl sm:shadow-none">
-      <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+      class="no-print hidden fixed sm:relative bottom-0 sm:bottom-auto left-0 sm:left-auto right-0 sm:right-auto sm:inset-y-0 w-full sm:w-56 lg:w-64 bg-white border-t sm:border-t-0 sm:border-l border-slate-200 flex-col shrink-0 z-55 sm:z-50 shadow-2xl sm:shadow-none rounded-t-[20px] sm:rounded-none max-h-[70vh] sm:max-h-none transform translate-y-full sm:transform-none transition-transform duration-[280ms] sm:transition-none">
+      <div class="sm:hidden w-9 h-1 bg-slate-300 rounded-full mx-auto my-2.5 flex-shrink-0"></div>
+      <div class="px-4 sm:px-3 py-2 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
         <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">Capas</h3>
         <div class="flex items-center gap-1">
           <button id="layers-toggle-visible" class="text-[10px] font-bold text-slate-500 hover:text-slate-700 px-1.5 py-0.5 rounded hover:bg-slate-200" title="Mostrar/ocultar todo">👁</button>
           <button id="layers-close-btn" class="sm:hidden text-slate-400 hover:text-slate-600 p-1 leading-none text-xl">&times;</button>
         </div>
       </div>
-      <div id="layers-list" class="flex-1 overflow-y-auto tb-scroll p-2 space-y-1"></div>
+      <div id="layers-list" class="flex-1 overflow-y-auto tb-scroll p-2 space-y-1 pb-[calc(56px+env(safe-area-inset-bottom,0px))] sm:pb-2"></div>
     </aside>
 
     <!-- Overlay móvil para cerrar panel -->
-    <div id="layers-overlay" class="no-print hidden fixed inset-0 bg-slate-900/20 z-40 sm:hidden"></div>
+    <div id="layers-overlay" class="no-print hidden fixed inset-0 bg-slate-900/20 z-54 sm:hidden"></div>
   </div>
 
   <!-- ══════════════ BOTTOM NAV (móvil) ══════════════ -->
@@ -479,7 +479,7 @@
 
   <!-- ══════════════ BOTTOM SHEET — AÑADIR (móvil) ══════════════ -->
   <div id="add-sheet-overlay" class="no-print" style="position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s"></div>
-  <div id="add-sheet" class="no-print" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
+  <div id="add-sheet" class="no-print hidden sm:hidden flex-col" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
     <div style="width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px;flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;flex-shrink:0">
       <span style="font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em">Añadir elemento</span>
@@ -499,8 +499,8 @@
   </div>
 
   <!-- ══════════════ BOTTOM SHEET — PROPIEDADES (móvil) ══════════════ -->
-  <div id="props-sheet-overlay" class="no-print"></div>
-  <div id="props-sheet" class="no-print">
+  <div id="props-sheet-overlay" class="no-print" style="position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s"></div>
+  <div id="props-sheet" class="no-print hidden sm:hidden flex-col">
     <div id="props-sheet-handle"></div>
     <div id="props-sheet-header">
       <span id="props-sheet-title">Propiedades</span>
@@ -511,7 +511,7 @@
 
   <!-- ══════════════ BOTTOM SHEET — MÁS ACCIONES (móvil) ══════════════ -->
   <div id="more-sheet-overlay" class="no-print" style="position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s"></div>
-  <div id="more-sheet" class="no-print" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
+  <div id="more-sheet" class="no-print hidden sm:hidden flex-col" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
     <div style="width:36px;height:4px;background:#cbd5e1;border-radius:9999px;margin:10px auto 6px;flex-shrink:0"></div>
     <div style="padding:0 16px 10px;flex-shrink:0">
       <span style="font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em">Más acciones</span>
@@ -1167,7 +1167,11 @@
   {
     // ── Helpers genéricos de sheet ──
     function openSheet(sheetEl, overlayEl) {
-      sheetEl.classList.add('sheet-open');
+      sheetEl.classList.remove('hidden');
+      sheetEl.classList.add('flex');
+      requestAnimationFrame(() => {
+        sheetEl.classList.add('sheet-open');
+      });
       overlayEl.style.display = 'block';
       requestAnimationFrame(() => overlayEl.style.opacity = '1');
       document.body.style.overflow = 'hidden';
@@ -1177,6 +1181,8 @@
       overlayEl.style.opacity = '0';
       setTimeout(() => {
         overlayEl.style.display = 'none';
+        sheetEl.classList.add('hidden');
+        sheetEl.classList.remove('flex');
         document.body.style.overflow = '';
       }, 280);
     }
@@ -1188,6 +1194,7 @@
     };
 
     function openOnly(name) {
+      closeLayersPanel(); // Cerrar capas al abrir un sheet
       Object.entries(_sheets).forEach(([k, s]) => {
         if (k === name) openSheet(s.el, s.ov);
         else closeSheet(s.el, s.ov);
@@ -1202,6 +1209,9 @@
       Object.values(_sheets).forEach(s => closeSheet(s.el, s.ov));
       ['bnav-add','bnav-edit','bnav-more'].forEach(id => document.getElementById(id)?.classList.remove('active'));
     }
+
+    // Exponer para cerrar sheets externamente
+    window._closeAllSheets = closeAll;
 
     // Cerrar con overlay
     Object.values(_sheets).forEach(s => s.ov.addEventListener('click', closeAll));
@@ -1371,17 +1381,34 @@
 
   // ── Panel de capas ──
   function openLayersPanel() {
+    window._closeAllSheets?.(); // Cerrar otros sheets al abrir capas
     layersOpen = true;
     elLayersPanel.classList.remove('hidden');
     elLayersPanel.classList.add('flex');
     elLayersOverlay.classList.remove('hidden');
+    document.getElementById('bnav-layers')?.classList.add('active');
+    
+    // Animación en móvil
+    requestAnimationFrame(() => {
+      elLayersPanel.classList.remove('translate-y-full');
+    });
+    
     renderLayersPanel();
   }
   function closeLayersPanel() {
     layersOpen = false;
-    elLayersPanel.classList.add('hidden');
-    elLayersPanel.classList.remove('flex');
+    document.getElementById('bnav-layers')?.classList.remove('active');
+    
+    // Animación en móvil
+    elLayersPanel.classList.add('translate-y-full');
     elLayersOverlay.classList.add('hidden');
+    
+    setTimeout(() => {
+      if (!layersOpen) {
+        elLayersPanel.classList.add('hidden');
+        elLayersPanel.classList.remove('flex');
+      }
+    }, 280);
   }
   function toggleLayersPanel() {
     if (layersOpen) closeLayersPanel();
