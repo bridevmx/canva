@@ -35,12 +35,9 @@ export class CanvasPersistence {
     let fileToken;
     try {
       fileToken = await this.pb.files.getToken();
-      console.log('[loadProject] fileToken obtained:', fileToken ? 'yes' : 'empty');
     } catch (e) {
-      console.warn('[loadProject] getToken failed:', e?.message || e);
       fileToken = '';
     }
-    console.log('[loadProject] upload_assets =', record.upload_assets);
     this.editingAsAdmin = this.auth.isAdmin();
 
     this.editor.paper.setSize(record[FIELDS.orders.paperSize] || 'a4');
@@ -69,7 +66,6 @@ export class CanvasPersistence {
         let assets = [];
         if (Array.isArray(record.upload_assets)) assets = record.upload_assets;
         else if (typeof record.upload_assets === 'string' && record.upload_assets.trim()) assets = [record.upload_assets];
-        console.log('[loadProject] FILE: prefix=', prefix, 'assets=', assets);
         const normPrefix = prefix.replace(/-/g, '_');
         const fn = assets.find(f => {
           const norm = f.replace(/-/g, '_');
@@ -83,11 +79,8 @@ export class CanvasPersistence {
           const url = fileToken
             ? this.pb.files.getURL(record, fn, { token: fileToken })
             : this.pb.files.getURL(record, fn);
-          console.log('[loadProject] resolved URL=', url);
           item.src = url;
           if (item.originalSrc) item.originalSrc = url;
-        } else {
-          console.warn('[loadProject] no asset matched for prefix', prefix, 'in', assets);
         }
       }
       if (item.opacity === undefined) item.opacity = 1.0;

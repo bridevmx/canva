@@ -1,7 +1,7 @@
 // canvasView.js — Adaptador entre CanvasEditor (OOP) y Nanostores (reactividad)
 import { atom } from 'nanostores';
 import { CanvasEditor } from './CanvasEditor.js?v=2.0.0';
-import { CanvasPersistence } from './CanvasPersistence.js?v=2.0.5';
+import { CanvasPersistence } from './CanvasPersistence.js?v=2.0.6';
 import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=2.0.0';
 import { AuthManager } from '../auth/AuthManager.js?v=2.0.0';
 import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=2.0.0';
