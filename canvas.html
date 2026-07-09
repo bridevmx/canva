@@ -473,6 +473,12 @@
           <!-- Sheet -->
           <div id="sheet-container"></div>
 
+          <!-- Loading overlay -->
+          <div id="canvas-loading" class="no-print absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-[200]">
+            <div class="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mb-3"></div>
+            <p class="text-sm font-semibold text-slate-600">Cargando proyecto…</p>
+          </div>
+
         </div>
       </div>
     </main>
@@ -658,15 +664,10 @@
   function scheduleRenderSheet() {
     if (renderSheetScheduled) return;
     // No re-renderizar durante drag/resize/rotate para no perder captura ni generar parpadeo.
-    if (isPointerActive()) {
-      console.log(`[scheduleRenderSheet] Skipped because isPointerActive() is true`);
-      return;
-    }
+    if (isPointerActive()) return;
     renderSheetScheduled = true;
-    console.log(`[scheduleRenderSheet] Scheduled`);
     requestAnimationFrame(() => {
       renderSheetScheduled = false;
-      console.log(`[scheduleRenderSheet] Running renderSheet()`);
       renderSheet();
     });
   }
@@ -996,7 +997,6 @@
       itemEl.addEventListener('pointerdown', e => { e.stopPropagation(); onItemPointerDown(e, item.id, e.ctrlKey || e.metaKey); });
       itemEl.addEventListener('click', e => {
         e.stopPropagation();
-        console.log(`[itemEl click] id=${item.id}, ctrl=${e.ctrlKey || e.metaKey}`);
         if (e.ctrlKey || e.metaKey) {
           select(item.id, true);
         }

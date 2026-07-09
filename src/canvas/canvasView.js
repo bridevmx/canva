@@ -137,6 +137,12 @@ function itemStyle(item) {
 async function initCanvas(canvasMainRef) {
   window.addEventListener('paste', e => handlePaste(e));
 
+  const loadingEl = document.getElementById('canvas-loading');
+  if (loadingEl) {
+    loadingEl.classList.remove('hidden');
+    console.log('[initCanvas] Spinner displayed, loading initial dependencies');
+  }
+
   auth = new AuthManager();
   await auth.init();
   persistence = new CanvasPersistence(editor, auth.pb, auth);
@@ -172,12 +178,20 @@ async function initCanvas(canvasMainRef) {
   const id = qs.get('id');
   if (id) {
     try {
+      console.log(`[initCanvas] Loading project id=${id}`);
       await persistence.loadProject(id);
       syncZoom();
-    } catch {
+      console.log('[initCanvas] Project loaded successfully');
+    } catch (err) {
+      console.error('[initCanvas] Project load failed:', err);
       alert('No se pudo cargar el proyecto.');
       window.location.replace('/dashboard');
     }
+  }
+
+  if (loadingEl) {
+    loadingEl.classList.add('hidden');
+    console.log('[initCanvas] Loading complete, spinner hidden');
   }
 }
 
@@ -477,9 +491,7 @@ window.addEventListener('pointercancel', () => {
 });
 
 function isPointerActive() {
-  const active = !!editor.pointer.action || _pointerDownActive;
-  console.log(`[isPointerActive] returning ${active} (action=${!!editor.pointer.action}, _pointerDownActive=${_pointerDownActive})`);
-  return active;
+  return !!editor.pointer.action || _pointerDownActive;
 }
 
 // ── Save ──
