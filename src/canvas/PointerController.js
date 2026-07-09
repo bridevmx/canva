@@ -189,6 +189,8 @@ export class PointerController {
       let dy = (ev.clientY - action.startY) / z;
       const sheet = editor.paper.sheet;
 
+      console.log(`[RESIZE] Start: handle=${action.handle}, screen_dx=${dx.toFixed(1)}, screen_dy=${dy.toFixed(1)}, rot=${item.rotation || 0}, flipX=${!!item.flipX}, flipY=${!!item.flipY}`);
+
       // Cuando el item está rotado, proyectamos el movimiento del mouse
       // sobre los ejes locales del item para que el resize sea natural.
       if (item.rotation) {
@@ -200,6 +202,11 @@ export class PointerController {
         dx = localDx;
         dy = localDy;
       }
+
+      if (item.flipX) dx = -dx;
+      if (item.flipY) dy = -dy;
+
+      console.log(`[RESIZE] Local coordinates: local_dx=${dx.toFixed(1)}, local_dy=${dy.toFixed(1)}`);
 
       const cfg = RESIZE_HANDLES[action.handle] || RESIZE_HANDLES.se;
       const startX = action.itemX, startY = action.itemY;
@@ -226,10 +233,43 @@ export class PointerController {
         newH = propH;
       }
 
-      item.w = newW;
-      item.h = newH;
-      item.x = startX + cfg.fx * (startW - newW);
-      item.y = startY + cfg.fy * (startH - newH);
+      if (item.rotation) {
+        // Preservar la esquina opuesta al handle en coordenadas de pantalla
+        const rad = item.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        // Esquina fija en coordenadas LOCALES (relativas al centro del item original)
+        const fixedLocalX = (cfg.fx === 0 ? -startW / 2 : startW / 2);
+        const fixedLocalY = (cfg.fy === 0 ? -startH / 2 : startH / 2);
+
+        // Rotarla a coordenadas de pantalla (relativas al centro del item)
+        const oldCx = startX + startW / 2;
+        const oldCy = startY + startH / 2;
+        const fixedScreenX = oldCx + fixedLocalX * cos - fixedLocalY * sin;
+        const fixedScreenY = oldCy + fixedLocalX * sin + fixedLocalY * cos;
+
+        // Nueva posición: la misma esquina fija, con las nuevas dimensiones
+        const newFixedLocalX = (cfg.fx === 0 ? -newW / 2 : newW / 2);
+        const newFixedLocalY = (cfg.fy === 0 ? -newH / 2 : newH / 2);
+
+        // El nuevo centro = fixedScreen - R * newFixedLocal
+        const newCx = fixedScreenX - (newFixedLocalX * cos - newFixedLocalY * sin);
+        const newCy = fixedScreenY - (newFixedLocalX * sin + newFixedLocalY * cos);
+
+        item.w = newW;
+        item.h = newH;
+        item.x = newCx - newW / 2;
+        item.y = newCy - newH / 2;
+        console.log(`[RESIZE] Rotated math: new_x=${item.x.toFixed(1)}, new_y=${item.y.toFixed(1)}, new_w=${item.w.toFixed(1)}, new_h=${item.h.toFixed(1)}`);
+      } else {
+        // Comportamiento sin rotación
+        item.w = newW;
+        item.h = newH;
+        item.x = startX + cfg.fx * (startW - newW);
+        item.y = startY + cfg.fy * (startH - newH);
+        console.log(`[RESIZE] Simple math: new_x=${item.x.toFixed(1)}, new_y=${item.y.toFixed(1)}, new_w=${item.w.toFixed(1)}, new_h=${item.h.toFixed(1)}`);
+      }
       this._applyStyle(item);
     }
 
@@ -264,14 +304,12 @@ export class PointerController {
       let dx = (ev.clientX - action.startX) / z;
       let dy = (ev.clientY - action.startY) / z;
       const cropItem = editor.items.find(i => i.id === editor.crop.id);
-      console.log(`[CROP_RESIZE] Start: handle=${action.handle}, screen_dx=${dx.toFixed(1)}, screen_dy=${dy.toFixed(1)}, rot=${cropItem?.rotation || 0}`);
       if (cropItem && cropItem.rotation) {
         const rad = cropItem.rotation * Math.PI / 180;
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
         const localDx =  dx * cos + dy * sin;
         const localDy = -dx * sin + dy * cos;
-        console.log(`[CROP_RESIZE] Rotated: local_dx=${localDx.toFixed(1)}, local_dy=${localDy.toFixed(1)}`);
         dx = localDx;
         dy = localDy;
       }
