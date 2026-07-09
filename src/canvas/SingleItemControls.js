@@ -1,20 +1,23 @@
-// SingleItemControls.js — Controles de ítem único con Material Icons Round.
+// SingleItemControls.js — Controles de ítem único con iconos SVG de formas.
 import { SHAPE_STYLES } from './ShapeItem.js?v=2.0.0';
 
 const mi = (name, cls = '') =>
   `<span class="mi${cls ? ' ' + cls : ''}" style="font-size:18px">${name}</span>`;
 
-const pbBtn = (cls, icon, title, active = false, extra = '') =>
-  `<button class="pb-btn ${cls}${active ? ' pb-btn-active' : ''}" title="${title}" ${extra}>${mi(icon)}</button>`;
+const pbBtn = (cls, content, title, active = false, extra = '') =>
+  `<button class="pb-btn ${cls}${active ? ' pb-btn-active' : ''}" title="${title}" ${extra}>${content}</button>`;
 
-// Material icon per shape type
+// SVG silhouettes for each shape (18x18 viewBox)
+const shapeSvg = (paths, extra = '') =>
+  `<svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" ${extra}>${paths}</svg>`;
+
 const SHAPE_BTNS = [
-  { key: 'rect',     icon: 'rectangle',    label: 'Rectángulo' },
-  { key: 'circle',   icon: 'circle',       label: 'Círculo'    },
-  { key: 'star',     icon: 'star',         label: 'Estrella'   },
-  { key: 'heart',    icon: 'favorite',     label: 'Corazón'    },
-  { key: 'triangle', icon: 'change_history', label: 'Triángulo' },
-  { key: 'hexagon',  icon: 'hexagon',      label: 'Hexágono'   },
+  { key: 'rect',     svg: shapeSvg('<rect x="1" y="3" width="16" height="12" rx="2" ry="2"/>'), label: 'Rectángulo' },
+  { key: 'circle',   svg: shapeSvg('<circle cx="9" cy="9" r="8"/>'), label: 'Círculo' },
+  { key: 'star',     svg: shapeSvg('<polygon points="9,1 11.5,6.5 17,7 13,11 14,17 9,14 4,17 5,11 1,7 6.5,6.5"/>'), label: 'Estrella' },
+  { key: 'heart',    svg: shapeSvg('<path d="M9,16 C5,12 1,9 1,5.5 C1,2.5 3,1 5.5,1 C7,1 8.5,2 9,4 C9.5,2 11,1 12.5,1 C15,1 17,2.5 17,5.5 C17,9 13,12 9,16 Z"/>', 'fill-rule="evenodd"'), label: 'Corazón' },
+  { key: 'triangle', svg: shapeSvg('<polygon points="9,1 1,17 17,17"/>'), label: 'Triángulo' },
+  { key: 'hexagon',  svg: shapeSvg('<polygon points="5,1 13,1 17,9 13,17 5,17 1,9"/>'), label: 'Hexágono' },
 ];
 
 const LABEL = 'text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1';
@@ -46,7 +49,7 @@ export class SingleItemControls {
       h += `<div class="${GROUP}">`;
       if (!isMobile) h += `<span class="${LABEL}">Forma</span>`;
       for (const b of SHAPE_BTNS) {
-        h += pbBtn(`prop-shape-${b.key}`, b.icon, b.label, sel.shapeType === b.key);
+        h += pbBtn(`prop-shape-${b.key}`, b.svg, b.label, sel.shapeType === b.key);
       }
       h += `</div>`;
 
@@ -92,7 +95,7 @@ export class SingleItemControls {
 
       // Negrita
       h += `<div class="flex items-center gap-0.5 border-r border-slate-200 pr-2 mr-1">`;
-      h += pbBtn('prop-text-bold', 'format_bold', 'Negrita (B)', isBold);
+      h += pbBtn('prop-text-bold', mi('format_bold'), 'Negrita (B)', isBold);
       h += `</div>`;
 
       // Texto curvo
