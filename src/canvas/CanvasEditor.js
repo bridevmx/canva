@@ -272,67 +272,128 @@ export class CanvasEditor {
     };
   }
 
+  _groupedItems(items) {
+    const groups = new Map();
+    const result = [];
+    for (const item of items) {
+      if (!item.groupId) {
+        result.push({ items: [item], isGroup: false });
+      } else {
+        if (!groups.has(item.groupId)) {
+          const unit = { items: [], isGroup: true, groupId: item.groupId };
+          groups.set(item.groupId, unit);
+          result.push(unit);
+        }
+        groups.get(item.groupId).items.push(item);
+      }
+    }
+    return result;
+  }
+
+  _unitAABB(unit) {
+    const aabbs = unit.items.map(i => this._aabb(i));
+    const left   = Math.min(...aabbs.map(a => a.left));
+    const top    = Math.min(...aabbs.map(a => a.top));
+    const right  = Math.max(...aabbs.map(a => a.right));
+    const bottom = Math.max(...aabbs.map(a => a.bottom));
+    return {
+      left, top, right, bottom,
+      cx: (left + right) / 2,
+      cy: (top + bottom) / 2,
+      w: right - left,
+      h: bottom - top,
+      offsetX: aabbs[0].offsetX,
+      offsetY: aabbs[0].offsetY
+    };
+  }
+
   alignLeft() {
     const sel = this._selectedItems();
     if (sel.length < 2) return;
-    const target = Math.min(...sel.map(i => this._aabb(i).left));
-    for (const item of sel) {
-      const a = this._aabb(item);
-      item.x = target - a.offsetX;
+    const units = this._groupedItems(sel);
+    if (units.length < 2) return;
+    const target = Math.min(...units.map(u => this._unitAABB(u).left));
+    for (const unit of units) {
+      const ua = this._unitAABB(unit);
+      const dx = target - ua.left;
+      for (const item of unit.items) {
+        item.x += dx;
+      }
     }
     this.history.push();
   }
   alignCenterH() {
     const sel = this._selectedItems();
     if (sel.length < 2) return;
-    const left = Math.min(...sel.map(i => this._aabb(i).left));
-    const right = Math.max(...sel.map(i => this._aabb(i).right));
-    const target = (left + right) / 2;
-    for (const item of sel) {
-      const a = this._aabb(item);
-      item.x = target - a.offsetX - a.w / 2;
+    const units = this._groupedItems(sel);
+    if (units.length < 2) return;
+    const target = units.reduce((s, u) => s + this._unitAABB(u).cx, 0) / units.length;
+    for (const unit of units) {
+      const ua = this._unitAABB(unit);
+      const dx = target - ua.cx;
+      for (const item of unit.items) {
+        item.x += dx;
+      }
     }
     this.history.push();
   }
   alignRight() {
     const sel = this._selectedItems();
     if (sel.length < 2) return;
-    const target = Math.max(...sel.map(i => this._aabb(i).right));
-    for (const item of sel) {
-      const a = this._aabb(item);
-      item.x = target - a.offsetX - a.w;
+    const units = this._groupedItems(sel);
+    if (units.length < 2) return;
+    const target = Math.max(...units.map(u => this._unitAABB(u).right));
+    for (const unit of units) {
+      const ua = this._unitAABB(unit);
+      const dx = target - ua.right;
+      for (const item of unit.items) {
+        item.x += dx;
+      }
     }
     this.history.push();
   }
   alignTop() {
     const sel = this._selectedItems();
     if (sel.length < 2) return;
-    const target = Math.min(...sel.map(i => this._aabb(i).top));
-    for (const item of sel) {
-      const a = this._aabb(item);
-      item.y = target - a.offsetY;
+    const units = this._groupedItems(sel);
+    if (units.length < 2) return;
+    const target = Math.min(...units.map(u => this._unitAABB(u).top));
+    for (const unit of units) {
+      const ua = this._unitAABB(unit);
+      const dy = target - ua.top;
+      for (const item of unit.items) {
+        item.y += dy;
+      }
     }
     this.history.push();
   }
   alignCenterV() {
     const sel = this._selectedItems();
     if (sel.length < 2) return;
-    const top = Math.min(...sel.map(i => this._aabb(i).top));
-    const bottom = Math.max(...sel.map(i => this._aabb(i).bottom));
-    const target = (top + bottom) / 2;
-    for (const item of sel) {
-      const a = this._aabb(item);
-      item.y = target - a.offsetY - a.h / 2;
+    const units = this._groupedItems(sel);
+    if (units.length < 2) return;
+    const target = units.reduce((s, u) => s + this._unitAABB(u).cy, 0) / units.length;
+    for (const unit of units) {
+      const ua = this._unitAABB(unit);
+      const dy = target - ua.cy;
+      for (const item of unit.items) {
+        item.y += dy;
+      }
     }
     this.history.push();
   }
   alignBottom() {
     const sel = this._selectedItems();
     if (sel.length < 2) return;
-    const target = Math.max(...sel.map(i => this._aabb(i).bottom));
-    for (const item of sel) {
-      const a = this._aabb(item);
-      item.y = target - a.offsetY - a.h;
+    const units = this._groupedItems(sel);
+    if (units.length < 2) return;
+    const target = Math.max(...units.map(u => this._unitAABB(u).bottom));
+    for (const unit of units) {
+      const ua = this._unitAABB(unit);
+      const dy = target - ua.bottom;
+      for (const item of unit.items) {
+        item.y += dy;
+      }
     }
     this.history.push();
   }
