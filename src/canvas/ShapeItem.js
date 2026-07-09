@@ -7,7 +7,6 @@ const SHAPE_STYLES = {
   heart:    { label: 'Corazón',    clipPath: 'polygon(50% 15%,70% 0%,85% 15%,100% 30%,100% 50%,50% 100%,0% 50%,0% 30%,15% 15%,30% 0%)' },
   triangle: { label: 'Triángulo', clipPath: 'polygon(50% 0%,0% 100%,100% 100%)' },
   hexagon:  { label: 'Hexágono',  clipPath: 'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)' },
-  bubble:   { label: 'Burbuja',   clipPath: '' },
 };
 
 export { SHAPE_STYLES };
@@ -25,7 +24,7 @@ export class ShapeItem extends StickerItem {
     const style = SHAPE_STYLES[this.shapeType] || SHAPE_STYLES.rect;
     return {
       background: this.fillColor,
-      borderRadius: ['rect', 'bubble'].includes(this.shapeType) ? '8px' : (this.shapeType === 'circle' ? '50%' : '0'),
+      borderRadius: this.shapeType === 'circle' ? '50%' : (this.shapeType === 'rect' ? '8px' : '0'),
       clipPath: style.clipPath || undefined,
       border: (this.strokeWidth ?? 0) > 0 ? `${this.strokeWidth}px solid ${this.strokeColor}` : 'none',
       boxSizing: 'border-box'

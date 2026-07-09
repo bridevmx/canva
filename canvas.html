@@ -1130,7 +1130,7 @@
         itemEl.appendChild(wrapper);
       } else if (item.type === 'shape') {
         const div = document.createElement('div');
-        div.className = 'w-full h-full pointer-events-none' + (item.shapeType === 'bubble' ? ' shape-bubble' : '');
+        div.className = 'w-full h-full pointer-events-none';
         if (typeof item.toShapeStyle === 'function') {
           const ss = item.toShapeStyle();
           div.style.background = ss.background;
@@ -1143,11 +1143,6 @@
           div.style.borderRadius = item.shapeType === 'circle' ? '50%' : '4px';
           div.style.border = (item.strokeWidth || 0) > 0 ? `${item.strokeWidth}px solid ${item.strokeColor}` : 'none';
           div.style.boxSizing = 'border-box';
-        }
-        if (item.shapeType === 'bubble') {
-          const tail = document.createElement('div');
-          tail.style.cssText = `position:absolute;bottom:-10px;left:35%;width:0;height:0;border:12px solid transparent;border-top-color:${item.fillColor || '#3b82f6'};border-bottom:0;pointer-events:none;z-index:1;`;
-          div.appendChild(tail);
         }
         if (item.shapeType === 'heart') {
           const sw = item.strokeWidth || 0;

@@ -15,7 +15,6 @@ const SHAPE_BTNS = [
   { key: 'heart',    icon: 'favorite',     label: 'Corazón'    },
   { key: 'triangle', icon: 'change_history', label: 'Triángulo' },
   { key: 'hexagon',  icon: 'hexagon',      label: 'Hexágono'   },
-  { key: 'bubble',   icon: 'chat_bubble',  label: 'Bocadillo'  },
 ];
 
 const LABEL = 'text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1';
