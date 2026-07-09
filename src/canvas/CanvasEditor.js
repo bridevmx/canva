@@ -308,6 +308,7 @@ export class CanvasEditor {
         groups.get(item.groupId).items.push(item);
       }
     }
+    console.log('[ALIGN DBG] _groupedItems:', items.length, '→', result.length, 'units', result.map(u => ({g:u.isGroup, n:u.items.length, gid:u.groupId})));
     return result;
   }
 
@@ -330,13 +331,16 @@ export class CanvasEditor {
 
   alignLeft() {
     const sel = this._selectedItems();
-    if (sel.length < 2) return;
+    console.log('[ALIGN DBG] alignLeft sel:', sel.length, sel.map(i=>({id:i.id,gid:i.groupId,x:i.x,y:i.y})));
+    if (sel.length < 2) { console.log('[ALIGN DBG] abort: <2 items'); return; }
     const units = this._groupedItems(sel);
-    if (units.length < 2) return;
+    if (units.length < 2) { console.log('[ALIGN DBG] abort: <2 units', units.length); return; }
     const target = Math.min(...units.map(u => this._unitAABB(u).left));
+    console.log('[ALIGN DBG] target:', target);
     for (const unit of units) {
       const ua = this._unitAABB(unit);
       const dx = target - ua.left;
+      console.log('[ALIGN DBG] unit gid:', unit.groupId, 'dx:', dx);
       for (const item of unit.items) {
         item.x += dx;
       }
