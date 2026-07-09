@@ -244,15 +244,37 @@ export class PointerController {
     }
 
     else if (action.mode === ACTION.CROP_MOVE) {
-      const dx = (ev.clientX - action.startX) / z;
-      const dy = (ev.clientY - action.startY) / z;
+      let dx = (ev.clientX - action.startX) / z;
+      let dy = (ev.clientY - action.startY) / z;
+      const cropItem = editor.items.find(i => i.id === editor.crop.id);
+      if (cropItem && cropItem.rotation) {
+        const rad = cropItem.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const localDx =  dx * cos + dy * sin;
+        const localDy = -dx * sin + dy * cos;
+        dx = localDx;
+        dy = localDy;
+      }
       editor.crop.move(dx, dy, { x: action.cropX, y: action.cropY });
       this._applyCropStyle();
     }
 
     else if (action.mode === ACTION.CROP_RESIZE) {
-      const dx = (ev.clientX - action.startX) / z;
-      const dy = (ev.clientY - action.startY) / z;
+      let dx = (ev.clientX - action.startX) / z;
+      let dy = (ev.clientY - action.startY) / z;
+      const cropItem = editor.items.find(i => i.id === editor.crop.id);
+      console.log(`[CROP_RESIZE] Start: handle=${action.handle}, screen_dx=${dx.toFixed(1)}, screen_dy=${dy.toFixed(1)}, rot=${cropItem?.rotation || 0}`);
+      if (cropItem && cropItem.rotation) {
+        const rad = cropItem.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const localDx =  dx * cos + dy * sin;
+        const localDy = -dx * sin + dy * cos;
+        console.log(`[CROP_RESIZE] Rotated: local_dx=${localDx.toFixed(1)}, local_dy=${localDy.toFixed(1)}`);
+        dx = localDx;
+        dy = localDy;
+      }
       editor.crop.resize(action.handle, dx, dy, { x: action.cropX, y: action.cropY, w: action.cropW, h: action.cropH });
       this._applyCropStyle();
     }
