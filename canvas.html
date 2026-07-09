@@ -531,6 +531,19 @@
 
   </nav>
 
+  <!-- Crop nav (móvil) — reemplaza bottom-nav cuando crop está activo -->
+  <nav id="crop-nav-mobile" class="no-print hidden" style="position:fixed;bottom:0;left:0;right:0;z-index:70;background:white;border-top:2px solid #3b82f6;display:flex;gap:0;padding-bottom:env(safe-area-inset-bottom,0px)">
+    <button id="crop-nav-cancel" style="flex:1;padding:14px;background:#f8fafc;border:none;cursor:pointer;font-weight:700;font-size:14px;color:#475569">
+      <span class="mi" style="font-size:20px;display:block;margin-bottom:2px">cancel</span>
+      Cancelar
+    </button>
+    <div style="width:1px;background:#e2e8f0"></div>
+    <button id="crop-nav-apply" style="flex:1;padding:14px;background:#eff6ff;border:none;cursor:pointer;font-weight:800;font-size:14px;color:#2563eb">
+      <span class="mi" style="font-size:20px;display:block;margin-bottom:2px">check_circle</span>
+      Aplicar
+    </button>
+  </nav>
+
   <!-- ══════════════ BOTTOM SHEET — AÑADIR (móvil) ══════════════ -->
   <div id="add-sheet-overlay" class="no-print" style="position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.25);display:none;opacity:0;transition:opacity .28s"></div>
   <div id="add-sheet" class="no-print hidden sm:hidden flex-col" style="position:fixed;bottom:0;left:0;right:0;z-index:55;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -4px 24px rgba(0,0,0,.14);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))">
@@ -573,6 +586,7 @@
     <div style="display:flex;flex-direction:column;padding:0 12px 12px;gap:2px">
       <!-- Acciones de ítem -->
       <div id="more-item-actions" class="hidden" style="display:none;flex-direction:column;gap:2px">
+        <button id="more-btn-crop" class="more-row-btn hidden"><span class="mi" style="font-size:22px;color:#3b82f6">crop</span><span>Recortar</span></button>
         <button id="more-btn-duplicar" class="more-row-btn"><span class="mi" style="font-size:22px;color:#6366f1">copy_all</span><span>Duplicar</span></button>
         <button id="more-btn-eliminar" class="more-row-btn" style="color:#ef4444"><span class="mi" style="font-size:22px">delete</span><span>Eliminar</span></button>
         <button id="more-btn-grupo" class="more-row-btn"><span class="mi" style="font-size:22px;color:#0ea5e9">group_work</span><span>Agrupar</span></button>
@@ -920,9 +934,13 @@
     updateLayersSelection();
   });
 
-  $cropActive.subscribe(() => {
+  $cropActive.subscribe(active => {
     updateCropButtonVisibility();
     scheduleRenderSheet();
+    if (window.innerWidth < 640) {
+      document.getElementById('bottom-nav')?.classList.toggle('hidden', active);
+      document.getElementById('crop-nav-mobile')?.classList.toggle('hidden', !active);
+    }
   });
 
   function updateCropButtonVisibility() {
@@ -1328,6 +1346,10 @@
       else { updateMoreSheet(); openOnly('more'); }
     });
 
+    // Crop nav (móvil)
+    document.getElementById('crop-nav-cancel')?.addEventListener('click', cancelCropMode);
+    document.getElementById('crop-nav-apply')?.addEventListener('click', () => { applyCrop(); });
+
     // Add sheet
     document.getElementById('add-sheet-imagen')?.addEventListener('click', () => { closeAll(); elFileInput.click(); });
     document.getElementById('add-sheet-texto')?.addEventListener('click',  () => { closeAll(); addText(); });
@@ -1352,6 +1374,8 @@
       const hasGroup = hasSelection && getSelectedAll().some(i => i.groupId);
       const moreItemActions = document.getElementById('more-item-actions');
       if (moreItemActions) moreItemActions.style.display = hasSelection ? 'flex' : 'none';
+      const isSingleImage = ids.length === 1 && getSelected()?.type === 'image';
+      document.getElementById('more-btn-crop')?.classList.toggle('hidden', !isSingleImage);
       document.getElementById('more-btn-duplicar')?.toggleAttribute('disabled', !hasSelection);
       document.getElementById('more-btn-eliminar')?.toggleAttribute('disabled', !hasSelection);
       document.getElementById('more-btn-grupo')?.toggleAttribute('disabled', !multi);
@@ -1363,6 +1387,7 @@
       if (mgl) mgl.textContent = gridOn ? 'Ocultar cuadrícula' : 'Cuadrícula';
     }
 
+    document.getElementById('more-btn-crop')?.addEventListener('click',       () => { closeAll(); startCropMode(); });
     document.getElementById('more-btn-duplicar')?.addEventListener('click',   () => { closeAll(); duplicateSelected(); });
     document.getElementById('more-btn-eliminar')?.addEventListener('click',    () => { closeAll(); deleteSelected(); });
     document.getElementById('more-btn-grupo')?.addEventListener('click',       () => { closeAll(); groupSelected(); });
