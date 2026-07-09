@@ -58,14 +58,6 @@ export class SingleItemControls {
       if (!isMobile) h += `<span class="${LABEL}">Relleno</span>`;
       h += `<input type="color" value="${sel.fillColor || '#3b82f6'}" class="prop-fill-color w-7 h-7 rounded cursor-pointer border border-slate-200 p-0.5 bg-white" title="Color de relleno" />`;
       h += `</div>`;
-
-      // Borde
-      h += `<div class="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">`;
-      if (!isMobile) h += `<span class="${LABEL}">Borde</span>`;
-      h += `<input type="color" value="${sel.strokeColor || '#1d4ed8'}" class="prop-stroke-color w-7 h-7 rounded cursor-pointer border border-slate-200 p-0.5 bg-white" title="Color de borde" />`;
-      h += `<input type="range" value="${sel.strokeWidth ?? 0}" min="0" max="20" step="1" class="prop-stroke-width ${isMobile ? 'w-12' : 'w-16'} h-1.5 accent-violet-600 cursor-pointer" title="Grosor de borde" />`;
-      h += `<span class="text-[10px] text-slate-500 w-5 tabular-nums">${sel.strokeWidth ?? 0}</span>`;
-      h += `</div>`;
     }
 
     // ── Texto ───────────────────────────────────────────────────────────────
