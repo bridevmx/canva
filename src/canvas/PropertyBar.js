@@ -137,8 +137,13 @@ export class PropertyBar {
       if (opacitySlider) {
         opacitySlider.addEventListener('input', () => {
           sel.opacity = parseInt(opacitySlider.value) / 100;
-          lifecycle.renderPropertyBars();
+          const span = opacitySlider.nextElementSibling;
+          if (span) span.textContent = opacitySlider.value + '%';
           lifecycle.sync();
+        });
+        opacitySlider.addEventListener('change', () => {
+          lifecycle.pushHistory();
+          lifecycle.renderSheet();
         });
       }
       this.singleControls.bindEvents(container, sel, lifecycle);
