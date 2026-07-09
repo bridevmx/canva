@@ -495,6 +495,15 @@ export class CanvasEditor {
       ev.preventDefault(); this.toggleGrid();
       window.dispatchEvent(new CustomEvent('editor:change'));
     }
+    if (ev.key.toLowerCase() === 'a' && (ev.ctrlKey || ev.metaKey) && !typing) {
+      ev.preventDefault();
+      const activePage = this.paper.activePage;
+      const pageItems = this.items.filter(i => (i.page || 1) === activePage && !i.locked && i.visible !== false);
+      if (pageItems.length > 0) {
+        this.selectedIds = new Set(pageItems.map(i => i.id));
+      }
+      window.dispatchEvent(new CustomEvent('editor:change'));
+    }
     if ((ev.key === ']' || ev.key === '}') && (ev.ctrlKey || ev.metaKey) && this.selectedIds.size > 0) {
       ev.preventDefault();
       if (ev.shiftKey || ev.key === '}') this.bringForward();
