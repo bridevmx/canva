@@ -139,9 +139,10 @@ export class PropertyBar {
           sel.opacity = parseInt(opacitySlider.value) / 100;
           const span = opacitySlider.nextElementSibling;
           if (span) span.textContent = opacitySlider.value + '%';
+          const el = document.querySelector(`[data-item-id="${sel.id}"]`);
+          if (el) el.style.opacity = sel.opacity;
         });
         opacitySlider.addEventListener('change', () => {
-          console.log(`[Bug06 fix] opacity change → sync + history`);
           lifecycle.sync();
           lifecycle.pushHistory();
         });
