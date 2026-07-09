@@ -937,9 +937,11 @@
   $cropActive.subscribe(active => {
     updateCropButtonVisibility();
     scheduleRenderSheet();
+    console.log(`[cropActive] active=${active}, innerWidth=${window.innerWidth}`);
     if (window.innerWidth < 640) {
       document.getElementById('bottom-nav')?.classList.toggle('hidden', active);
       document.getElementById('crop-nav-mobile')?.classList.toggle('hidden', !active);
+      console.log(`[cropActive] bottom-nav hidden=${document.getElementById('bottom-nav')?.classList.contains('hidden')}, crop-nav-mobile hidden=${document.getElementById('crop-nav-mobile')?.classList.contains('hidden')}`);
     }
   });
 
@@ -1374,8 +1376,14 @@
       const hasGroup = hasSelection && getSelectedAll().some(i => i.groupId);
       const moreItemActions = document.getElementById('more-item-actions');
       if (moreItemActions) moreItemActions.style.display = hasSelection ? 'flex' : 'none';
-      const isSingleImage = ids.length === 1 && getSelected()?.type === 'image';
-      document.getElementById('more-btn-crop')?.classList.toggle('hidden', !isSingleImage);
+      const sel = getSelected();
+      const isSingleImage = ids.length === 1 && sel?.type === 'image';
+      const cropBtn = document.getElementById('more-btn-crop');
+      console.log(`[updateMoreSheet] ids=${JSON.stringify(ids)}, selType=${sel?.type}, isSingleImage=${isSingleImage}, cropBtn=${!!cropBtn}`);
+      if (cropBtn) {
+        cropBtn.classList.toggle('hidden', !isSingleImage);
+        console.log(`[updateMoreSheet] cropBtn hidden=${cropBtn.classList.contains('hidden')}`);
+      }
       document.getElementById('more-btn-duplicar')?.toggleAttribute('disabled', !hasSelection);
       document.getElementById('more-btn-eliminar')?.toggleAttribute('disabled', !hasSelection);
       document.getElementById('more-btn-grupo')?.toggleAttribute('disabled', !multi);
@@ -1387,7 +1395,10 @@
       if (mgl) mgl.textContent = gridOn ? 'Ocultar cuadrícula' : 'Cuadrícula';
     }
 
-    document.getElementById('more-btn-crop')?.addEventListener('click',       () => { closeAll(); startCropMode(); });
+    document.getElementById('more-btn-crop')?.addEventListener('click',       () => {
+      console.log('[more-btn-crop] clicked');
+      closeAll(); startCropMode();
+    });
     document.getElementById('more-btn-duplicar')?.addEventListener('click',   () => { closeAll(); duplicateSelected(); });
     document.getElementById('more-btn-eliminar')?.addEventListener('click',    () => { closeAll(); deleteSelected(); });
     document.getElementById('more-btn-grupo')?.addEventListener('click',       () => { closeAll(); groupSelected(); });
