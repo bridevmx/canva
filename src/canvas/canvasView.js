@@ -469,6 +469,11 @@ function startCropResize(ev, handle) {
   capturePointer(ev);
 }
 
+function onGroupResizePointerDown(ev, groupId, handle, aabb) {
+  editor.pointer.startGroupResize(groupId, handle, ev, aabb);
+  capturePointer(ev);
+}
+
 let _pointerDownActive = false;
 window.addEventListener('pointerdown', () => {
   _pointerDownActive = true;
@@ -573,6 +578,7 @@ export {
   gridFill, resetProject,
   getRulerXStyle, getRulerYStyle, getGridStyle,
   onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
+  onGroupResizePointerDown,
   startCropMove, startCropResize,
   saveProject, getEditableAsAdmin,
   computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,

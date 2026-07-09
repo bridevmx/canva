@@ -2,7 +2,7 @@
 
 import { clamp, getRotatedBounds } from './StickerItem.js?v=2.0.0';
 
-const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize' };
+const ACTION = { DRAG:'drag', RESIZE:'resize', ROTATE:'rotate', CROP_MOVE:'crop-move', CROP_RESIZE:'crop-resize', GROUP_RESIZE:'group-resize' };
 
 // Configuración de resize por esquina:
 // dw/dh: signo del cambio de tamaño respecto al delta local.
@@ -73,6 +73,18 @@ export class PointerController {
       mode: ACTION.CROP_RESIZE, handle, startX: ev.clientX, startY: ev.clientY,
       cropX: this.editor.crop.x, cropY: this.editor.crop.y,
       cropW: this.editor.crop.w, cropH: this.editor.crop.h
+    };
+    document.body.classList.add('drag-locked');
+  }
+
+  startGroupResize(groupId, handle, ev, aabb) {
+    const groupItems = this.editor.items.filter(i => i.groupId === groupId);
+    const originals = groupItems.map(i => ({ id: i.id, x: i.x, y: i.y, w: i.w, h: i.h }));
+    this.action = {
+      mode: ACTION.GROUP_RESIZE, groupId, handle,
+      startX: ev.clientX, startY: ev.clientY,
+      aabbX: aabb.x, aabbY: aabb.y, aabbW: aabb.w, aabbH: aabb.h,
+      originals
     };
     document.body.classList.add('drag-locked');
   }
@@ -189,8 +201,6 @@ export class PointerController {
       let dy = (ev.clientY - action.startY) / z;
       const sheet = editor.paper.sheet;
 
-      console.log(`[RESIZE] Start: handle=${action.handle}, screen_dx=${dx.toFixed(1)}, screen_dy=${dy.toFixed(1)}, rot=${item.rotation || 0}, flipX=${!!item.flipX}, flipY=${!!item.flipY}`);
-
       // Cuando el item está rotado, proyectamos el movimiento del mouse
       // sobre los ejes locales del item para que el resize sea natural.
       if (item.rotation) {
@@ -205,8 +215,6 @@ export class PointerController {
 
       if (item.flipX) dx = -dx;
       if (item.flipY) dy = -dy;
-
-      console.log(`[RESIZE] Local coordinates: local_dx=${dx.toFixed(1)}, local_dy=${dy.toFixed(1)}`);
 
       const cfg = RESIZE_HANDLES[action.handle] || RESIZE_HANDLES.se;
       const startX = action.itemX, startY = action.itemY;
@@ -261,14 +269,12 @@ export class PointerController {
         item.h = newH;
         item.x = newCx - newW / 2;
         item.y = newCy - newH / 2;
-        console.log(`[RESIZE] Rotated math: new_x=${item.x.toFixed(1)}, new_y=${item.y.toFixed(1)}, new_w=${item.w.toFixed(1)}, new_h=${item.h.toFixed(1)}`);
       } else {
         // Comportamiento sin rotación
         item.w = newW;
         item.h = newH;
         item.x = startX + cfg.fx * (startW - newW);
         item.y = startY + cfg.fy * (startH - newH);
-        console.log(`[RESIZE] Simple math: new_x=${item.x.toFixed(1)}, new_y=${item.y.toFixed(1)}, new_w=${item.w.toFixed(1)}, new_h=${item.h.toFixed(1)}`);
       }
       this._applyStyle(item);
     }
@@ -316,11 +322,50 @@ export class PointerController {
       editor.crop.resize(action.handle, dx, dy, { x: action.cropX, y: action.cropY, w: action.cropW, h: action.cropH });
       this._applyCropStyle();
     }
+
+    else if (action.mode === ACTION.GROUP_RESIZE) {
+      let dx = (ev.clientX - action.startX) / z;
+      let dy = (ev.clientY - action.startY) / z;
+
+      const cfg = RESIZE_HANDLES[action.handle] || RESIZE_HANDLES.se;
+      const oldW = action.aabbW;
+      const oldH = action.aabbH;
+      let newW = clamp(oldW + cfg.dw * dx, 20, 9999);
+      let newH = clamp(oldH + cfg.dh * dy, 20, 9999);
+
+      if (ev.shiftKey && oldW > 0 && oldH > 0) {
+        const ratio = oldW / oldH;
+        const s = Math.max(newW / oldW, newH / oldH);
+        newW = oldW * s;
+        newH = oldH * s;
+        if (newW < 20) { newW = 20; newH = newW / ratio; }
+        if (newH < 20) { newH = 20; newW = newH * ratio; }
+      }
+
+      const scaleX = newW / oldW;
+      const scaleY = newH / oldH;
+      const gLeft = action.aabbX;
+      const gTop = action.aabbY;
+
+      for (const orig of action.originals) {
+        const item = this.editor.items.find(i => i.id === orig.id);
+        if (!item) continue;
+        const relX = (orig.x - gLeft) / oldW;
+        const relY = (orig.y - gTop) / oldH;
+        const relW = orig.w / oldW;
+        const relH = orig.h / oldH;
+        item.x = gLeft + relX * newW;
+        item.y = gTop + relY * newH;
+        item.w = Math.max(relW * newW, 10);
+        item.h = Math.max(relH * newH, 10);
+        this._applyStyle(item);
+      }
+    }
   }
 
   end() {
     if (!this.action) return;
-    if ([ACTION.DRAG, ACTION.RESIZE, ACTION.ROTATE].includes(this.action.mode)) {
+    if ([ACTION.DRAG, ACTION.RESIZE, ACTION.ROTATE, ACTION.GROUP_RESIZE].includes(this.action.mode)) {
       this.editor.history.push();
     }
     document.querySelectorAll('.temp-guide').forEach(el => el.remove());

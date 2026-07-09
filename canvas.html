@@ -633,6 +633,7 @@
     gridFill, resetProject,
     getRulerXStyle, getRulerYStyle, getGridStyle,
     onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
+    onGroupResizePointerDown,
     startCropMove, startCropResize, saveProject, getEditableAsAdmin,
     computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
     hasAutoSave, restoreAutoSave, clearAutoSave,
@@ -1200,6 +1201,41 @@
 
       sheetEl.appendChild(itemEl);
     });
+
+    // ── Group resize handles ──
+    const selectedAll = [...selectedIds];
+    if (selectedAll.length > 1 && !cropActive) {
+      const selItems = items.filter(i => selectedIds.has(i.id));
+      const allSameGroup = selItems.every(i => i.groupId && i.groupId === selItems[0]?.groupId);
+      if (allSameGroup && selItems[0]?.groupId) {
+        const aabbs = selItems.map(i => {
+          const b = getRotatedBounds(i.w, i.h, i.rotation || 0);
+          return { left: i.x + b.offsetX, top: i.y + b.offsetY, right: i.x + b.offsetX + b.w, bottom: i.y + b.offsetY + b.h };
+        });
+        const gLeft   = Math.min(...aabbs.map(a => a.left));
+        const gTop    = Math.min(...aabbs.map(a => a.top));
+        const gRight  = Math.max(...aabbs.map(a => a.right));
+        const gBottom = Math.max(...aabbs.map(a => a.bottom));
+        const gW = gRight - gLeft;
+        const gH = gBottom - gTop;
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'no-print group-resize-overlay';
+        groupEl.style.cssText = `position:absolute;left:${gLeft}px;top:${gTop}px;width:${gW}px;height:${gH}px;pointer-events:none;z-index:60;border:2px dashed #7c3aed;border-radius:4px;`;
+        ['nw','ne','se','sw'].forEach(handle => {
+          const rh = document.createElement('div');
+          rh.className = 'resize-handle no-print handle-' + handle;
+          rh.style.pointerEvents = 'auto';
+          rh.title = 'Redimensionar grupo (Shift = proporción)';
+          rh.addEventListener('pointerdown', e => {
+            e.stopPropagation(); e.preventDefault();
+            onGroupResizePointerDown(e, selItems[0].groupId, handle, { x: gLeft, y: gTop, w: gW, h: gH });
+          });
+          groupEl.appendChild(rh);
+        });
+        sheetEl.appendChild(groupEl);
+      }
+    }
 
     elSheetContainer.appendChild(sheetEl);
 
