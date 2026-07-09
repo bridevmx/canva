@@ -151,18 +151,18 @@ export class SingleItemControls {
 
     const fillColor = container.querySelector('.prop-fill-color');
     if (fillColor) {
-      fillColor.addEventListener('input',  () => { sel.fillColor = fillColor.value; lifecycle.sync(); });
-      fillColor.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      fillColor.addEventListener('input',  () => { sel.fillColor = fillColor.value; });
+      fillColor.addEventListener('change', () => { console.log(`[Bug06 fix] fillColor change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
     const strokeColor = container.querySelector('.prop-stroke-color');
     if (strokeColor) {
-      strokeColor.addEventListener('input',  () => { sel.strokeColor = strokeColor.value; lifecycle.sync(); });
-      strokeColor.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      strokeColor.addEventListener('input',  () => { sel.strokeColor = strokeColor.value; });
+      strokeColor.addEventListener('change', () => { console.log(`[Bug06 fix] strokeColor change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
     const strokeWidth = container.querySelector('.prop-stroke-width');
     if (strokeWidth) {
-      strokeWidth.addEventListener('input',  () => { sel.strokeWidth = parseInt(strokeWidth.value); const span = strokeWidth.nextElementSibling; if (span) span.textContent = strokeWidth.value; console.log(`[strokeWidth input] value=${strokeWidth.value}`); lifecycle.sync(); });
-      strokeWidth.addEventListener('change', () => { console.log(`[strokeWidth change] pushing history`); lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      strokeWidth.addEventListener('input',  () => { sel.strokeWidth = parseInt(strokeWidth.value); const span = strokeWidth.nextElementSibling; if (span) span.textContent = strokeWidth.value; });
+      strokeWidth.addEventListener('change', () => { console.log(`[Bug06 fix] strokeWidth change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
 
     // Texto
@@ -177,8 +177,8 @@ export class SingleItemControls {
 
     const textColor = container.querySelector('.prop-text-color');
     if (textColor) {
-      textColor.addEventListener('input',  () => { sel.color = textColor.value; lifecycle.sync(); });
-      textColor.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      textColor.addEventListener('input',  () => { sel.color = textColor.value; });
+      textColor.addEventListener('change', () => { console.log(`[Bug06 fix] textColor change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
 
     container.querySelector('.prop-text-bold')?.addEventListener('click', () => {
@@ -194,8 +194,8 @@ export class SingleItemControls {
     });
     const arcRadius = container.querySelector('.prop-text-arc-radius');
     if (arcRadius) {
-      arcRadius.addEventListener('input',  () => { sel.textArcRadius = parseInt(arcRadius.value); lifecycle.sync(); });
-      arcRadius.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      arcRadius.addEventListener('input',  () => { sel.textArcRadius = parseInt(arcRadius.value); });
+      arcRadius.addEventListener('change', () => { console.log(`[Bug06 fix] arcRadius change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
 
     container.querySelector('.prop-text-shadow-toggle')?.addEventListener('click', () => {
@@ -205,8 +205,8 @@ export class SingleItemControls {
     });
     const shadowColor = container.querySelector('.prop-shadow-color');
     if (shadowColor) {
-      shadowColor.addEventListener('input',  () => { sel.shadowColor = shadowColor.value; lifecycle.sync(); });
-      shadowColor.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      shadowColor.addEventListener('input',  () => { sel.shadowColor = shadowColor.value; });
+      shadowColor.addEventListener('change', () => { console.log(`[Bug06 fix] shadowColor change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
     const shadowBlur = container.querySelector('.prop-shadow-blur');
     if (shadowBlur) shadowBlur.addEventListener('change', () => { sel.shadowBlur = Math.max(0, parseInt(shadowBlur.value) || 0); updateText(); });
@@ -218,8 +218,8 @@ export class SingleItemControls {
     });
     const outlineColor = container.querySelector('.prop-outline-color');
     if (outlineColor) {
-      outlineColor.addEventListener('input',  () => { sel.outlineColor = outlineColor.value; lifecycle.sync(); });
-      outlineColor.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      outlineColor.addEventListener('input',  () => { sel.outlineColor = outlineColor.value; });
+      outlineColor.addEventListener('change', () => { console.log(`[Bug06 fix] outlineColor change`); lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
     const outlineWidth = container.querySelector('.prop-outline-width');
     if (outlineWidth) outlineWidth.addEventListener('change', () => { sel.outlineWidth = Math.max(0.5, parseFloat(outlineWidth.value) || 1); updateText(); });
