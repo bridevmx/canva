@@ -161,8 +161,8 @@ export class SingleItemControls {
     }
     const strokeWidth = container.querySelector('.prop-stroke-width');
     if (strokeWidth) {
-      strokeWidth.addEventListener('input',  () => { sel.strokeWidth = parseInt(strokeWidth.value); const span = strokeWidth.nextElementSibling; if (span) span.textContent = strokeWidth.value; lifecycle.sync(); });
-      strokeWidth.addEventListener('change', () => { lifecycle.pushHistory(); lifecycle.renderSheet(); });
+      strokeWidth.addEventListener('input',  () => { sel.strokeWidth = parseInt(strokeWidth.value); const span = strokeWidth.nextElementSibling; if (span) span.textContent = strokeWidth.value; console.log(`[strokeWidth input] value=${strokeWidth.value}`); lifecycle.sync(); });
+      strokeWidth.addEventListener('change', () => { console.log(`[strokeWidth change] pushing history`); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
 
     // Texto
