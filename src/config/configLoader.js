@@ -1,41 +1,52 @@
-import configData from './siteConfig.json';
+const PB_URL = 'https://scraping.pockethost.io';
+const COLLECTION = 'stiker_com_settings';
 
-let _records = configData;
+let _records = [];
 let _config = {};
+let _initialized = false;
 
 /**
- * Convierte el array plano [{key, value, section}] a objeto anidado.
- * Ej: [{key:"hero_title", value:"Eleva...", section:"landing"}]
- *   → { landing: { hero_title: "Eleva..." } }
+ * Busca un valor por key directamente.
+ * Ej: getVal('landing.hero_title') → "Eleva la repostería"
  */
-function buildConfig(records) {
+export function getVal(key, fallback = '') {
+  return _config[key] ?? fallback;
+}
+
+/**
+ * Obtiene todas las keys que empiezan con un prefijo.
+ * Ej: getSection('landing') → { 'landing.hero_title': "Eleva...", ... }
+ */
+export function getSection(prefix) {
   const result = {};
-  for (const r of records) {
-    if (!result[r.section]) result[r.section] = {};
-    result[r.section][r.key] = r.value;
+  for (const [k, v] of Object.entries(_config)) {
+    if (k.startsWith(prefix + '.') || k.startsWith(prefix + '_')) {
+      result[k] = v;
+    }
   }
   return result;
 }
 
 /**
- * Agrupa los products_* en un array de objetos.
- * Ej: { product_1_title, product_1_desc } → [{ title, desc }]
+ * Obtiene el array de productos parseado desde keys como product_N_title, product_N_desc, etc.
  */
-function buildProducts(records) {
+export function getProducts() {
   const products = [];
-  const productRecords = records.filter(r => r.section === 'products');
-  const keys = [...new Set(productRecords.map(r => r.key.replace(/_\d+_/, '_N_').replace(/_\d+$/, '')))];
-  const indices = [...new Set(productRecords.map(r => {
-    const m = r.key.match(/product_(\d+)_/);
-    return m ? m[1] : null;
-  }).filter(Boolean))];
+  const productKeys = Object.keys(_config).filter(k => /^products\.p\d+\./.test(k));
+
+  const indices = [...new Set(
+    productKeys.map(k => {
+      const m = k.match(/products\.p(\d+)\./);
+      return m ? m[1] : null;
+    }).filter(Boolean)
+  )].sort((a, b) => Number(a) - Number(b));
 
   for (const idx of indices) {
+    const prefix = `products.p${idx}.`;
     const obj = {};
-    const prefix = `product_${idx}_`;
-    for (const r of productRecords) {
-      if (r.key.startsWith(prefix)) {
-        obj[r.key.slice(prefix.length)] = r.value;
+    for (const [k, v] of Object.entries(_config)) {
+      if (k.startsWith(prefix)) {
+        obj[k.slice(prefix.length)] = v;
       }
     }
     if (obj.title) products.push(obj);
@@ -44,58 +55,39 @@ function buildProducts(records) {
 }
 
 /**
- * Agrupa las keys que terminan en _tag_N en un array.
- * Ej: footer_tag_1, footer_tag_2 → ["#tag1", "#tag2"]
- */
-function buildTags(records, section) {
-  return records
-    .filter(r => r.section === section && r.key.match(/_tag_\d+$/))
-    .sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }))
-    .map(r => r.value);
-}
-
-/**
- * Inicializa el config desde un array de registros (mock o PocketBase).
- */
-export function initConfig(records) {
-  _records = records;
-  _config = buildConfig(records);
-
-  // Agregar array de productos
-  _config.products = buildProducts(records);
-
-  // Agregar tags del footer
-  _config.footer_tags = buildTags(records, 'footer');
-}
-
-/**
- * Obtiene un valor por section y key.
- * Ej: getVal('landing', 'hero_title') → "Eleva la repostería"
- */
-export function getVal(section, key, fallback = '') {
-  return _config[section]?.[key] ?? fallback;
-}
-
-/**
- * Obtiene una sección completa como objeto.
- * Ej: getSection('landing') → { hero_title: "...", hero_subtitle: "..." }
- */
-export function getSection(section) {
-  return _config[section] || {};
-}
-
-/**
- * Obtiene el array de productos parseado.
- */
-export function getProducts() {
-  return _config.products || [];
-}
-
-/**
- * Obtiene los tags del footer.
+ * Obtiene los tags del footer desde la key footer.tags (separados por coma).
  */
 export function getFooterTags() {
-  return _config.footer_tags || [];
+  const raw = _config['footer.tags'] || '';
+  return raw.split(',').map(t => t.trim()).filter(Boolean);
+}
+
+/**
+ * Carga los registros desde PocketBase y construye el config plano.
+ */
+export async function initConfig(records) {
+  if (records) {
+    _records = records;
+  } else {
+    const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records?page=1&perPage=500`);
+    if (!res.ok) throw new Error(`Config fetch failed: ${res.status}`);
+    const data = await res.json();
+    _records = data.items || [];
+  }
+
+  _config = {};
+  for (const r of _records) {
+    _config[r.key] = r.value;
+  }
+  _initialized = true;
+}
+
+/**
+ * Obtiene el valor raw de un key sin punto.
+ * Ej: getRaw('site_brand_name') → "StickerMaker"
+ */
+export function getRaw(key, fallback = '') {
+  return _config[key] ?? fallback;
 }
 
 /**
@@ -105,7 +97,5 @@ export function printConfig() {
   console.log(JSON.stringify(_config, null, 2));
 }
 
-// Inicializar con el mock por defecto
-initConfig(configData);
-
+export { _initialized as isInitialized };
 export default _config;

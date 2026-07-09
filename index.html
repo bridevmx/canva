@@ -91,26 +91,28 @@
   </footer>
 
   <script type="module">
-    import { getVal, getProducts, getFooterTags } from './src/config/configLoader.js';
+    import { initConfig, getVal, getProducts, getFooterTags } from './src/config/configLoader.js';
 
-    function goToLogin() { window.location.href = getVal('site', 'cta_url', '/login'); }
-    function goToCanvas() { window.location.href = isAuthenticated() ? '/canvas' : getVal('site', 'cta_url', '/login'); }
+    await initConfig();
+
+    function goToLogin() { window.location.href = getVal('site.cta_url') || '/login'; }
+    function goToCanvas() { window.location.href = isAuthenticated() ? '/canvas' : (getVal('site.cta_url') || '/login'); }
     window.goToLogin = goToLogin;
     window.goToCanvas = goToCanvas;
 
     // ── Navbar ──
-    document.getElementById('nav-brand-icon').textContent = getVal('site', 'brand_icon', 'local_florist');
-    document.getElementById('nav-brand-name').textContent = getVal('site', 'brand_name', 'StickerMaker');
-    document.getElementById('nav-cta-text').textContent = getVal('site', 'cta_text', 'Iniciar sesión');
+    document.getElementById('nav-brand-icon').textContent = getVal('site.brand_icon') || 'local_florist';
+    document.getElementById('nav-brand-name').textContent = getVal('site.brand_name') || 'StickerMaker';
+    document.getElementById('nav-cta-text').textContent = getVal('site.cta_text') || 'Iniciar sesión';
 
     // ── Hero ──
-    document.getElementById('hero-badge-icon').textContent = getVal('landing', 'hero_badge_icon', 'local_printshop');
-    document.getElementById('hero-badge-text').textContent = getVal('landing', 'hero_badge_text', 'Impresión Comestible');
-    document.getElementById('hero-title').textContent = getVal('landing', 'hero_title', 'Eleva la repostería');
-    document.getElementById('hero-highlight').textContent = getVal('landing', 'hero_highlight', 'nivel obra de arte.');
-    document.getElementById('hero-subtitle').textContent = getVal('landing', 'hero_subtitle', '');
-    document.getElementById('hero-cta-text').textContent = getVal('landing', 'hero_cta_text', 'Abrir Editor');
-    document.getElementById('hero-cta-icon').textContent = getVal('landing', 'hero_cta_icon', 'arrow_forward');
+    document.getElementById('hero-badge-icon').textContent = getVal('landing.hero_badge_icon') || 'local_printshop';
+    document.getElementById('hero-badge-text').textContent = getVal('landing.hero_badge_text') || 'Impresión Comestible';
+    document.getElementById('hero-title').textContent = getVal('landing.hero_title') || 'Eleva la repostería';
+    document.getElementById('hero-highlight').textContent = getVal('landing.hero_highlight') || 'nivel obra de arte.';
+    document.getElementById('hero-subtitle').textContent = getVal('landing.hero_subtitle') || '';
+    document.getElementById('hero-cta-text').textContent = getVal('landing.hero_cta_text') || 'Abrir Editor';
+    document.getElementById('hero-cta-icon').textContent = getVal('landing.hero_cta_icon') || 'arrow_forward';
 
     // ── Products ──
     const products = getProducts();
@@ -133,7 +135,7 @@
     });
 
     // ── Footer ──
-    document.getElementById('footer-brand').textContent = getVal('site', 'brand_name', 'StickerMaker');
+    document.getElementById('footer-brand').textContent = getVal('site.brand_name') || 'StickerMaker';
     const tags = getFooterTags();
     const tagsEl = document.getElementById('footer-tags');
     tags.forEach((t, i) => {

@@ -105,7 +105,7 @@
         <!-- Login link -->
         <a href="/login" class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all duration-200">
           <span class="mi mi-sm">login</span>
-          ¿Ya tienes cuenta? Inicia sesion
+          ¿Ya tienes cuenta? Inicia sesión
         </a>
 
         <!-- Back link -->
@@ -169,11 +169,11 @@
       $successMessage.set('');
 
       if ($password.get() !== $passwordConfirm.get()) {
-        $error.set('Las contrasenas no coinciden');
+        $error.set('Las contraseñas no coinciden');
         return;
       }
       if ($password.get().length < 8) {
-        $error.set('La contrasena debe tener al menos 8 caracteres');
+        $error.set('La contraseña debe tener al menos 8 caracteres');
         return;
       }
 
