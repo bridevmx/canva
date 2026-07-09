@@ -465,8 +465,21 @@ function startCropResize(ev, handle) {
   capturePointer(ev);
 }
 
+let _pointerDownActive = false;
+window.addEventListener('pointerdown', () => {
+  _pointerDownActive = true;
+});
+window.addEventListener('pointerup', () => {
+  _pointerDownActive = false;
+});
+window.addEventListener('pointercancel', () => {
+  _pointerDownActive = false;
+});
+
 function isPointerActive() {
-  return !!editor.pointer.action;
+  const active = !!editor.pointer.action || _pointerDownActive;
+  console.log(`[isPointerActive] returning ${active} (action=${!!editor.pointer.action}, _pointerDownActive=${_pointerDownActive})`);
+  return active;
 }
 
 // ── Save ──

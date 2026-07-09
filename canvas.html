@@ -658,10 +658,15 @@
   function scheduleRenderSheet() {
     if (renderSheetScheduled) return;
     // No re-renderizar durante drag/resize/rotate para no perder captura ni generar parpadeo.
-    if (isPointerActive()) return;
+    if (isPointerActive()) {
+      console.log(`[scheduleRenderSheet] Skipped because isPointerActive() is true`);
+      return;
+    }
     renderSheetScheduled = true;
+    console.log(`[scheduleRenderSheet] Scheduled`);
     requestAnimationFrame(() => {
       renderSheetScheduled = false;
+      console.log(`[scheduleRenderSheet] Running renderSheet()`);
       renderSheet();
     });
   }
@@ -989,7 +994,13 @@
       itemEl.style.cursor = style.cursor;
 
       itemEl.addEventListener('pointerdown', e => { e.stopPropagation(); onItemPointerDown(e, item.id, e.ctrlKey || e.metaKey); });
-      itemEl.addEventListener('click', e => { e.stopPropagation(); select(item.id, e.ctrlKey || e.metaKey); });
+      itemEl.addEventListener('click', e => {
+        e.stopPropagation();
+        console.log(`[itemEl click] id=${item.id}, ctrl=${e.ctrlKey || e.metaKey}`);
+        if (e.ctrlKey || e.metaKey) {
+          select(item.id, true);
+        }
+      });
       itemEl.addEventListener('dblclick', e => {
         e.stopPropagation();
         if (item.type === 'text' && !item.locked) $editingTextId.set(item.id);
