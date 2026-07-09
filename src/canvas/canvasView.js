@@ -6,7 +6,7 @@ import { QuoteCalculator } from '../ui/QuoteCalculator.js?v=2.0.0';
 import { AuthManager } from '../auth/AuthManager.js?v=2.0.0';
 import { PRODUCTS, PAPER_SIZES, FONTS } from '../pb.config.js?v=2.0.0';
 import { rulerXStyle, rulerYStyle, gridStyle } from './RulerService.js?v=2.0.0';
-import { StickerItem } from './StickerItem.js?v=2.0.0';
+import { StickerItem, getRotatedBounds } from './StickerItem.js?v=2.0.0';
 
 
 const PX_PER_CM = 37.8095;
@@ -469,6 +469,18 @@ function startCropResize(ev, handle) {
   capturePointer(ev);
 }
 
+function getGroupAABB(items) {
+  const aabbs = items.map(i => {
+    const b = getRotatedBounds(i.w, i.h, i.rotation || 0);
+    return { left: i.x + b.offsetX, top: i.y + b.offsetY, right: i.x + b.offsetX + b.w, bottom: i.y + b.offsetY + b.h };
+  });
+  const left   = Math.min(...aabbs.map(a => a.left));
+  const top    = Math.min(...aabbs.map(a => a.top));
+  const right  = Math.max(...aabbs.map(a => a.right));
+  const bottom = Math.max(...aabbs.map(a => a.bottom));
+  return { x: left, y: top, w: right - left, h: bottom - top };
+}
+
 function onGroupResizePointerDown(ev, groupId, handle, aabb) {
   editor.pointer.startGroupResize(groupId, handle, ev, aabb);
   capturePointer(ev);
@@ -578,7 +590,7 @@ export {
   gridFill, resetProject,
   getRulerXStyle, getRulerYStyle, getGridStyle,
   onItemPointerDown, onResizeHandlePointerDown, onRotateHandlePointerDown,
-  onGroupResizePointerDown,
+  onGroupResizePointerDown, getGroupAABB,
   startCropMove, startCropResize,
   saveProject, getEditableAsAdmin,
   computeQuote, currentPageBg, setCurrentPageColor, isPointerActive,
