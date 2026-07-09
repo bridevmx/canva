@@ -104,7 +104,14 @@ export class CanvasEditor {
   // ── Manipulaciones ──────────────────────────────────
   deleteSelected() {
     if (this.selectedIds.size === 0) return;
-    this.items = this.items.filter(i => !this.selectedIds.has(i.id));
+    const toDelete = new Set(this.selectedIds);
+    for (const id of this.selectedIds) {
+      const item = this.items.find(i => i.id === id);
+      if (item?.groupId) {
+        this.items.filter(i => i.groupId === item.groupId).forEach(i => toDelete.add(i.id));
+      }
+    }
+    this.items = this.items.filter(i => !toDelete.has(i.id));
     this.selectedIds.clear();
     this.normalizeZ();
     this.history.push();
@@ -115,7 +122,14 @@ export class CanvasEditor {
     const sheet = this.paper.sheet;
     const newIds = [];
     const groupMap = new Map();
-    for (const s of this.items.filter(i => this.selectedIds.has(i.id))) {
+    const toClone = new Set(this.selectedIds);
+    for (const id of this.selectedIds) {
+      const item = this.items.find(i => i.id === id);
+      if (item?.groupId) {
+        this.items.filter(i => i.groupId === item.groupId).forEach(i => toClone.add(i.id));
+      }
+    }
+    for (const s of this.items.filter(i => toClone.has(i.id))) {
       const c = s.clone();
       c.id = this.uid();
       c.x = Math.min(s.x + 25, sheet.w - s.w);
@@ -135,8 +149,15 @@ export class CanvasEditor {
 
   copySelected() {
     if (this.selectedIds.size === 0) return;
+    const toClone = new Set(this.selectedIds);
+    for (const id of this.selectedIds) {
+      const item = this.items.find(i => i.id === id);
+      if (item?.groupId) {
+        this.items.filter(i => i.groupId === item.groupId).forEach(i => toClone.add(i.id));
+      }
+    }
     this.clipboard = this.items
-      .filter(i => this.selectedIds.has(i.id))
+      .filter(i => toClone.has(i.id))
       .map(i => i.clone());
     this.pasteOffset = 0;
   }
