@@ -154,7 +154,11 @@ export class SingleItemControls {
       fillColor.addEventListener('input',  () => {
         sel.fillColor = fillColor.value;
         const el = document.querySelector(`[data-item-id="${sel.id}"]`);
-        if (el && sel.type === 'shape') el.style.background = fillColor.value;
+        if (el && sel.type === 'shape') {
+          const svgPath = el.querySelector('svg path');
+          if (svgPath) svgPath.setAttribute('fill', fillColor.value);
+          else el.style.background = fillColor.value;
+        }
       });
       fillColor.addEventListener('change', () => { lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
@@ -163,7 +167,11 @@ export class SingleItemControls {
       strokeColor.addEventListener('input',  () => {
         sel.strokeColor = strokeColor.value;
         const el = document.querySelector(`[data-item-id="${sel.id}"]`);
-        if (el) el.style.borderColor = strokeColor.value;
+        if (el) {
+          const svgPath = el.querySelector('svg path');
+          if (svgPath) svgPath.setAttribute('stroke', strokeColor.value);
+          else el.style.borderColor = strokeColor.value;
+        }
       });
       strokeColor.addEventListener('change', () => { lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
@@ -174,7 +182,11 @@ export class SingleItemControls {
         const span = strokeWidth.nextElementSibling;
         if (span) span.textContent = strokeWidth.value;
         const el = document.querySelector(`[data-item-id="${sel.id}"]`);
-        if (el) el.style.borderWidth = sel.strokeWidth + 'px';
+        if (el) {
+          const svgPath = el.querySelector('svg path');
+          if (svgPath) { svgPath.setAttribute('stroke-width', sel.strokeWidth); svgPath.setAttribute('stroke', sel.strokeWidth > 0 ? (sel.strokeColor || 'none') : 'none'); }
+          else el.style.borderWidth = sel.strokeWidth + 'px';
+        }
       });
       strokeWidth.addEventListener('change', () => { lifecycle.sync(); lifecycle.pushHistory(); lifecycle.renderSheet(); });
     }
