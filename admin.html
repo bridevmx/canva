@@ -372,7 +372,7 @@
         const response = await fetch('https://printer.tiendagenesis.com/print-edible-media', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: id, printer: printer })
+          body: JSON.stringify({ orderId: id, pbToken: pb.authStore.token, printer: printer })
         });
         const result = await response.json();
         if (response.ok && result.success) {
